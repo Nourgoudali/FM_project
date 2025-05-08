@@ -1,0 +1,167 @@
+.sidebar {
+    width: 250px;
+    height: 100vh;
+    background-color: white;
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
+  }
+  
+  .sidebar-header {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .logo-image {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+  }
+  
+  .logo-text {
+    font-weight: 700;
+    font-size: 1.25rem;
+  }
+  
+  .sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 0;
+  }
+  
+  .nav-list {
+    list-style: none;
+  }
+  
+  .nav-item {
+    margin: 0.25rem 0;
+  }
+  
+  .nav-link {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: var(--text-color);
+    border-radius: 0.25rem;
+    margin: 0 0.5rem;
+    transition: all 0.2s ease;
+  }
+  
+  .nav-link:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  .nav-link.active {
+    background-color: #e0e7ff;
+    color: var(--primary-color);
+  }
+  
+  .nav-icon {
+    margin-right: 0.75rem;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Icons */
+  .icon-dashboard::before {
+    content: "📊";
+  }
+  .icon-equipment::before {
+    content: "🔧";
+  }
+  .icon-intervention::before {
+    content: "🔨";
+  }
+  .icon-calendar::before {
+    content: "📅";
+  }
+  .icon-stock::before {
+    content: "📦";
+  }
+  .icon-document::before {
+    content: "📄";
+  }
+  .icon-chart::before {
+    content: "📈";
+  }
+  .icon-history::before {
+    content: "⏱️";
+  }
+  .icon-user::before {
+    content: "👤";
+  }
+  .icon-settings::before {
+    content: "⚙️";
+  }
+  
+  .nav-divider {
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 1rem 1rem;
+  }
+  
+  .sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid var(--border-color);
+  }
+  
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+  }
+  
+  .user-details {
+    overflow: hidden;
+  }
+  
+  .user-name {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .user-role {
+    font-size: 0.75rem;
+    color: var(--text-light);
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .sidebar {
+      position: fixed;
+      z-index: 100;
+      transform: translateX(-100%);
+    }
+  
+    .sidebar.open {
+      transform: translateX(0);
+    }
+  }
+  
