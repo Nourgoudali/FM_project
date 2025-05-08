@@ -19,11 +19,14 @@ export function AuthProvider({ children }) {
       setCurrentUser(response.data)
     } catch (error) {
       console.error("Erreur lors de la récupération du profil:", error)
-      logout()
+      // Inline logout logic instead of calling logout
+      localStorage.removeItem("token")
+      delete api.defaults.headers.common["Authorization"]
+      setCurrentUser(null)
     } finally {
       setLoading(false)
     }
-  }, [logout])
+  }, []) // No dependencies needed now
 
   useEffect(() => {
     // Vérifier si l'utilisateur est déjà connecté (token dans localStorage)
@@ -34,7 +37,7 @@ export function AuthProvider({ children }) {
     } else {
       setLoading(false)
     }
-  }, [fetchUserProfile]) 
+  }, [fetchUserProfile])
 
   const login = async (email, password) => {
     try {
