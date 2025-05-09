@@ -1,0 +1,16 @@
+/* App-wide styles */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+}
+
+.page-content {
+  flex: 1;
+  overflow: auto;
+}

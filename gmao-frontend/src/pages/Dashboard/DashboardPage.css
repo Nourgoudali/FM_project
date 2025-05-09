@@ -1,0 +1,228 @@
+.dashboard-container {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .dashboard-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  .dashboard-main {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+    background-color: var(--background-color);
+  }
+  
+  .dashboard-welcome {
+    margin-bottom: 1.5rem;
+  }
+  
+  .welcome-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+  
+  .welcome-subtitle {
+    color: var(--text-light);
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  @media (min-width: 640px) {
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .stats-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  
+  .stat-card {
+    background-color: white;
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+  }
+  
+  .stat-blue .stat-icon {
+    background-color: #3b82f6;
+  }
+  
+  .stat-red .stat-icon {
+    background-color: #ef4444;
+  }
+  
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background-color: var(--primary-color);
+    margin-right: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+  
+  .stat-icon::before {
+    content: "📊";
+    font-size: 1.25rem;
+  }
+  
+  .stat-info {
+    flex: 1;
+  }
+  
+  .stat-title {
+    font-size: 0.875rem;
+    color: var(--text-light);
+    margin-bottom: 0.25rem;
+  }
+  
+  .stat-count {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  
+  .recent-interventions {
+    background-color: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .section-title {
+    font-weight: 600;
+  }
+  
+  .view-all-link {
+    color: var(--primary-color);
+    font-size: 0.875rem;
+  }
+  
+  .view-all-link:hover {
+    text-decoration: underline;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .data-table th {
+    background-color: #f8fafc;
+    text-align: left;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .data-table td {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.875rem;
+  }
+  
+  .data-table tr:hover {
+    background-color: #f8fafc;
+  }
+  
+  .badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-align: center;
+  }
+  
+  .status-in-progress {
+    background-color: #3b82f6;
+    color: white;
+  }
+  
+  .status-pending {
+    background-color: #f59e0b;
+    color: white;
+  }
+  
+  .status-completed {
+    background-color: #22c55e;
+    color: white;
+  }
+  
+  .status-delayed {
+    background-color: #ef4444;
+    color: white;
+  }
+  
+  .priority-high {
+    background-color: #f97316;
+    color: white;
+  }
+  
+  .priority-normal {
+    background-color: #3b82f6;
+    color: white;
+  }
+  
+  .priority-low {
+    background-color: #22c55e;
+    color: white;
+  }
+  
+  .type-preventive {
+    background-color: #3b82f6;
+    color: white;
+  }
+  
+  .type-curative {
+    background-color: #f97316;
+    color: white;
+  }
+  
+  .loading-indicator {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-light);
+  }
+  
+  .error-message {
+    padding: 1rem;
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border-radius: var(--radius);
+    margin: 1rem;
+  }
+  
