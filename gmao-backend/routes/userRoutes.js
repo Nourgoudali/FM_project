@@ -1,10 +1,15 @@
 const express = require('express');
-const userController = require('../controllers/userController');
-const { authMiddleware, roleMiddleware } = require('../middleware/authMiddleware');
-
 const router = express.Router();
+const authController = require('../controllers/auth.controller');
+const authMiddleware = require('../middleware/auth.middleware');
 
-router.post('/register', authMiddleware, roleMiddleware(['admin']), userController.register);
-router.post('/login', userController.login);
+// Routes publiques
+router.post('/login', authController.login);
+router.post('/register', authController.register);
+
+// Routes protégées
+router.get('/profile', authMiddleware, (req, res) => {
+    res.json({ user: req.user });
+});
 
 module.exports = router;
