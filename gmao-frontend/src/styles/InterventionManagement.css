@@ -1,0 +1,87 @@
+.intervention-management-container {
+  padding: 20px;
+}
+
+.add-intervention-btn {
+  padding: 10px 15px;
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 20px;
+  transition: background-color 0.3s;
+}
+
+.add-intervention-btn:hover {
+  background-color: #27ae60;
+}
+
+.intervention-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.intervention-table th, .intervention-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.intervention-table th {
+  background-color: #f8f9fa;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.intervention-table tr:last-child td {
+  border-bottom: none;
+}
+
+.intervention-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.planifiée {
+  background-color: #e5f5ff;
+  color: #3498db;
+}
+
+.status-badge.en-cours {
+  background-color: #fff5e5;
+  color: #f39c12;
+}
+
+.status-badge.terminée {
+  background-color: #e5f9e0;
+  color: #27ae60;
+}
+
+.intervention-table button {
+  margin-right: 5px;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  background-color: #3498db;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.intervention-table button:hover {
+  background-color: #2980b9;
+} 

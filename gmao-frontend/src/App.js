@@ -111,9 +111,17 @@ function App() {
                             </ProtectedRoute>
                         }
                     />
+                    <Route
+                        path="/profile"
+                        element={
+                            <ProtectedRoute>
+                                <ProfilePage />
+                            </ProtectedRoute>
+                        }
+                    />
 
-                    {/* Redirection par défaut */}
-                    <Route path="/" element={<Navigate to="/dashboard" />} />
+                    {/* Route pour 404 */}
+                    <Route path="*" element={<NotFoundPage />} />
                 </Routes>
                 <NotificationSystem />
             </Router>
