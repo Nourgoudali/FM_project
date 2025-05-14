@@ -3,21 +3,21 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import "./App.css"
 
 // Pages
-import LoginPage from "./pages/LoginPage"
-import DashboardPage from "./pages/Dashboard"
-import UserManagementPage from "./pages/UserManagement"
-import InterventionManagementPage from "./pages/InterventionManagement"
-import EquipmentManagementPage from "./pages/EquipmentManagement"
-import StockManagementPage from "./pages/StockManagement"
-import DocumentationPage from "./pages/DocumentationPage"
-import PredictiveMaintenancePage from "./pages/PredictiveMaintenance"
-import SettingsPage from "./pages/SettingsPage"
-import ProfilePage from "./pages/ProfilePage"
-import NotFoundPage from "./pages/NotFoundPage"
-import HomePage from "./pages/HomePage"
+import LoginPage from "./pages/Login/LoginPage"
+import DashboardPage from "./pages/Dashboard/DashboardPage"
+import UserManagementPage from "./pages/UserManagement/UserManagementPage"
+import InterventionManagementPage from "./pages/InterventionManagement/InterventionManagementPage"
+import EquipmentManagementPage from "./pages/EquipmentManagement/EquipmentManagementPage"
+import StockManagementPage from "./pages/StockManagement/StockManagementPage"
+import DocumentationPage from "./pages/Documentation/DocumentationPage"
+import PredictiveMaintenancePage from "./pages/PredictiveMaintenance/PredictiveMaintenancePage"
+import SettingsPage from "./pages/Settings/SettingsPage"
+import ProfilePage from "./pages/Profile/ProfilePage"
+import NotFoundPage from "./pages/NotFound/NotFoundPage"
+import HomePage from "./pages/Home/HomePage"
 
 // Components
-import NotificationSystem from "./components/NotificationSystem"
+import NotificationSystem from "./components/Notifications/NotificationSystem"
 
 // Context
 import { AuthProvider, useAuth } from "./contexts/AuthContext"
@@ -111,17 +111,9 @@ function App() {
                             </ProtectedRoute>
                         }
                     />
-                    <Route
-                        path="/profile"
-                        element={
-                            <ProtectedRoute>
-                                <ProfilePage />
-                            </ProtectedRoute>
-                        }
-                    />
 
-                    {/* Route pour 404 */}
-                    <Route path="*" element={<NotFoundPage />} />
+                    {/* Redirection par défaut */}
+                    <Route path="/" element={<Navigate to="/dashboard" />} />
                 </Routes>
                 <NotificationSystem />
             </Router>
