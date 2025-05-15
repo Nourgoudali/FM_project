@@ -2,7 +2,7 @@ import axios from "axios"
 
 // Créer une instance axios avec l'URL de base de l'API
 export const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "http://localhost:5001/api",
+  baseURL: process.env.PORT || "http://localhost:5001/api",
   headers: {
     "Content-Type": "application/json",
   },

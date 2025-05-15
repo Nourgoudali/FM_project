@@ -19,7 +19,15 @@ dotenv.config();
 
 // Initialize Express app
 const app = express();
-app.use(cors());
+
+// Configuration CORS avec options explicites
+app.use(cors({
+  origin: ['http://localhost:3001', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
 app.use(express.json());
 
 // MongoDB Connection
