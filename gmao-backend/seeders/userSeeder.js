@@ -33,6 +33,12 @@ const users = [
     email: 'tech@gmao.com',
     password: 'Tech123!',
     role: 'technician'
+  },
+  {
+    username: 'aya',
+    email: 'AYA@gmail.com',
+    password: 'AYA@0000',
+    role: 'admin'
   }
 ];
 

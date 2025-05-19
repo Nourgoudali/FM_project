@@ -50,10 +50,10 @@ function Sidebar() {
       {currentUser && (
         <div className="sidebar-footer">
           <div className="user-info">
-            <div className="user-avatar">{currentUser.name.charAt(0)}</div>
+            <div className="user-avatar">{currentUser.name ? currentUser.name.charAt(0) : (currentUser.email ? currentUser.email.charAt(0) : 'U')}</div>
             <div className="user-details">
-              <div className="user-name">{currentUser.name}</div>
-              <div className="user-role">{currentUser.role}</div>
+              <div className="user-name">{currentUser.name || currentUser.email || 'Utilisateur'}</div>
+              <div className="user-role">{currentUser.role || ''}</div>
             </div>
           </div>
         </div>

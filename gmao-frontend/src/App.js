@@ -24,14 +24,17 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext"
 
 // Composant pour les routes protégées
 const ProtectedRoute = ({ children }) => {
-    const { isAuthenticated, loading } = useAuth();
+    const { isAuthenticated, loading, user } = useAuth();
+
+    console.log('ProtectedRoute:', { isAuthenticated, loading, user });
 
     if (loading) {
         return <div>Chargement...</div>;
     }
 
     if (!isAuthenticated) {
-        return <Navigate to="/login" />;
+        console.warn('ProtectedRoute redirect: not authenticated', { isAuthenticated, user });
+        return <Navigate to="/login" replace />;
     }
 
     return children;
@@ -40,7 +43,10 @@ const ProtectedRoute = ({ children }) => {
 function App() {
     return (
         <AuthProvider>
-            <Router>
+            <Router future={{ 
+                v7_relativeSplatPath: true,
+                v7_startTransition: true 
+            }}>
                 <Routes>
                     {/* Routes publiques */}
                     <Route path="/" element={<HomePage />} />
@@ -113,7 +119,7 @@ function App() {
                     />
 
                     {/* Redirection par défaut */}
-                    <Route path="/" element={<Navigate to="/dashboard" />} />
+                    <Route path="*" element={<NotFoundPage />} />
                 </Routes>
                 <NotificationSystem />
             </Router>

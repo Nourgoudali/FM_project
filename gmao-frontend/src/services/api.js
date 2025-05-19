@@ -1,30 +1,42 @@
 import axios from "axios"
+import { api } from './auth.service'
 
 // Créer une instance axios avec l'URL de base de l'API
-export const api = axios.create({
-  baseURL: process.env.PORT || "http://localhost:5001/api",
-  headers: {
-    "Content-Type": "application/json",
-  },
-})
+// const api = axios.create({
+//   baseURL: process.env.PORT || "http://localhost:5000/api",
+//   headers: {
+//     "Content-Type": "application/json",
+//   },
+// })
 
 // Intercepteur pour gérer les erreurs
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    // Gérer les erreurs 401 (non autorisé)
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem("token")
-      window.location.href = "/login"
-    }
-    return Promise.reject(error)
-  },
-)
+// api.interceptors.request.use(
+//   (request) => {
+//     // Add any custom logic here before the request is sent
+//     return request
+//   },
+//   (error) => {
+//     // Handle request error
+//     return Promise.reject(error)
+//   },
+// )
+
+// api.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     // Gérer les erreurs 401 (non autorisé)
+//     if (error.response && error.response.status === 401) {
+//       localStorage.removeItem("token")
+//       window.location.href = "/login"
+//     }
+//     return Promise.reject(error)
+//   },
+// )
 
 // Services API pour les différentes entités
 export const authService = {
-  login: (credentials) => api.post("/auth/login", credentials),
-  register: (userData) => api.post("/auth/register", userData),
+  login: (credentials) => api.post("/users/login", credentials),
+  register: (userData) => api.post("/users/register", userData),
 }
 
 export const userService = {
