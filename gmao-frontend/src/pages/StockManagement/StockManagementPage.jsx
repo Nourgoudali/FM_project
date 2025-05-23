@@ -288,8 +288,8 @@ const StockManagementPage = () => {
               <div className="filter-group">
                 <label>Catégorie:</label>
                 <select value={filters.category} onChange={(e) => setFilters({ ...filters, category: e.target.value })}>
-                  {categories.map((category, index) => (
-                    <option key={index} value={category}>
+                  {categories.map((category) => (
+                    <option key={`cat-${category.toLowerCase().replace(/\s+/g, '-')}`} value={category}>
                       {category === "all" ? "Toutes les catégories" : category}
                     </option>
                   ))}
@@ -299,8 +299,8 @@ const StockManagementPage = () => {
               <div className="filter-group">
                 <label>Statut:</label>
                 <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
-                  {statuses.map((status, index) => (
-                    <option key={index} value={status}>
+                  {statuses.map((status) => (
+                    <option key={`status-${status.toLowerCase().replace(/\s+/g, '-')}`} value={status}>
                       {status === "all" ? "Tous les statuts" : status}
                     </option>
                   ))}
@@ -374,28 +374,25 @@ const StockManagementPage = () => {
                 </thead>
                 <tbody>
                   {filteredItems.map((item) => (
-                    <tr key={item.id}>
-                      <td>{item.reference}</td>
+                    <tr key={item._id || item.id || `item-${item.reference.toLowerCase().replace(/\s+/g, '-')}`}>
                       <td>{item.name}</td>
+                      <td>{item.reference}</td>
                       <td>{item.category}</td>
-                      <td>
-                        <div className="quantity-cell">
-                          <span className="quantity-value">{item.quantity}</span>
-                          {item.quantity <= item.minQuantity && <span className="alert-icon">⚠️</span>}
-                        </div>
-                      </td>
+                      <td>{item.quantity}</td>
                       <td>{item.location}</td>
                       <td>{item.unitPrice.toFixed(2)} €</td>
+                      <td>{item.supplier}</td>
+                      <td>{new Date(item.lastRestockDate).toLocaleDateString()}</td>
                       <td>
-                        <span className={`status-badge ${item.status.replace(/\s+/g, "-").toLowerCase()}`}>
+                        <span className={`status-badge ${item.status.toLowerCase().replace(/\s+/g, '-')}`}>
                           {item.status}
                         </span>
                       </td>
                       <td className="actions-cell">
-                        <button className="action-btn edit" onClick={() => handleOpenEditModal(item)} title="Modifier">
+                        <button className="action-btn edit" onClick={() => handleOpenEditModal(item)}>
                           <FaEdit />
                         </button>
-                        <button className="action-btn delete" onClick={() => handleOpenDeleteModal(item)} title="Supprimer">
+                        <button className="action-btn delete" onClick={() => handleOpenDeleteModal(item)}>
                           <FaTrash />
                         </button>
                       </td>

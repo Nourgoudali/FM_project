@@ -192,7 +192,7 @@ function GlobalSearch() {
             ) : (
               <div className="search-results">
                 {results.map((category) => (
-                  <div key={category.category} className="result-category">
+                  <div key={`cat-${category.category.toLowerCase().replace(/\s+/g, '-')}`} className="result-category">
                     <h3 className="category-title">
                       <span className={`category-icon icon-${getCategoryIcon(category.category)}`}></span>
                       {getCategoryName(category.category)}
@@ -200,7 +200,7 @@ function GlobalSearch() {
                     <ul className="result-list">
                       {category.items.map((item) => (
                         <li
-                          key={item.id}
+                          key={`${category.category}-${item.id || item._id || item.name.toLowerCase().replace(/\s+/g, '-')}`}
                           className="result-item"
                           onClick={() => handleResultClick(category.category, item)}
                         >

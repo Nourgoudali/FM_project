@@ -79,7 +79,7 @@ function Header({ title, onToggleSidebar }) {
               <div className="notifications-list">
                 {notifications.length > 0 ? (
                   notifications.map((notification) => (
-                    <div key={notification.id} className={`notification-item ${!notification.read ? "unread" : ""}`}>
+                    <div key={`notif-${notification.id || notification._id || `${notification.type}-${notification.time}`.toLowerCase().replace(/\s+/g, '-')}`} className={`notification-item ${!notification.read ? "unread" : ""}`}>
                       <div className={`notification-icon ${notification.type}-icon`}></div>
                       <div className="notification-content">
                         <p className="notification-message">{notification.message}</p>

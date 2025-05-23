@@ -203,7 +203,7 @@ function AddUserForm({ user, onClose, onSubmit, isEdit }) {
                   <select id="role" name="role" value={formData.role} onChange={handleChange}>
                     <option value="">Sélectionner un rôle</option>
                     {roles.map((role) => (
-                      <option key={role.id} value={role.id}>
+                      <option key={`role-${role._id || role.id || role.name.toLowerCase().replace(/\s+/g, '-')}`} value={role.id}>
                         {role.name}
                       </option>
                     ))}
@@ -215,7 +215,7 @@ function AddUserForm({ user, onClose, onSubmit, isEdit }) {
                   <select id="department" name="department" value={formData.department} onChange={handleChange}>
                     <option value="">Sélectionner un département</option>
                     {departments.map((dept) => (
-                      <option key={dept.id} value={dept.id}>
+                      <option key={`dept-${dept._id || dept.id || dept.name.toLowerCase().replace(/\s+/g, '-')}`} value={dept.id}>
                         {dept.name}
                       </option>
                     ))}

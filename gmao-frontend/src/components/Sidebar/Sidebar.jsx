@@ -41,7 +41,7 @@ function Sidebar({ isOpen }) {
             item.divider ? (
               <li key={`divider-${index}`} className="nav-divider"></li>
             ) : (
-              <li key={item.path} className="nav-item">
+              <li key={`nav-${item.path.toLowerCase().replace(/\//g, '-')}`} className="nav-item">
                 <Link to={item.path} className={`nav-link ${location.pathname === item.path ? "active" : ""}`}>
                   <span className="nav-icon">{item.icon}</span>
                   <span className="nav-text">{item.name}</span>

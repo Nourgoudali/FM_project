@@ -13,6 +13,7 @@ import {
   FaUserCog,
   FaUserTie,
   FaUserCheck,
+  FaCircle,
 } from "react-icons/fa"
 import Sidebar from "../../components/Sidebar/Sidebar"
 import Header from "../../components/Header/Header"
@@ -51,14 +52,59 @@ const UserManagementPage = () => {
           setUsers(response.data);
           setFilteredUsers(response.data);
         } else {
-          // Données fictives comme fallback
-          initializeMockUsers();
+          // Données de test
+          const mockUsers = [
+            {
+              id: 1,
+              lastName: "admin",
+              firstName: "admin",
+              email: "admin@gmao.com",
+              role: "admin",
+              department: "Administration",
+              phone: "01 23 45 67 89",
+              status: "Actif",
+              lastLogin: "2024-02-20"
+            },
+            {
+              id: 2,
+              lastName: "teamleader",
+              firstName: "teamleader",
+              email: "team@gmao.com",
+              role: "team_leader",
+              department: "Maintenance",
+              phone: "01 23 45 67 90",
+              status: "Actif",
+              lastLogin: "2024-02-19"
+            },
+            {
+              id: 3,
+              lastName: "technician",
+              firstName: "technician",
+              email: "tech@gmao.com",
+              role: "technician",
+              department: "Production",
+              phone: "01 23 45 67 91",
+              status: "Actif",
+              lastLogin: "2024-02-18"
+            },
+            {
+              id: 4,
+              lastName: "aya",
+              firstName: "aya",
+              email: "AYA@gmail.com",
+              role: "admin",
+              department: "Administration",
+              phone: "01 23 45 67 92",
+              status: "Actif",
+              lastLogin: "2024-02-17"
+            }
+          ];
+          setUsers(mockUsers);
+          setFilteredUsers(mockUsers);
         }
       } catch (error) {
         console.error("Erreur lors du chargement des utilisateurs:", error);
-        setError("Impossible de charger les utilisateurs");
-        // Utiliser des données fictives en cas d'erreur
-        initializeMockUsers();
+        setError("Impossible de charger les utilisateurs. Veuillez réessayer plus tard.");
       } finally {
         setLoading(false);
       }
@@ -66,75 +112,6 @@ const UserManagementPage = () => {
 
     fetchUsers();
   }, []);
-
-  // Fonction pour initialiser des données fictives
-  const initializeMockUsers = () => {
-    const mockUsers = [
-      {
-        id: 1,
-        firstName: "Jean",
-        lastName: "Dupont",
-        email: "jean.dupont@example.com",
-        role: "Administrateur",
-        department: "Maintenance",
-        phone: "06 12 34 56 78",
-        status: "Actif",
-        lastLogin: "2023-06-15 08:45",
-        createdAt: "2023-01-10",
-      },
-      {
-        id: 2,
-        firstName: "Marie",
-        lastName: "Martin",
-        email: "marie.martin@example.com",
-        role: "Technicien",
-        department: "Production",
-        phone: "06 23 45 67 89",
-        status: "Actif",
-        lastLogin: "2023-06-14 14:30",
-        createdAt: "2023-02-05",
-      },
-      {
-        id: 3,
-        firstName: "Pierre",
-        lastName: "Durand",
-        email: "pierre.durand@example.com",
-        role: "Manager",
-        department: "Maintenance",
-        phone: "06 34 56 78 90",
-        status: "Actif",
-        lastLogin: "2023-06-10 09:15",
-        createdAt: "2023-01-15",
-      },
-      {
-        id: 4,
-        firstName: "Sophie",
-        lastName: "Leroy",
-        email: "sophie.leroy@example.com",
-        role: "Technicien",
-        department: "Qualité",
-        phone: "06 45 67 89 01",
-        status: "Inactif",
-        lastLogin: "2023-05-20 11:30",
-        createdAt: "2023-03-01",
-      },
-      {
-        id: 5,
-        firstName: "Thomas",
-        lastName: "Moreau",
-        email: "thomas.moreau@example.com",
-        role: "Opérateur",
-        department: "Production",
-        phone: "06 56 78 90 12",
-        status: "Actif",
-        lastLogin: "2023-06-15 07:50",
-        createdAt: "2023-04-10",
-      },
-    ];
-
-    setUsers(mockUsers);
-    setFilteredUsers(mockUsers);
-  };
 
   // Filtrer les utilisateurs en fonction du terme de recherche et des filtres
   useEffect(() => {
@@ -188,21 +165,16 @@ const UserManagementPage = () => {
     setFilteredUsers(sortedUsers)
   }
 
-  // Gérer l'ajout d'un nouvel utilisateur
+  // Fonction pour gérer l'ajout d'un nouvel utilisateur
   const handleAddUser = async (newUser) => {
     try {
-      // Appel à l'API pour créer un utilisateur
       const response = await userAPI.register(newUser);
       
       if (response && response.data) {
-        // Ajouter l'utilisateur à la liste
         setUsers([...users, response.data]);
         setShowAddModal(false);
       } else {
-        // Fallback si pas de réponse valide
-        const tempUser = { ...newUser, id: users.length + 1 };
-        setUsers([...users, tempUser]);
-        setShowAddModal(false);
+        throw new Error("Erreur lors de l'ajout de l'utilisateur");
       }
     } catch (error) {
       console.error("Erreur lors de l'ajout de l'utilisateur:", error);
@@ -210,36 +182,31 @@ const UserManagementPage = () => {
     }
   }
 
-  // Gérer la modification d'un utilisateur
+  // Fonction pour gérer la modification d'un utilisateur
   const handleEditUser = async (updatedUser) => {
     try {
-      // Appel à l'API pour mettre à jour l'utilisateur
-      const response = await userAPI.updateUser(updatedUser.id, updatedUser);
+      const response = await userAPI.updateUser(updatedUser._id || updatedUser.id, updatedUser);
       
       if (response && response.data) {
-        // Mettre à jour la liste des utilisateurs
-        setUsers(users.map(user => user.id === updatedUser.id ? response.data : user));
+        setUsers(users.map(user => 
+          (user._id || user.id) === (updatedUser._id || updatedUser.id) ? response.data : user
+        ));
+        setShowEditModal(false);
       } else {
-        // Fallback si pas de réponse valide
-        setUsers(users.map(user => user.id === updatedUser.id ? updatedUser : user));
+        throw new Error("Erreur lors de la modification de l'utilisateur");
       }
-      
-      setShowEditModal(false);
     } catch (error) {
       console.error("Erreur lors de la modification de l'utilisateur:", error);
       alert("Une erreur est survenue lors de la modification de l'utilisateur");
     }
   }
 
-  // Gérer la suppression d'un utilisateur
-  const handleDeleteUser = async (id) => {
+  // Fonction pour gérer la suppression d'un utilisateur
+  const handleDeleteUser = async (userId) => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?")) {
       try {
-        // Appel à l'API pour supprimer l'utilisateur
-        await userAPI.deleteUser(id);
-        
-        // Mettre à jour la liste des utilisateurs
-        setUsers(users.filter(user => user.id !== id));
+        await userAPI.deleteUser(userId);
+        setUsers(users.filter(user => (user._id || user.id) !== userId));
       } catch (error) {
         console.error("Erreur lors de la suppression de l'utilisateur:", error);
         alert("Une erreur est survenue lors de la suppression de l'utilisateur");
@@ -247,20 +214,18 @@ const UserManagementPage = () => {
     }
   }
 
-  // Gérer le changement de statut d'un utilisateur
-  const handleToggleUserStatus = async (id, currentStatus) => {
+  // Fonction pour gérer le changement de statut d'un utilisateur
+  const handleToggleUserStatus = async (userId, currentStatus) => {
     try {
       const newStatus = currentStatus === "Actif" ? "Inactif" : "Actif";
-      
-      // Appel à l'API pour changer le statut
-      const response = await userAPI.changeUserStatus(id, newStatus);
+      const response = await userAPI.changeUserStatus(userId, newStatus);
       
       if (response && response.data) {
-        // Mettre à jour la liste des utilisateurs
-        setUsers(users.map(user => user.id === id ? { ...user, status: newStatus } : user));
+        setUsers(users.map(user => 
+          (user._id || user.id) === userId ? { ...user, status: newStatus } : user
+        ));
       } else {
-        // Fallback si pas de réponse valide
-        setUsers(users.map(user => user.id === id ? { ...user, status: newStatus } : user));
+        throw new Error("Erreur lors du changement de statut");
       }
     } catch (error) {
       console.error("Erreur lors du changement de statut de l'utilisateur:", error);
@@ -325,8 +290,8 @@ const UserManagementPage = () => {
               <div className="filter-group">
                 <label>Rôle:</label>
                 <select value={filters.role} onChange={(e) => setFilters({ ...filters, role: e.target.value })}>
-                  {roles.map((role, index) => (
-                    <option key={index} value={role}>
+                  {roles.map((role) => (
+                    <option key={`role-${role.toLowerCase().replace(/\s+/g, '-')}`} value={role}>
                       {role === "all" ? "Tous les rôles" : role}
                     </option>
                   ))}
@@ -336,8 +301,8 @@ const UserManagementPage = () => {
               <div className="filter-group">
                 <label>Statut:</label>
                 <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
-                  {statuses.map((status, index) => (
-                    <option key={index} value={status}>
+                  {statuses.map((status) => (
+                    <option key={`status-${status.toLowerCase().replace(/\s+/g, '-')}`} value={status}>
                       {status === "all" ? "Tous les statuts" : status}
                     </option>
                   ))}
@@ -347,8 +312,8 @@ const UserManagementPage = () => {
               <div className="filter-group">
                 <label>Département:</label>
                 <select value={filters.department} onChange={(e) => setFilters({ ...filters, department: e.target.value })}>
-                  {departments.map((department, index) => (
-                    <option key={index} value={department}>
+                  {departments.map((department) => (
+                    <option key={`dept-${department.toLowerCase().replace(/\s+/g, '-')}`} value={department}>
                       {department === "all" ? "Tous les départements" : department}
                     </option>
                   ))}
@@ -408,42 +373,37 @@ const UserManagementPage = () => {
                 </thead>
                 <tbody>
                   {filteredUsers.map((user) => (
-                    <tr key={user.id}>
+                    <tr key={user._id || user.id || `user-${user.email.toLowerCase().replace(/\s+/g, '-')}`}>
                       <td>{user.lastName}</td>
                       <td>{user.firstName}</td>
                       <td>{user.email}</td>
-                      <td>
-                        <div className="role-cell">
-                          {getRoleIcon(user.role)}
-                          {user.role}
-                        </div>
-                      </td>
+                      <td>{user.role}</td>
                       <td>{user.department}</td>
                       <td>{user.phone}</td>
                       <td>
-                        <span 
-                          className={`status-badge ${user.status === "Actif" ? "active" : "inactive"}`}
-                          onClick={() => handleToggleUserStatus(user.id, user.status)}
-                          style={{ cursor: 'pointer' }}
-                          title="Cliquer pour changer le statut"
-                        >
-                          {user.status}
+                        <span className={`status-badge ${user.lastLogin ? "active" : "inactive"}`}>
+                          <FaCircle className="status-icon" />
+                          {user.lastLogin ? "Actif" : "Inactif"}
                         </span>
                       </td>
-                      <td>{user.lastLogin}</td>
-                      <td className="actions-cell">
-                        <button
-                          className="action-btn edit"
-                          onClick={() => {
-                            setCurrentUser(user)
-                            setShowEditModal(true)
-                          }}
-                        >
-                          <FaEdit />
-                        </button>
-                        <button className="action-btn delete" onClick={() => handleDeleteUser(user.id)}>
-                          <FaTrash />
-                        </button>
+                      <td>{user.lastLogin ? new Date(user.lastLogin).toLocaleString() : "Jamais"}</td>
+                      <td>
+                        <div className="action-buttons">
+                          <button 
+                            className="action-btn edit" 
+                            onClick={() => handleEditUser(user)}
+                            title="Modifier"
+                          >
+                            <FaEdit />
+                          </button>
+                          <button 
+                            className="action-btn delete" 
+                            onClick={() => handleDeleteUser(user._id || user.id)}
+                            title="Supprimer"
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -15,7 +15,7 @@ const userController = {
         return res.status(400).json({ message: 'User already exists' });
       }
 
-      // Create new user
+      // Create new user with status Inactif
       const user = new User({ 
         firstName, 
         lastName, 
@@ -24,7 +24,8 @@ const userController = {
         role, 
         department: department || 'Non assigné',
         phone: phone || '',
-        status: 'Actif'
+        status: 'Inactif', // Initialiser comme Inactif
+        lastLogin: null
       });
       console.log('New user created');
       
@@ -70,23 +71,45 @@ const userController = {
           return res.status(500).json({ message: 'Erreur de configuration du serveur' });
         }
 
-        // Mettre à jour la date de dernière connexion
-        user.lastLogin = new Date();
-        await user.save();
+        // Mettre à jour la date de dernière connexion et le statut
+        const now = new Date();
+        const updates = {
+          lastLogin: now,
+          status: 'Actif',
+          lastActivity: now
+        };
 
-        const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '30d' });
+        // Mettre à jour l'utilisateur
+        const updatedUser = await User.findByIdAndUpdate(
+          user._id,
+          updates,
+          { new: true, select: '-password' }
+        );
+
+        const token = jwt.sign(
+          { 
+            id: updatedUser._id, 
+            role: updatedUser.role,
+            status: updatedUser.status
+          }, 
+          process.env.JWT_SECRET, 
+          { expiresIn: '30d' }
+        );
+
         console.log('Authentication successful');
         
         const response = {
           token,
           user: {
-            id: user._id,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
-            role: user.role,
-            department: user.department,
-            status: user.status
+            id: updatedUser._id,
+            firstName: updatedUser.firstName,
+            lastName: updatedUser.lastName,
+            email: updatedUser.email,
+            role: updatedUser.role,
+            department: updatedUser.department,
+            status: updatedUser.status,
+            lastLogin: updatedUser.lastLogin,
+            lastActivity: updatedUser.lastActivity
           }
         };
         res.json(response);
@@ -252,6 +275,46 @@ const userController = {
     } catch (err) {
       console.error('Error changing user status');
       res.status(400).json({ message: err.message });
+    }
+  },
+
+  // Ajouter une méthode pour mettre à jour l'activité de l'utilisateur
+  updateUserActivity: async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const now = new Date();
+      
+      await User.findByIdAndUpdate(userId, {
+        lastActivity: now,
+        status: 'Actif'
+      });
+
+      res.json({ message: 'User activity updated' });
+    } catch (err) {
+      console.error('Error updating user activity:', err);
+      res.status(500).json({ message: 'Error updating user activity' });
+    }
+  },
+
+  // Ajouter une méthode pour vérifier et mettre à jour automatiquement le statut des utilisateurs inactifs
+  checkInactiveUsers: async () => {
+    try {
+      const inactivityThreshold = new Date();
+      inactivityThreshold.setDate(inactivityThreshold.getDate() - 30); // 30 jours d'inactivité
+
+      await User.updateMany(
+        {
+          lastActivity: { $lt: inactivityThreshold },
+          status: 'Actif'
+        },
+        {
+          status: 'Inactif'
+        }
+      );
+
+      console.log('Inactive users status updated');
+    } catch (err) {
+      console.error('Error checking inactive users:', err);
     }
   },
 };

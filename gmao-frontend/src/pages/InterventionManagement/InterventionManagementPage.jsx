@@ -165,6 +165,14 @@ const InterventionManagementPage = () => {
     }
   }
 
+  const getTypeClass = (type) => {
+    switch(type) {
+      case "Curative": return "intv-type-curative"
+      case "Préventive": return "intv-type-preventive"
+      default: return ""
+    }
+  }
+
   const handleNewIntervention = async (data) => {
     try {
       // Créer l'objet intervention avec les données du formulaire
@@ -347,52 +355,56 @@ const InterventionManagementPage = () => {
                     <th>Type</th>
                     <th>Priorité</th>
                     <th>Statut</th>
+                    <th>Date</th>
                     <th>Technicien</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {interventions.map((intervention) => (
-                    <tr key={intervention.id}>
-                      <td className="intv-ref-column">{intervention.id}</td>
+                    <tr key={intervention._id || intervention.id || `intervention-${intervention.equipment}-${intervention.date}`}>
+                      <td>{intervention.id}</td>
                       <td>{intervention.equipment}</td>
                       <td>
-                        <div className={`intv-type-badge ${intervention.type === "Curative" ? "curative" : "preventive"}`}>
-                          {intervention.type === "Curative" ? "Curative" : "Préventive"}
-                        </div>
+                        <span className={`badge ${getTypeClass(intervention.type)}`}>
+                          {intervention.type}
+                        </span>
                       </td>
                       <td>
-                        <div className={`intv-priority-badge ${getPriorityClass(intervention.priority)}`}>
+                        <span className={`badge ${getPriorityClass(intervention.priority)}`}>
                           {intervention.priority}
-                        </div>
+                        </span>
                       </td>
                       <td>
-                        <div className={`intv-status-badge ${getStatusClass(intervention.status)}`}>
+                        <span className={`badge ${getStatusClass(intervention.status)}`}>
                           {intervention.status}
-                        </div>
+                        </span>
                       </td>
+                      <td>{intervention.date}</td>
                       <td>
-                        <div className="intv-technician">
-                          <div 
-                            className="intv-technician-avatar" 
+                        <div className="technician-info">
+                          <span 
+                            className="technician-avatar" 
                             style={{ backgroundColor: intervention.technician.color }}
                           >
                             {intervention.technician.initials}
-                          </div>
-                          <span>{intervention.technician.name}</span>
+                          </span>
+                          <span className="technician-name">{intervention.technician.name}</span>
                         </div>
                       </td>
                       <td>
-                        <div className="intv-action-buttons">
-                          <button 
-                            className="intv-action-btn intv-view-btn" 
+                        <div className="action-buttons">
+                          <button
+                            className="action-btn view"
                             onClick={() => handleViewIntervention(intervention)}
+                            title="Voir les détails"
                           >
                             <FaEye />
                           </button>
-                          <button 
-                            className="intv-action-btn intv-edit-btn"
+                          <button
+                            className="action-btn edit"
                             onClick={() => handleEditButton(intervention)}
+                            title="Modifier"
                           >
                             <FaPen />
                           </button>

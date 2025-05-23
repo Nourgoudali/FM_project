@@ -71,7 +71,7 @@ function PerformanceIndicators() {
       <div className="indicators-grid">
         {kpis.length > 0 ? (
           kpis.map((kpi, index) => (
-            <div key={index} className="indicator-card">
+            <div key={`kpi-${kpi.title || kpi.name || `indicator-${index}`}`.toLowerCase().replace(/\s+/g, '-')} className="indicator-card">
               <div className="indicator-header">
                 <h3 className="indicator-title">{kpi.title}</h3>
                 <div className={`trend-badge trend-${kpi.trend}`}>

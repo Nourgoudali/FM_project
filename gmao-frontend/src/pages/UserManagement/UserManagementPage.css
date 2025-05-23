@@ -183,20 +183,34 @@
 }
 
 .status-badge {
-  display: inline-block;
-  padding: 0.25rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 0.875rem;
   font-weight: 500;
 }
 
 .status-badge.active {
-  background-color: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  background-color: #dcfce7;
+  color: #166534;
 }
 
 .status-badge.inactive {
-  background-color: rgba(239, 68, 68, 0.1);
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.status-icon {
+  font-size: 8px;
+}
+
+.status-badge.active .status-icon {
+  color: #22c55e;
+}
+
+.status-badge.inactive .status-icon {
   color: #ef4444;
 }
 
@@ -206,30 +220,48 @@
   justify-content: flex-end;
 }
 
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
 .action-btn {
-  width: 32px;
-  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  width: 32px;
+  height: 32px;
   border: none;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.action-btn.edit {
-  background-color: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-}
-
-.action-btn.delete {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  transition: all 0.2s ease;
+  background: none;
 }
 
 .action-btn:hover {
-  opacity: 0.8;
+  background-color: #f3f4f6;
+}
+
+.action-btn.edit {
+  color: #3b82f6;
+}
+
+.action-btn.edit:hover {
+  background-color: #dbeafe;
+}
+
+.action-btn.delete {
+  color: #ef4444;
+}
+
+.action-btn.delete:hover {
+  background-color: #fee2e2;
+}
+
+.action-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
 .loading-indicator {

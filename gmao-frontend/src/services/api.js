@@ -92,6 +92,12 @@ export const interventionAPI = {
   updateIntervention: (id, interventionData) => API.put(`/interventions/${id}`, interventionData),
   // Supprimer une intervention
   deleteIntervention: (id) => API.delete(`/interventions/${id}`),
+  // Récupérer les techniciens disponibles pour les interventions
+  getTechnicians: () => API.get('/users?role=technician'),
+  // Récupérer les tâches de maintenance pour un équipement
+  getMaintenanceTasks: (equipmentId) => API.get(`/interventions/tasks/${equipmentId}`),
+  // Récupérer les pièces nécessaires pour la maintenance d'un équipement
+  getMaintenanceParts: (equipmentId) => API.get(`/stock/parts/${equipmentId}`),
 };
 
 // API pour les équipements
@@ -106,6 +112,8 @@ export const equipmentAPI = {
   updateEquipment: (id, equipmentData) => API.put(`/equipment/${id}`, equipmentData),
   // Supprimer un équipement
   deleteEquipment: (id) => API.delete(`/equipment/${id}`),
+  // Récupérer les équipements avec leurs données de maintenance prédictive
+  getPredictiveEquipments: () => API.get('/equipment'),
 };
 
 // API pour la planification
@@ -160,6 +168,10 @@ export const sensorAPI = {
   getAlerts: () => API.get('/sensors/alerts'),
   // Créer un nouveau capteur
   createSensor: (sensorData) => API.post('/sensors', sensorData),
+  // Récupérer les recommandations pour un équipement
+  getRecommendationsForEquipment: (equipmentId) => API.get(`/sensors/equipment/${equipmentId}/recommendations`),
+  // Appliquer l'optimisation énergétique
+  applyOptimization: (equipmentId) => API.post(`/sensors/equipment/${equipmentId}/optimize`),
 };
 
 // API pour les indicateurs de performance (KPI)

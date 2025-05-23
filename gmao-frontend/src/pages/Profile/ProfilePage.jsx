@@ -338,7 +338,9 @@ function ProfilePage() {
                 
                 <div className="skills-list">
                   {skills.map((skill, index) => (
-                    <span key={index} className="skill-badge">{skill}</span>
+                    <div key={`skill-${skill.toLowerCase().replace(/\s+/g, '-')}-${index}`} className="skill-badge">
+                      {skill}
+                    </div>
                   ))}
                 </div>
               </div>

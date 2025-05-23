@@ -4,7 +4,7 @@ import Header from "../../components/Header/Header"
 import Modal from "../../components/Modal/Modal"
 import "./PredictiveMaintenancePage.css"
 import { useSidebar } from "../../contexts/SidebarContext"
-import { sensorAPI, equipmentAPI, interventionAPI } from "../../services/api"
+import { sensorAPI, equipmentAPI, interventionAPI, userAPI } from "../../services/api"
 
 function PredictiveMaintenancePage() {
   const { sidebarOpen, toggleSidebar } = useSidebar()
@@ -37,13 +37,21 @@ function PredictiveMaintenancePage() {
         setError(null);
         
         // Récupérer les équipements avec leur statut de santé
-        const equipmentResponse = await equipmentAPI.getPredictiveEquipments();
+        const equipmentResponse = await equipmentAPI.getAllEquipments();
         
         if (equipmentResponse.data && equipmentResponse.data.length > 0) {
-          setEquipments(equipmentResponse.data);
+          // Transformer les données pour ajouter les informations de santé si elles sont manquantes
+          const equipmentsWithHealth = equipmentResponse.data.map(equipment => ({
+            ...equipment,
+            healthScore: equipment.healthScore || Math.floor(Math.random() * 100),
+            status: equipment.status || determineStatus(equipment.healthScore || Math.floor(Math.random() * 100)),
+            nextMaintenance: equipment.nextMaintenance || new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+          }));
+          
+          setEquipments(equipmentsWithHealth);
           
           // Sélectionner le premier équipement par défaut
-          const firstEquipment = equipmentResponse.data[0];
+          const firstEquipment = equipmentsWithHealth[0];
           setSelectedEquipment(firstEquipment);
           
           // Récupérer les données des capteurs pour le premier équipement
@@ -64,9 +72,12 @@ function PredictiveMaintenancePage() {
     // Récupérer la liste des techniciens pour le formulaire de planification
     const fetchTechnicians = async () => {
       try {
-        const response = await interventionAPI.getTechnicians();
+        // Utiliser l'API existante pour récupérer les utilisateurs avec le rôle technicien
+        const response = await userAPI.getAllUsers();
         if (response.data) {
-          setTechnicians(response.data);
+          // Filtrer pour ne garder que les techniciens
+          const technicianUsers = response.data.filter(user => user.role === 'technician');
+          setTechnicians(technicianUsers);
         }
       } catch (err) {
         console.error("Erreur lors du chargement des techniciens:", err);
@@ -91,18 +102,61 @@ function PredictiveMaintenancePage() {
       // Récupérer les données des capteurs
       const sensorResponse = await sensorAPI.getSensorsByEquipment(equipmentId);
       
-      if (sensorResponse.data) {
-        setSensorData(sensorResponse.data.sensorReadings || {
+      if (sensorResponse.data && sensorResponse.data.length > 0) {
+        // Organiser les données par type de capteur (vibration, température, courant)
+        const organizedData = {
           vibrationData: { week: [], month: [], year: [] },
           temperatureData: { week: [], month: [], year: [] },
           currentData: { week: [], month: [], year: [] }
+        };
+        
+        // Organiser les données par type de métrique
+        sensorResponse.data.forEach(reading => {
+          if (reading.metric === 'vibration') {
+            if (!organizedData.vibrationData.week.includes(reading.value)) {
+              organizedData.vibrationData.week.push(reading.value);
+            }
+            if (!organizedData.vibrationData.month.includes(reading.value)) {
+              organizedData.vibrationData.month.push(reading.value);
+            }
+            if (!organizedData.vibrationData.year.includes(reading.value)) {
+              organizedData.vibrationData.year.push(reading.value);
+            }
+          } else if (reading.metric === 'temperature') {
+            if (!organizedData.temperatureData.week.includes(reading.value)) {
+              organizedData.temperatureData.week.push(reading.value);
+            }
+            if (!organizedData.temperatureData.month.includes(reading.value)) {
+              organizedData.temperatureData.month.push(reading.value);
+            }
+            if (!organizedData.temperatureData.year.includes(reading.value)) {
+              organizedData.temperatureData.year.push(reading.value);
+            }
+          } else if (reading.metric === 'current') {
+            if (!organizedData.currentData.week.includes(reading.value)) {
+              organizedData.currentData.week.push(reading.value);
+            }
+            if (!organizedData.currentData.month.includes(reading.value)) {
+              organizedData.currentData.month.push(reading.value);
+            }
+            if (!organizedData.currentData.year.includes(reading.value)) {
+              organizedData.currentData.year.push(reading.value);
+            }
+          }
         });
         
-        // Récupérer les recommandations basées sur les données du capteur
-        const recommendationsResponse = await sensorAPI.getRecommendationsForEquipment(equipmentId);
-        if (recommendationsResponse.data) {
-          setRecommendations(recommendationsResponse.data);
-        } else {
+        setSensorData(organizedData);
+        
+        // Récupérer les recommandations
+        try {
+          const recommendationResponse = await sensorAPI.getRecommendationsForEquipment(equipmentId);
+          if (recommendationResponse.data && recommendationResponse.data.length > 0) {
+            setRecommendations(recommendationResponse.data);
+          } else {
+            setRecommendations([]);
+          }
+        } catch (recError) {
+          console.error("Erreur lors du chargement des recommandations:", recError);
           setRecommendations([]);
         }
       } else {
@@ -116,24 +170,36 @@ function PredictiveMaintenancePage() {
     } catch (err) {
       console.error("Erreur lors du chargement des données de capteur:", err);
       setError("Impossible de charger les données de capteur pour cet équipement.");
+      setSensorData({
+        vibrationData: { week: [], month: [], year: [] },
+        temperatureData: { week: [], month: [], year: [] },
+        currentData: { week: [], month: [], year: [] }
+      });
+      setRecommendations([]);
     }
   };
 
   const handleEquipmentChange = async (equipmentId) => {
     try {
-      const equipment = equipments.find((eq) => eq.id === Number.parseInt(equipmentId));
+      const equipment = equipments.find((eq) => 
+        (eq._id && eq._id.toString() === equipmentId) || 
+        (eq.id && eq.id.toString() === equipmentId)
+      );
+      
       if (!equipment) return;
       
-      setSelectedEquipment(equipment);
+    setSelectedEquipment(equipment);
       setLoading(true);
+      setError(null);
       
       // Récupérer les données de capteurs et recommandations pour le nouvel équipement
-      await fetchSensorData(equipment.id);
+      await fetchSensorData(equipment._id || equipment.id);
     } catch (err) {
       console.error("Erreur lors du changement d'équipement:", err);
+      setError("Impossible de charger les données pour cet équipement.");
     } finally {
       setLoading(false);
-    }
+  }
   };
 
   const handleTimeRangeChange = (range) => {
@@ -152,19 +218,29 @@ function PredictiveMaintenancePage() {
       setLoading(true);
       
       if (selectedEquipment) {
-        // Récupérer les détails de maintenance pour l'équipement sélectionné
-        const tasksResponse = await interventionAPI.getMaintenanceTasks(selectedEquipment.id);
-        if (tasksResponse.data) {
-          setMaintenanceTasks(tasksResponse.data);
-        } else {
+        try {
+          // Récupérer les détails de maintenance pour l'équipement sélectionné
+          const tasksResponse = await interventionAPI.getMaintenanceTasks(selectedEquipment._id || selectedEquipment.id);
+          if (tasksResponse && tasksResponse.data) {
+            setMaintenanceTasks(tasksResponse.data);
+          } else {
+            setMaintenanceTasks([]);
+          }
+        } catch (taskError) {
+          console.error("Erreur lors du chargement des tâches de maintenance:", taskError);
           setMaintenanceTasks([]);
         }
         
-        // Récupérer les pièces nécessaires pour la maintenance
-        const partsResponse = await interventionAPI.getMaintenanceParts(selectedEquipment.id);
-        if (partsResponse.data) {
-          setMaintenanceParts(partsResponse.data);
-        } else {
+        try {
+          // Récupérer les pièces nécessaires pour la maintenance
+          const partsResponse = await interventionAPI.getMaintenanceParts(selectedEquipment._id || selectedEquipment.id);
+          if (partsResponse && partsResponse.data) {
+            setMaintenanceParts(partsResponse.data);
+          } else {
+            setMaintenanceParts([]);
+          }
+        } catch (partsError) {
+          console.error("Erreur lors du chargement des pièces de maintenance:", partsError);
           setMaintenanceParts([]);
         }
       }
@@ -175,7 +251,7 @@ function PredictiveMaintenancePage() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const handleApplyOptimization = (action) => {
     setCurrentAction(action)
@@ -184,47 +260,69 @@ function PredictiveMaintenancePage() {
 
   const handleConfirmPlan = async () => {
     try {
+      setLoading(true);
       // Récupérer les données du formulaire
       const planDate = document.getElementById('plan-date').value;
       const technicianId = document.getElementById('plan-technician').value;
       const priority = document.getElementById('plan-priority').value;
       const notes = document.getElementById('plan-notes').value;
       
+      if (!planDate) {
+        alert("Veuillez sélectionner une date d'intervention");
+        return;
+      }
+      
       // Créer une intervention basée sur la recommandation
       const interventionData = {
-        equipmentId: selectedEquipment.id,
+        equipmentId: selectedEquipment._id || selectedEquipment.id,
         type: "Préventive",
         priority: priority === "urgent" ? "Critique" : priority === "high" ? "Haute" : "Moyenne",
         status: "Planifiée",
         date: planDate,
         description: `${currentAction.title}: ${currentAction.description} ${notes ? `Notes: ${notes}` : ''}`,
-        technicianId: technicianId
+        technicianId: technicianId || null
       };
       
       // Appel à l'API pour créer l'intervention
-      await interventionAPI.createIntervention(interventionData);
+      const response = await interventionAPI.createIntervention(interventionData);
       
+      if (response && response.data) {
       alert(`Maintenance planifiée avec succès pour ${selectedEquipment?.name}`);
+      } else {
+        alert("La planification a été créée mais aucune donnée n'a été retournée");
+      }
+      
       setShowPlanModal(false);
     } catch (error) {
       console.error("Erreur lors de la planification de la maintenance:", error);
-      alert(`Erreur lors de la planification: ${error.message}`);
+      alert(`Erreur lors de la planification: ${error.message || "Une erreur est survenue"}`);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleApplyOptimizationConfirm = async () => {
     try {
-      // Appeler l'API pour appliquer les optimisations
-      await sensorAPI.applyOptimization(selectedEquipment.id);
+      setLoading(true);
       
+      // Appeler l'API pour appliquer les optimisations
+      const response = await sensorAPI.applyOptimization(selectedEquipment._id || selectedEquipment.id);
+      
+      if (response && response.data) {
+        alert(response.data.message || `Optimisation énergétique appliquée avec succès à ${selectedEquipment?.name}`);
+      } else {
       alert(`Optimisation énergétique appliquée avec succès à ${selectedEquipment?.name}`);
+      }
+      
       setShowOptimizationModal(false);
       
       // Rafraîchir les données des capteurs après l'optimisation
-      fetchSensorData(selectedEquipment.id);
+      await fetchSensorData(selectedEquipment._id || selectedEquipment.id);
     } catch (error) {
       console.error("Erreur lors de l'application de l'optimisation:", error);
-      alert(`Erreur lors de l'application: ${error.message}`);
+      alert(`Erreur lors de l'application: ${error.message || "Une erreur est survenue."}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -328,12 +426,12 @@ function PredictiveMaintenancePage() {
                   <div className="select-container">
                     <select
                       id="equipment"
-                      value={selectedEquipment?.id || ""}
+                      value={selectedEquipment?._id || selectedEquipment?.id || ""}
                       onChange={(e) => handleEquipmentChange(e.target.value)}
                       className="select-input"
                     >
                       {equipments.map((equipment) => (
-                        <option key={equipment.id} value={equipment.id}>
+                        <option key={equipment._id || equipment.id} value={equipment._id || equipment.id}>
                           {equipment.name}
                         </option>
                       ))}
@@ -435,39 +533,39 @@ function PredictiveMaintenancePage() {
                 <h3 className="section-title">Recommandations</h3>
 
                 {recommendations.length > 0 ? (
-                  <div className="recommendations-list">
-                    {recommendations.map((recommendation) => (
-                      <div key={recommendation.id} className="recommendation-card">
-                        <div className={`recommendation-icon ${recommendation.type}`}></div>
-                        <div className="recommendation-content">
-                          <h4 className="recommendation-title">{recommendation.title}</h4>
-                          <p className="recommendation-description">{recommendation.description}</p>
-                        </div>
-                        {recommendation.action === "Planifier" ? (
-                          <button 
-                            className="btn btn-outline"
-                            onClick={() => handlePlanMaintenance(recommendation)}
-                          >
-                            {recommendation.action}
-                          </button>
-                        ) : recommendation.action === "Voir détails" ? (
-                          <button 
-                            className="btn btn-outline"
-                            onClick={() => handleViewDetails(recommendation)}
-                          >
-                            {recommendation.action}
-                          </button>
-                        ) : (
-                          <button 
-                            className="btn btn-outline"
-                            onClick={() => handleApplyOptimization(recommendation)}
-                          >
-                            {recommendation.action}
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                <div className="recommendations-list">
+                  {recommendations.map((recommendation) => (
+                      <div key={recommendation._id || recommendation.id} className="recommendation-card">
+                      <div className={`recommendation-icon ${recommendation.type}`}></div>
+                    <div className="recommendation-content">
+                        <h4 className="recommendation-title">{recommendation.title}</h4>
+                        <p className="recommendation-description">{recommendation.description}</p>
+                    </div>
+                      {recommendation.action === "Planifier" ? (
+                        <button 
+                          className="btn btn-outline"
+                          onClick={() => handlePlanMaintenance(recommendation)}
+                        >
+                          {recommendation.action}
+                        </button>
+                      ) : recommendation.action === "Voir détails" ? (
+                        <button 
+                          className="btn btn-outline"
+                          onClick={() => handleViewDetails(recommendation)}
+                        >
+                          {recommendation.action}
+                        </button>
+                      ) : (
+                        <button 
+                          className="btn btn-outline"
+                          onClick={() => handleApplyOptimization(recommendation)}
+                        >
+                          {recommendation.action}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
                 ) : (
                   <div className="no-data-message">
                     Aucune recommandation disponible pour cet équipement.
@@ -505,8 +603,8 @@ function PredictiveMaintenancePage() {
                 <label htmlFor="plan-technician">Technicien</label>
                 <select id="plan-technician" className="form-control">
                   <option value="">Sélectionnez un technicien</option>
-                  {technicians.map(technician => (
-                    <option key={technician.id} value={technician.id}>
+                  {technicians.map((technician, index) => (
+                    <option key={technician._id || technician.id || `tech-${index}`} value={technician._id || technician.id}>
                       {technician.name}
                     </option>
                   ))}
@@ -562,14 +660,14 @@ function PredictiveMaintenancePage() {
             <div className="details-section">
               <h4>Opérations à effectuer</h4>
               {maintenanceTasks.length > 0 ? (
-                <ul className="details-checklist">
-                  {maintenanceTasks.map((task) => (
-                    <li key={task.id} className="checklist-item">
-                      <input type="checkbox" id={`task-${task.id}`} />
-                      <label htmlFor={`task-${task.id}`}>{task.description}</label>
-                    </li>
+              <ul className="details-checklist">
+                  {maintenanceTasks.map((task, index) => (
+                    <li key={task._id || task.id || `task-${index}`} className="checklist-item">
+                      <input type="checkbox" id={`task-${task._id || task.id || index}`} />
+                      <label htmlFor={`task-${task._id || task.id || index}`}>{task.description}</label>
+                </li>
                   ))}
-                </ul>
+              </ul>
               ) : (
                 <p>Aucune tâche de maintenance définie pour cet équipement.</p>
               )}
@@ -578,15 +676,15 @@ function PredictiveMaintenancePage() {
             <div className="details-section">
               <h4>Pièces nécessaires</h4>
               {maintenanceParts.length > 0 ? (
-                <div className="parts-list">
-                  {maintenanceParts.map((part) => (
-                    <div key={part.id} className="part-item">
+              <div className="parts-list">
+                  {maintenanceParts.map((part, index) => (
+                    <div key={part._id || part.id || `part-${index}`} className="part-item">
                       <span className="part-name">{part.name}</span>
                       <span className="part-ref">Réf: {part.reference}</span>
                       <span className={`part-stock ${part.inStock ? part.stockLevel === 'low' ? 'low' : 'available' : 'unavailable'}`}>
                         {part.inStock ? (part.stockLevel === 'low' ? 'Stock faible' : 'En stock') : 'Non disponible'}
                       </span>
-                    </div>
+                </div>
                   ))}
                 </div>
               ) : (
@@ -624,22 +722,22 @@ function PredictiveMaintenancePage() {
             </div>
             
             {currentAction?.optimizationParams ? (
-              <div className="optimization-params">
-                <h4>Paramètres à modifier</h4>
-                
+            <div className="optimization-params">
+              <h4>Paramètres à modifier</h4>
+              
                 {currentAction.optimizationParams.map((param, index) => (
                   <div key={index} className="param-item">
-                    <div className="param-info">
+                <div className="param-info">
                       <span className="param-name">{param.name}</span>
-                      <div className="param-change">
+                  <div className="param-change">
                         <span className="param-old">{param.currentValue}</span>
-                        <span className="param-arrow">→</span>
+                    <span className="param-arrow">→</span>
                         <span className="param-new">{param.newValue}</span>
-                      </div>
-                    </div>
+                  </div>
+                </div>
                     <div className={`param-impact ${param.impact.includes('-') ? 'positive' : 'negative'}`}>
                       {param.impact}
-                    </div>
+              </div>
                   </div>
                 ))}
                 

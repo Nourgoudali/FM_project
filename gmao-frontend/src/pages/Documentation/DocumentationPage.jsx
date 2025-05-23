@@ -328,7 +328,7 @@ const DocumentationPage = () => {
                 <select value={filterCategory} onChange={handleCategoryChange} className="select-input">
                   <option value="all">Toutes les catégories</option>
                   {categories.map((category) => (
-                    <option key={category} value={category}>
+                    <option key={`cat-${category.toLowerCase().replace(/\s+/g, '-')}`} value={category}>
                       {category}
                     </option>
                   ))}
@@ -354,7 +354,7 @@ const DocumentationPage = () => {
                 <div className="no-results">Aucun document trouvé</div>
               ) : (
                 filteredDocuments.map((document) => (
-                  <div key={document.id} className="document-card">
+                  <div key={document._id || document.id || `doc-${document.title.toLowerCase().replace(/\s+/g, '-')}`} className="document-card">
                     <div className="document-header">
                       <div className="document-icon">
                         <span className={`file-icon file-${document.fileType.toLowerCase()}`}></span>
@@ -367,10 +367,18 @@ const DocumentationPage = () => {
                         >
                           <span className="icon-download"></span>
                         </button>
-                        {!document.qrCode && (
+                        {document.qrCode ? (
                           <button
                             className="action-btn qr-btn"
-                            title="Générer QR Code"
+                            title="Voir le QR Code"
+                            onClick={() => handleShowQRCode(document)}
+                          >
+                            <span className="icon-qrcode"></span>
+                          </button>
+                        ) : (
+                          <button
+                            className="action-btn generate-qr-btn"
+                            title="Générer un QR Code"
                             onClick={() => handleGenerateQRCode(document.id)}
                           >
                             <span className="icon-qrcode"></span>
@@ -483,7 +491,7 @@ const DocumentationPage = () => {
                     className="form-control"
                   >
                     {categories.map((category) => (
-                      <option key={category} value={category}>
+                      <option key={`cat-${category.toLowerCase().replace(/\s+/g, '-')}`} value={category}>
                         {category}
                       </option>
                     ))}
@@ -503,7 +511,7 @@ const DocumentationPage = () => {
                   >
                     <option value="">Aucun</option>
                     {equipments.map((equipment) => (
-                      <option key={equipment.id} value={equipment.name}>
+                      <option key={`equip-${equipment._id || equipment.id}`} value={equipment.name}>
                         {equipment.name}
                       </option>
                     ))}

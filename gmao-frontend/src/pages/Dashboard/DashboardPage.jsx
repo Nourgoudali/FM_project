@@ -145,7 +145,7 @@ const DashboardPage = () => {
           ) : (
             <div className="stats-grid">
               {stats.map((stat, index) => (
-                <div key={index} className={`stat-card stat-${stat.color}`}>
+                <div key={`stat-${stat.title || `stat-${index}`}`.toLowerCase().replace(/\s+/g, '-')} className={`stat-card stat-${stat.color}`}>
                   <div className="stat-icon"></div>
                   <div className="stat-info">
                     <h3 className="stat-title">{stat.title}</h3>
@@ -196,7 +196,7 @@ const DashboardPage = () => {
                   </thead>
                   <tbody>
                     {recentInterventions.map((intervention) => (
-                      <tr key={intervention.id}>
+                      <tr key={intervention._id || intervention.id || `intervention-${intervention.reference}`.toLowerCase().replace(/\s+/g, '-')}>
                         <td>{intervention.reference || intervention.id}</td>
                         <td>{intervention.equipment}</td>
                         <td>

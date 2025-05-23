@@ -286,60 +286,69 @@ const EquipmentManagementPage = () => {
                 <div className="emp-no-results">Aucun équipement trouvé</div>
               ) : (
                 filteredEquipments.map((equipment) => (
-                  <div key={equipment.id} className="emp-equipment-card">
-                    <div className="emp-equipment-card-header">
-                      <div>
-                        <h3 className="emp-equipment-name">{equipment.name}</h3>
-                        <p className="emp-equipment-reference">{equipment.reference}</p>
+                  <div key={equipment._id || equipment.id || `equipment-${equipment.reference}`} className="emp-equipment-card">
+                    <div className="emp-equipment-header">
+                      <div className="emp-equipment-image">
+                        <img src={equipment.image} alt={equipment.name} />
                       </div>
-                      <span className={`emp-equipment-status ${getStatusColor(equipment.status)}`}>{equipment.status}</span>
+                      <div className="emp-equipment-actions">
+                        <button
+                          className="emp-action-btn emp-history-btn"
+                          onClick={() => handleOpenHistoryModal(equipment)}
+                          title="Historique"
+                        >
+                          <span className="icon-history"></span>
+                        </button>
+                        <button
+                          className="emp-action-btn emp-edit-btn"
+                          onClick={() => handleOpenEditModal(equipment)}
+                          title="Modifier"
+                        >
+                          <span className="icon-edit"></span>
+                        </button>
+                        <button
+                          className="emp-action-btn emp-delete-btn"
+                          onClick={() => handleOpenDeleteModal(equipment)}
+                          title="Supprimer"
+                        >
+                          <span className="icon-delete"></span>
+                        </button>
+                      </div>
                     </div>
-                    <div className="emp-equipment-card-body">
-                      <div className="emp-equipment-image-container">
-                        <img
-                          src={equipment.image || "/placeholder.svg"}
-                          alt={equipment.name}
-                          className="emp-equipment-image"
-                        />
-                      </div>
+
+                    <div className="emp-equipment-content">
+                      <h3 className="emp-equipment-name">{equipment.name}</h3>
+                      <p className="emp-equipment-reference">{equipment.reference}</p>
+                      
                       <div className="emp-equipment-details">
-                        <div className="emp-detail-row">
+                        <div className="emp-detail-item">
                           <span className="emp-detail-label">Catégorie:</span>
                           <span className="emp-detail-value">{equipment.category}</span>
                         </div>
-                        <div className="emp-detail-row">
-                          <span className="emp-detail-label">Localisation:</span>
+                        <div className="emp-detail-item">
+                          <span className="emp-detail-label">Emplacement:</span>
                           <span className="emp-detail-value">{equipment.location}</span>
                         </div>
-                        <div className="emp-detail-row">
+                        <div className="emp-detail-item">
                           <span className="emp-detail-label">Marque:</span>
                           <span className="emp-detail-value">{equipment.brand}</span>
                         </div>
                       </div>
-                    </div>
-                    <div className="emp-equipment-card-footer">
-                      <div className="emp-availability-container">
-                        <div className="emp-availability-header">
-                          <span className="emp-availability-label">Disponibilité</span>
-                          <span className="emp-availability-value">{equipment.availability}%</span>
+
+                      <div className="emp-equipment-status">
+                        <div className="emp-status-badge">
+                          <span className={`emp-status-indicator ${getStatusColor(equipment.status)}`}></span>
+                          <span className="emp-status-text">{equipment.status}</span>
                         </div>
-                        <div className="emp-availability-bar-container">
-                          <div
-                            className={`emp-availability-bar ${getAvailabilityColor(equipment.availability)}`}
-                            style={{ width: `${equipment.availability}%` }}
-                          ></div>
+                        <div className="emp-availability">
+                          <div className="emp-availability-bar">
+                            <div
+                              className={`emp-availability-fill ${getAvailabilityColor(equipment.availability)}`}
+                              style={{ width: `${equipment.availability}%` }}
+                            ></div>
+                          </div>
+                          <span className="emp-availability-text">{equipment.availability}% disponible</span>
                         </div>
-                      </div>
-                      <div className="emp-equipment-actions">
-                        <button className="emp-action-btn emp-history-btn" title="Historique" onClick={() => handleOpenHistoryModal(equipment)}>
-                          <span className="emp-action-icon emp-history-icon"></span>
-                        </button>
-                        <button className="emp-action-btn emp-edit-btn" title="Modifier" onClick={() => handleOpenEditModal(equipment)}>
-                          <span className="emp-action-icon emp-edit-icon"></span>
-                        </button>
-                        <button className="emp-action-btn emp-delete-btn" title="Supprimer" onClick={() => handleOpenDeleteModal(equipment)}>
-                          <span className="emp-action-icon emp-delete-icon"></span>
-                        </button>
                       </div>
                     </div>
                   </div>

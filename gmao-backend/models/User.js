@@ -6,12 +6,15 @@ const userSchema = new mongoose.Schema({
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ['admin', 'team_leader', 'technician'], required: true },
+  role: { type: String, enum: ['admin', 'team_leader', 'technician', 'operator'], required: true },
   department: { type: String, default: 'Non assigné' },
   phone: { type: String, default: '' },
-  status: { type: String, enum: ['Actif', 'Inactif'], default: 'Actif' },
+  status: { type: String, enum: ['Actif', 'Inactif'], default: 'Inactif' },
   lastLogin: { type: Date },
+  lastActivity: { type: Date },
   createdAt: { type: Date, default: Date.now },
+}, {
+  timestamps: true
 });
 
 userSchema.pre('save', async function (next) {

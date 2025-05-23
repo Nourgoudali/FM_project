@@ -290,7 +290,7 @@ function AddInterventionForm({ onClose, onSubmit }) {
               <select id="technician" name="technician" value={formData.technician} onChange={handleChange}>
                 <option value="">Sélectionner un technicien</option>
                 {technicians.map((tech) => (
-                  <option key={tech.id} value={tech.id}>
+                  <option key={`tech-${tech._id || tech.id || tech.name.toLowerCase().replace(/\s+/g, '-')}`} value={tech.id}>
                     {tech.name}
                   </option>
                 ))}
@@ -310,7 +310,7 @@ function AddInterventionForm({ onClose, onSubmit }) {
               <select id="equipment" name="equipment" value={formData.equipment} onChange={handleChange}>
                 <option value="">Sélectionner un équipement</option>
                 {equipments.map((equip) => (
-                  <option key={equip.id} value={equip.id}>
+                  <option key={`equip-${equip._id || equip.id || equip.name.toLowerCase().replace(/\s+/g, '-')}`} value={equip.id}>
                     {equip.name}
                   </option>
                 ))}
@@ -337,8 +337,8 @@ function AddInterventionForm({ onClose, onSubmit }) {
                   <select id="partSelect" onChange={(e) => handleAddPart(e.target.value)} value="">
                     <option value="">Ajouter une pièce</option>
                     {parts.map((part) => (
-                      <option key={part.id} value={part.id}>
-                        {part.reference} - {part.name} (Stock: {part.stock})
+                      <option key={`part-${part._id || part.id || part.reference.toLowerCase().replace(/\s+/g, '-')}`} value={part.id}>
+                        {part.name} ({part.reference}) - Stock: {part.stock}
                       </option>
                     ))}
                   </select>
@@ -358,7 +358,7 @@ function AddInterventionForm({ onClose, onSubmit }) {
                       </thead>
                       <tbody>
                         {selectedParts.map((part) => (
-                          <tr key={part.id}>
+                          <tr key={`selected-part-${part._id || part.id || part.reference.toLowerCase().replace(/\s+/g, '-')}`}>
                             <td>{part.reference}</td>
                             <td>{part.name}</td>
                             <td>
@@ -419,7 +419,20 @@ function AddInterventionForm({ onClose, onSubmit }) {
                   <h4>Fichiers ajoutés</h4>
                   <ul>
                     {formData.documents.map((file, index) => (
-                      <li key={index}>{file.name}</li>
+                      <div key={`doc-${index}-${file.name.toLowerCase().replace(/\s+/g, '-')}`} className="document-item">
+                        <span className="document-name">{file.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newDocs = [...formData.documents]
+                            newDocs.splice(index, 1)
+                            setFormData({ ...formData, documents: newDocs })
+                          }}
+                          className="remove-document"
+                        >
+                          ×
+                        </button>
+                      </div>
                     ))}
                   </ul>
                 </div>
