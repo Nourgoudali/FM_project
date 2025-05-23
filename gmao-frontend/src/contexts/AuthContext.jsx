@@ -1,39 +1,56 @@
 "use client"
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { AuthService } from '../services/auth.service';
+import { userAPI } from '../services/api';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(() => {
-        const storedUser = AuthService.getCurrentUser();
-        console.log('AuthContext useState: Initial user from localStorage', storedUser);
+        const storedUser = getCurrentUser();
+        console.log('AuthContext useState: État initial de l\'utilisateur vérifié');
         return storedUser;
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // Fonctions utilitaires pour l'authentification
+    function getCurrentUser() {
+        const user = localStorage.getItem('user');
+        return user ? JSON.parse(user) : null;
+    }
+
+    function isAuthenticated() {
+        const user = localStorage.getItem('user');
+        if (!user) return false;
+        
+        try {
+            const parsedUser = JSON.parse(user);
+            return !!parsedUser?.token;
+        } catch {
+            return false;
+        }
+    }
+
     useEffect(() => {
-        console.log('AuthContext useEffect: Running initial check');
+        console.log('AuthContext: Vérification initiale de l\'authentification');
 
         const timer = setTimeout(() => {
             try {
-                const currentUser = AuthService.getCurrentUser();
-                const isAuthenticated = AuthService.isAuthenticated();
-                console.log('AuthContext useEffect check delayed:', { currentUser, isAuthenticated });
+                const authenticated = isAuthenticated();
+                console.log('AuthContext: État authentifié =', authenticated);
 
-                if (currentUser && isAuthenticated) {
-                    console.log('AuthContext useEffect: User found and authenticated');
-                    setUser(currentUser);
+                if (authenticated) {
+                    console.log('AuthContext: Utilisateur authentifié');
+                    setUser(getCurrentUser());
                 } else {
-                    console.log('AuthContext useEffect: No user or not authenticated on delayed check');
+                    console.log('AuthContext: Utilisateur non authentifié');
                 }
             } catch (err) {
-                console.error('AuthContext useEffect: Error checking auth state (delayed):', err);
+                console.error('AuthContext: Erreur lors de la vérification de l\'authentification:', err.message);
             } finally {
                 setLoading(false);
-                console.log('AuthContext useEffect: Finished check (delayed), loading set to false');
+                console.log('AuthContext: Vérification terminée, chargement terminé');
             }
         }, 50);
         
@@ -42,21 +59,30 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     useEffect(() => {
-        console.log('AuthContext user state changed:', user, 'loading:', loading);
+        console.log('AuthContext: État utilisateur mis à jour, chargement =', loading);
     }, [user, loading]);
 
     const login = async (email, password) => {
         try {
             setError(null);
             setLoading(true);
-            const response = await AuthService.login(email, password);
-            if (response) {
-                setUser(response);
+            const response = await userAPI.login({ email, password });
+            if (response.data.token) {
+                localStorage.setItem('user', JSON.stringify(response.data));
+                setUser(response.data);
             }
-            return response;
+            return response.data;
         } catch (err) {
-            setError(err.message);
-            throw err;
+            console.error('Erreur de connexion:', err.response?.status, err.response?.data);
+            
+            // Récupérer le message d'erreur du backend ou utiliser un message par défaut
+            const errorMessage = err.response?.data?.message || 'Problème de connexion au serveur. Veuillez réessayer.';
+            setError(errorMessage);
+            
+            // Pour que l'erreur soit plus facilement capturée par le composant LoginPage
+            const error = new Error(errorMessage);
+            error.status = err.response?.status;
+            throw error;
         } finally {
             setLoading(false);
         }
@@ -64,11 +90,12 @@ export const AuthProvider = ({ children }) => {
 
     const logout = () => {
         try {
-            console.log('AuthContext: Calling logout function');
-            AuthService.logout();
+            console.log('AuthContext: Déconnexion en cours');
+            localStorage.removeItem('user');
+            window.location.href = '/';
             setUser(null);
         } catch (err) {
-            console.error('Error during logout:', err);
+            console.error('Erreur pendant la déconnexion:', err.message);
         }
     };
 
@@ -76,10 +103,10 @@ export const AuthProvider = ({ children }) => {
         try {
             setError(null);
             setLoading(true);
-            const response = await AuthService.register(userData);
-            return response;
+            const response = await userAPI.register(userData);
+            return response.data;
         } catch (err) {
-            setError(err.message);
+            setError(err.response?.data?.message || 'Échec de l\'inscription');
             throw err;
         } finally {
             setLoading(false);

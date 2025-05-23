@@ -13,4 +13,20 @@ const interventionSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
+// Hook pour générer automatiquement une référence unique
+interventionSchema.pre('save', async function (next) {
+  if (this.isNew && !this.reference) {
+    try {
+      const count = await mongoose.model('Intervention').countDocuments();
+      const nextNumber = count + 1;
+      this.reference = `INT-${String(nextNumber).padStart(3, '0')}`;
+      next();
+    } catch (err) {
+      next(err);
+    }
+  } else {
+    next();
+  }
+});
+
 module.exports = mongoose.model('Intervention', interventionSchema);

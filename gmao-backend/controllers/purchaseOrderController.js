@@ -28,6 +28,17 @@ const purchaseOrderController = {
     }
   },
 
+  getById: async (req, res) => {
+    const { id } = req.params;
+    try {
+      const purchaseOrder = await PurchaseOrder.findById(id).populate('stock createdBy');
+      if (!purchaseOrder) return res.status(404).json({ message: 'Purchase order not found' });
+      res.json(purchaseOrder);
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  },
+
   update: async (req, res) => {
     const { id } = req.params;
     const updates = req.body;

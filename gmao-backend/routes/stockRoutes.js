@@ -1,14 +1,15 @@
 const express = require('express');
 const stockController = require('../controllers/stockController');
-const { authMiddleware, roleMiddleware } = require('../middleware/authMiddleware');
+const { verifyToken, checkRole } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-router.post('/', authMiddleware, roleMiddleware(['admin']), stockController.create);
-router.get('/', authMiddleware, stockController.getAll);
-router.put('/:id', authMiddleware, roleMiddleware(['admin']), stockController.update);
-router.delete('/:id', authMiddleware, roleMiddleware(['admin']), stockController.delete);
-router.post('/:id/movement', authMiddleware, roleMiddleware(['admin', 'team_leader']), stockController.addMovement);
-router.get('/low', authMiddleware, stockController.getLowStock);
+router.post('/', verifyToken, checkRole('admin'), stockController.create);
+router.get('/', verifyToken, stockController.getAll);
+router.get('/:id', verifyToken, stockController.getById);
+router.put('/:id', verifyToken, checkRole('admin'), stockController.update);
+router.delete('/:id', verifyToken, checkRole('admin'), stockController.delete);
+router.post('/:id/movement', verifyToken, checkRole(['admin', 'team_leader']), stockController.addMovement);
+router.get('/low', verifyToken, stockController.getLowStock);
 
 module.exports = router;

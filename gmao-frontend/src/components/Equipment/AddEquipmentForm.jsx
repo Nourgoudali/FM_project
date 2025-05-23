@@ -1,27 +1,46 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import "./AddEquipmentForm.css"
 
-function AddEquipmentForm({ onClose, onEquipmentAdded }) {
+function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null, isEdit = false }) {
   const [formData, setFormData] = useState({
-    reference: "",
-    name: "",
-    category: "",
-    location: "",
-    brand: "",
-    model: "",
-    serialNumber: "",
-    purchaseDate: "",
-    warrantyEnd: "",
-    status: "En service",
-    description: "",
+    reference: initialData?.reference || "",
+    name: initialData?.name || "",
+    category: initialData?.category || "",
+    location: initialData?.location || "",
+    brand: initialData?.brand || "",
+    model: initialData?.model || "",
+    serialNumber: initialData?.serialNumber || "",
+    purchaseDate: initialData?.purchaseDate || "",
+    warrantyEnd: initialData?.warrantyEnd || "",
+    status: initialData?.status || "En service",
+    description: initialData?.description || "",
   })
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [imageFile, setImageFile] = useState(null)
-  const [imagePreview, setImagePreview] = useState(null)
+  const [imagePreview, setImagePreview] = useState(initialData?.image || null)
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        reference: initialData.reference || "",
+        name: initialData.name || "",
+        category: initialData.category || "",
+        location: initialData.location || "",
+        brand: initialData.brand || "",
+        model: initialData.model || "",
+        serialNumber: initialData.serialNumber || "",
+        purchaseDate: initialData.purchaseDate || "",
+        warrantyEnd: initialData.warrantyEnd || "",
+        status: initialData.status || "En service",
+        description: initialData.description || "",
+      })
+      setImagePreview(initialData.image || null)
+    }
+  }, [initialData])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -62,39 +81,37 @@ function AddEquipmentForm({ onClose, onEquipmentAdded }) {
         data.append("image", imageFile)
       }
 
-      // Dans un environnement réel, vous appelleriez l'API
-      // const response = await equipmentService.create(data)
-
-      // Pour la démo, simulons une réponse réussie
+      // Simuler une API
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      // Notifier le parent que l'équipement a été ajouté
-      onEquipmentAdded({
-        id: Date.now(), // Simuler un ID
+      // Pour édition, garder l'id existant
+      const equipmentToReturn = {
+        ...(isEdit && initialData ? { id: initialData.id } : { id: Date.now() }),
         ...formData,
         image: imagePreview || "/placeholder.svg?height=100&width=100",
-        availability: 100, // Valeur par défaut pour un nouvel équipement
-      })
+        availability: initialData?.availability || 100,
+      }
 
+      onEquipmentAdded(equipmentToReturn)
       onClose()
     } catch (err) {
       console.error("Erreur lors de l'ajout de l'équipement:", err)
-      setError("Une erreur est survenue lors de l'ajout de l'équipement. Veuillez réessayer.")
+      setError("Une erreur est survenue lors de l'enregistrement de l'équipement. Veuillez réessayer.")
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="equipment-form">
-      {error && <div className="form-error">{error}</div>}
+    <form onSubmit={handleSubmit} className="aef-equipment-form">
+      {error && <div className="aef-form-error">{error}</div>}
 
-      <div className="form-section">
-        <h3 className="form-section-title">Informations générales</h3>
+      <div className="aef-form-section">
+        <h3 className="aef-form-section-title">Informations générales</h3>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="reference" className="form-label">
+        <div className="aef-form-row">
+          <div className="aef-form-group">
+            <label htmlFor="reference" className="aef-form-label">
               Référence *
             </label>
             <input
@@ -103,13 +120,13 @@ function AddEquipmentForm({ onClose, onEquipmentAdded }) {
               name="reference"
               value={formData.reference}
               onChange={handleChange}
-              className="form-control"
+              className="aef-form-control"
               required
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="name" className="form-label">
+          <div className="aef-form-group">
+            <label htmlFor="name" className="aef-form-label">
               Nom *
             </label>
             <input
@@ -118,15 +135,15 @@ function AddEquipmentForm({ onClose, onEquipmentAdded }) {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="form-control"
+              className="aef-form-control"
               required
             />
           </div>
         </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="category" className="form-label">
+        <div className="aef-form-row">
+          <div className="aef-form-group">
+            <label htmlFor="category" className="aef-form-label">
               Catégorie *
             </label>
             <select
@@ -134,7 +151,7 @@ function AddEquipmentForm({ onClose, onEquipmentAdded }) {
               name="category"
               value={formData.category}
               onChange={handleChange}
-              className="form-control"
+              className="aef-form-control"
               required
             >
               <option value="">Sélectionner une catégorie</option>
@@ -148,8 +165,8 @@ function AddEquipmentForm({ onClose, onEquipmentAdded }) {
             </select>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="location" className="form-label">
+          <div className="aef-form-group">
+            <label htmlFor="location" className="aef-form-label">
               Localisation *
             </label>
             <select
@@ -157,7 +174,7 @@ function AddEquipmentForm({ onClose, onEquipmentAdded }) {
               name="location"
               value={formData.location}
               onChange={handleChange}
-              className="form-control"
+              className="aef-form-control"
               required
             >
               <option value="">Sélectionner une localisation</option>
@@ -171,12 +188,12 @@ function AddEquipmentForm({ onClose, onEquipmentAdded }) {
         </div>
       </div>
 
-      <div className="form-section">
-        <h3 className="form-section-title">Caractéristiques techniques</h3>
+      <div className="aef-form-section">
+        <h3 className="aef-form-section-title">Caractéristiques techniques</h3>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="brand" className="form-label">
+        <div className="aef-form-row">
+          <div className="aef-form-group">
+            <label htmlFor="brand" className="aef-form-label">
               Marque
             </label>
             <input
@@ -185,12 +202,12 @@ function AddEquipmentForm({ onClose, onEquipmentAdded }) {
               name="brand"
               value={formData.brand}
               onChange={handleChange}
-              className="form-control"
+              className="aef-form-control"
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="model" className="form-label">
+          <div className="aef-form-group">
+            <label htmlFor="model" className="aef-form-label">
               Modèle
             </label>
             <input
@@ -199,14 +216,14 @@ function AddEquipmentForm({ onClose, onEquipmentAdded }) {
               name="model"
               value={formData.model}
               onChange={handleChange}
-              className="form-control"
+              className="aef-form-control"
             />
           </div>
         </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="serialNumber" className="form-label">
+        <div className="aef-form-row">
+          <div className="aef-form-group">
+            <label htmlFor="serialNumber" className="aef-form-label">
               Numéro de série
             </label>
             <input
@@ -215,12 +232,12 @@ function AddEquipmentForm({ onClose, onEquipmentAdded }) {
               name="serialNumber"
               value={formData.serialNumber}
               onChange={handleChange}
-              className="form-control"
+              className="aef-form-control"
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="status" className="form-label">
+          <div className="aef-form-group">
+            <label htmlFor="status" className="aef-form-label">
               État *
             </label>
             <select
@@ -228,7 +245,7 @@ function AddEquipmentForm({ onClose, onEquipmentAdded }) {
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className="form-control"
+              className="aef-form-control"
               required
             >
               <option value="En service">En service</option>
@@ -240,12 +257,12 @@ function AddEquipmentForm({ onClose, onEquipmentAdded }) {
         </div>
       </div>
 
-      <div className="form-section">
-        <h3 className="form-section-title">Informations complémentaires</h3>
+      <div className="aef-form-section">
+        <h3 className="aef-form-section-title">Informations complémentaires</h3>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="purchaseDate" className="form-label">
+        <div className="aef-form-row">
+          <div className="aef-form-group">
+            <label htmlFor="purchaseDate" className="aef-form-label">
               Date d'achat
             </label>
             <input
@@ -254,12 +271,12 @@ function AddEquipmentForm({ onClose, onEquipmentAdded }) {
               name="purchaseDate"
               value={formData.purchaseDate}
               onChange={handleChange}
-              className="form-control"
+              className="aef-form-control"
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="warrantyEnd" className="form-label">
+          <div className="aef-form-group">
+            <label htmlFor="warrantyEnd" className="aef-form-label">
               Fin de garantie
             </label>
             <input
@@ -268,13 +285,13 @@ function AddEquipmentForm({ onClose, onEquipmentAdded }) {
               name="warrantyEnd"
               value={formData.warrantyEnd}
               onChange={handleChange}
-              className="form-control"
+              className="aef-form-control"
             />
           </div>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="description" className="form-label">
+        <div className="aef-form-group">
+          <label htmlFor="description" className="aef-form-label">
             Description
           </label>
           <textarea
@@ -282,30 +299,30 @@ function AddEquipmentForm({ onClose, onEquipmentAdded }) {
             name="description"
             value={formData.description}
             onChange={handleChange}
-            className="form-control"
+            className="aef-form-control"
             rows="3"
           ></textarea>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="image" className="form-label">
+        <div className="aef-form-group">
+          <label htmlFor="image" className="aef-form-label">
             Image de l'équipement
           </label>
-          <div className="image-upload-container">
+          <div className="aef-image-upload-container">
             <input
               type="file"
               id="image"
               name="image"
               onChange={handleImageChange}
               accept="image/*"
-              className="image-input"
+              className="aef-image-input"
             />
-            <div className="image-preview-container">
+            <div className="aef-image-preview-container">
               {imagePreview ? (
-                <img src={imagePreview || "/placeholder.svg"} alt="Aperçu" className="image-preview" />
+                <img src={imagePreview || "/placeholder.svg"} alt="Aperçu" className="aef-image-preview" />
               ) : (
-                <div className="image-placeholder">
-                  <span className="image-placeholder-text">Ajouter une image</span>
+                <div className="aef-image-placeholder">
+                  <span className="aef-image-placeholder-text">Ajouter une image</span>
                 </div>
               )}
             </div>
@@ -313,11 +330,11 @@ function AddEquipmentForm({ onClose, onEquipmentAdded }) {
         </div>
       </div>
 
-      <div className="form-actions">
-        <button type="button" className="btn btn-outline" onClick={onClose}>
+      <div className="aef-form-actions">
+        <button type="button" className="aef-btn aef-btn-outline" onClick={onClose}>
           Annuler
         </button>
-        <button type="submit" className="btn btn-primary" disabled={loading}>
+        <button type="submit" className="aef-btn aef-btn-primary" disabled={loading}>
           {loading ? "Enregistrement..." : "Ajouter l'équipement"}
         </button>
       </div>

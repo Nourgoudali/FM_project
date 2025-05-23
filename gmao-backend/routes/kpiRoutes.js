@@ -1,10 +1,13 @@
 const express = require('express');
 const kpiController = require('../controllers/kpiController');
-const { authMiddleware, roleMiddleware } = require('../middleware/authMiddleware');
+const { verifyToken, checkRole } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-router.post('/generate', authMiddleware, roleMiddleware(['admin', 'team_leader']), kpiController.generate);
-router.get('/latest', authMiddleware, kpiController.getLatest);
+router.post('/generate', verifyToken, checkRole(['admin', 'team_leader']), kpiController.generate);
+router.get('/latest', verifyToken, kpiController.getLatest);
+router.get('/equipment/:id', verifyToken, kpiController.getEquipmentKPI);
+router.get('/reliability', verifyToken, kpiController.getReliabilityKPI);
+router.get('/maintenance', verifyToken, kpiController.getMaintenanceKPI);
 
 module.exports = router;

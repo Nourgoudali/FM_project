@@ -21,8 +21,8 @@
   .settings-layout {
     display: flex;
     gap: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
+    max-width: 100%;
+    margin: 0;
   }
   
   .settings-sidebar {
@@ -32,6 +32,7 @@
   
   .settings-panel {
     flex: 1;
+    min-width: 0;
   }
   
   .settings-nav {
@@ -98,6 +99,8 @@
     box-shadow: var(--shadow);
     padding: 2rem;
     margin-bottom: 2rem;
+    width: 100%;
+    box-sizing: border-box;
   }
   
   .settings-section-title {

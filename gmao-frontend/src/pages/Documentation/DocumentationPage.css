@@ -45,6 +45,7 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     font-size: 0.875rem;
+    background-color: white;
   }
   
   .search-input:focus {
@@ -508,5 +509,98 @@
     justify-content: flex-end;
     gap: 1rem;
     margin-top: 1.5rem;
+  }
+  
+  /* Styles pour le modal QR Code */
+  .qr-code-modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .qr-code-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .qr-code-image {
+    background-color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .qr-code-placeholder {
+    width: 200px;
+    height: 200px;
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .qr-squares {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 5px;
+    width: 120px;
+    height: 120px;
+  }
+  
+  .qr-square {
+    background-color: #000;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .qr-code-info h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+  
+  .qr-code-info p {
+    margin: 0;
+    color: var(--text-light);
+    font-size: 0.875rem;
+  }
+  
+  .qr-code-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  
+  /* Styles pour le modal de confirmation de suppression */
+  .delete-confirmation {
+    text-align: center;
+    padding: 1rem;
+  }
+  
+  .delete-confirmation p {
+    margin-bottom: 1rem;
+  }
+  
+  .modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  
+  .btn-danger {
+    background-color: #ef4444;
+    color: white;
+    border: none;
+  }
+  
+  .btn-danger:hover {
+    background-color: #dc2626;
   }
   

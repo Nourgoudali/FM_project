@@ -21,6 +21,17 @@ const planningController = {
     }
   },
 
+  getById: async (req, res) => {
+    const { id } = req.params;
+    try {
+      const planning = await Planning.findById(id).populate('intervention');
+      if (!planning) return res.status(404).json({ message: 'Planning not found' });
+      res.json(planning);
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  },
+
   update: async (req, res) => {
     const { id } = req.params;
     const updates = req.body;

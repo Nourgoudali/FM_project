@@ -1,12 +1,13 @@
 const express = require('express');
 const planningController = require('../controllers/planningController');
-const { authMiddleware, roleMiddleware } = require('../middleware/authMiddleware');
+const { verifyToken, checkRole } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-router.post('/', authMiddleware, roleMiddleware(['admin', 'team_leader']), planningController.create);
-router.get('/', authMiddleware, planningController.getAll);
-router.put('/:id', authMiddleware, roleMiddleware(['admin', 'team_leader']), planningController.update);
-router.delete('/:id', authMiddleware, roleMiddleware(['admin']), planningController.delete);
+router.post('/', verifyToken, checkRole('admin'), planningController.create);
+router.get('/', verifyToken, planningController.getAll);
+router.get('/:id', verifyToken, planningController.getById);
+router.put('/:id', verifyToken, checkRole('admin'), planningController.update);
+router.delete('/:id', verifyToken, checkRole('admin'), planningController.delete);
 
 module.exports = router;

@@ -1,394 +1,239 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import "./AddStockItemForm.css"
 
-function AddStockItemForm({ onClose, onSubmit }) {
+function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
   const [formData, setFormData] = useState({
-    reference: "",
     name: "",
+    reference: "",
     category: "",
-    manufacturer: "",
-    model: "",
-    description: "",
-    location: "",
-    quantity: 1,
+    quantity: 0,
     minQuantity: 0,
-    unitPrice: "",
+    location: "",
+    unitPrice: 0,
     supplier: "",
-    orderReference: "",
-    receivedDate: "",
-    expiryDate: "",
-    image: null,
-    attachments: [],
-    notes: "",
+    lastRestockDate: "",
+    status: "En stock",
   })
 
-  const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
-  const categories = [
-    "Pièces mécaniques",
-    "Pièces électriques",
-    "Pièces hydrauliques",
-    "Pièces pneumatiques",
-    "Outils",
-    "Consommables",
-    "Équipements de sécurité",
-    "Autres",
-  ]
-
-  const locations = [
-    "Magasin principal",
-    "Atelier A",
-    "Atelier B",
-    "Entrepôt C",
-    "Armoire 1",
-    "Armoire 2",
-    "Étagère E1",
-    "Étagère E2",
-  ]
-
-  const suppliers = ["Fournisseur A", "Fournisseur B", "Fournisseur C", "Fournisseur D"]
+  // Pré-remplir le formulaire si on est en mode édition
+  useEffect(() => {
+    if (item && isEdit) {
+      setFormData({
+        name: item.name || "",
+        reference: item.reference || "",
+        category: item.category || "",
+        quantity: item.quantity || 0,
+        minQuantity: item.minQuantity || 0,
+        location: item.location || "",
+        unitPrice: item.unitPrice || 0,
+        supplier: item.supplier || "",
+        lastRestockDate: item.lastRestockDate || "",
+        status: item.status || "En stock",
+      })
+    }
+  }, [item, isEdit])
 
   const handleChange = (e) => {
     const { name, value, type } = e.target
-
-    if (type === "number") {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value === "" ? "" : Number(value),
-      }))
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }))
-    }
+    setFormData({
+      ...formData,
+      [name]: type === "number" ? Number(value) : value,
+    })
   }
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      setFormData((prev) => ({
-        ...prev,
-        image: file,
-      }))
-    }
-  }
-
-  const handleAttachmentsChange = (e) => {
-    const files = Array.from(e.target.files)
-    setFormData((prev) => ({
-      ...prev,
-      attachments: [...prev.attachments, ...files],
-    }))
-  }
-
-  const removeAttachment = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      attachments: prev.attachments.filter((_, i) => i !== index),
-    }))
-  }
-
-  const validateForm = () => {
-    const formErrors = {}
-    let isValid = true
-
-    if (!formData.reference.trim()) {
-      formErrors.reference = "La référence est requise"
-      isValid = false
-    }
-
-    if (!formData.name.trim()) {
-      formErrors.name = "Le nom est requis"
-      isValid = false
-    }
-
-    if (!formData.category) {
-      formErrors.category = "La catégorie est requise"
-      isValid = false
-    }
-
-    if (formData.quantity < 0) {
-      formErrors.quantity = "La quantité ne peut pas être négative"
-      isValid = false
-    }
-
-    if (formData.unitPrice && formData.unitPrice < 0) {
-      formErrors.unitPrice = "Le prix unitaire ne peut pas être négatif"
-      isValid = false
-    }
-
-    setErrors(formErrors)
-    return isValid
-  }
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    setLoading(true)
+    setError(null)
 
-    if (validateForm()) {
-      // Dans un environnement réel, envoyer les données à l'API
-      console.log("Données de la pièce:", formData)
-
-      // Appeler la fonction de callback
-      if (onSubmit) {
-        onSubmit(formData)
+    try {
+      // Simuler un délai réseau
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // Préparer l'objet à retourner, avec l'ID si on est en mode édition
+      const itemToSubmit = {
+        ...(isEdit && item ? { id: item.id } : {}),
+        ...formData,
       }
-
-      // Fermer le formulaire
-      if (onClose) {
-        onClose()
-      }
+      
+      onSubmit(itemToSubmit)
+    } catch (err) {
+      setError("Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.")
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
-    <div className="add-stock-item-form">
-      <div className="form-header">
-        <h2>Nouvelle pièce de stock</h2>
+    <form onSubmit={handleSubmit} className="stock-form">
+      {error && <div className="form-error">{error}</div>}
+
+      <div className="form-section">
+        <h3 className="form-section-title">Informations générales</h3>
+        
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="reference">Référence *</label>
+            <input
+              type="text"
+              id="reference"
+              name="reference"
+              value={formData.reference}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="name">Nom *</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+            />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="category">Catégorie *</label>
+            <select
+              id="category"
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              required
+            >
+              <option value="">Sélectionnez une catégorie</option>
+              <option value="Mécanique">Mécanique</option>
+              <option value="Électrique">Électrique</option>
+              <option value="Fluides">Fluides</option>
+              <option value="Transmission">Transmission</option>
+              <option value="Filtration">Filtration</option>
+              <option value="Autre">Autre</option>
+            </select>
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="supplier">Fournisseur</label>
+            <input
+              type="text"
+              id="supplier"
+              name="supplier"
+              value={formData.supplier}
+              onChange={handleChange}
+            />
+          </div>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit}>
-        <div className="form-content">
-          <div className="form-column">
-            <h3>Informations générales</h3>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="reference">Référence*</label>
-                <input
-                  type="text"
-                  id="reference"
-                  name="reference"
-                  value={formData.reference}
-                  onChange={handleChange}
-                  placeholder="Ex: P001"
-                />
-                {errors.reference && <span className="error-message">{errors.reference}</span>}
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="name">Nom*</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Ex: Filtre hydraulique"
-                />
-                {errors.name && <span className="error-message">{errors.name}</span>}
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="category">Catégorie*</label>
-              <select id="category" name="category" value={formData.category} onChange={handleChange}>
-                <option value="">Sélectionner une catégorie</option>
-                {categories.map((category, index) => (
-                  <option key={index} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-              {errors.category && <span className="error-message">{errors.category}</span>}
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="manufacturer">Fabricant</label>
-                <input
-                  type="text"
-                  id="manufacturer"
-                  name="manufacturer"
-                  value={formData.manufacturer}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="model">Modèle</label>
-                <input type="text" id="model" name="model" value={formData.model} onChange={handleChange} />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="description">Description</label>
-              <textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows="3"
-                placeholder="Description détaillée de la pièce..."
-              ></textarea>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="location">Emplacement</label>
-              <select id="location" name="location" value={formData.location} onChange={handleChange}>
-                <option value="">Sélectionner un emplacement</option>
-                {locations.map((location, index) => (
-                  <option key={index} value={location}>
-                    {location}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="form-column">
-            <h3>Stock et approvisionnement</h3>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="quantity">Quantité*</label>
-                <input
-                  type="number"
-                  id="quantity"
-                  name="quantity"
-                  value={formData.quantity}
-                  onChange={handleChange}
-                  min="0"
-                />
-                {errors.quantity && <span className="error-message">{errors.quantity}</span>}
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="minQuantity">Quantité minimale</label>
-                <input
-                  type="number"
-                  id="minQuantity"
-                  name="minQuantity"
-                  value={formData.minQuantity}
-                  onChange={handleChange}
-                  min="0"
-                />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="unitPrice">Prix unitaire (€)</label>
-              <input
-                type="number"
-                id="unitPrice"
-                name="unitPrice"
-                value={formData.unitPrice}
-                onChange={handleChange}
-                min="0"
-                step="0.01"
-              />
-              {errors.unitPrice && <span className="error-message">{errors.unitPrice}</span>}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="supplier">Fournisseur</label>
-              <select id="supplier" name="supplier" value={formData.supplier} onChange={handleChange}>
-                <option value="">Sélectionner un fournisseur</option>
-                {suppliers.map((supplier, index) => (
-                  <option key={index} value={supplier}>
-                    {supplier}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="orderReference">Référence de commande</label>
-              <input
-                type="text"
-                id="orderReference"
-                name="orderReference"
-                value={formData.orderReference}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="receivedDate">Date de réception</label>
-                <input
-                  type="date"
-                  id="receivedDate"
-                  name="receivedDate"
-                  value={formData.receivedDate}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="expiryDate">Date d'expiration</label>
-                <input
-                  type="date"
-                  id="expiryDate"
-                  name="expiryDate"
-                  value={formData.expiryDate}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="form-section">
-          <h3>Médias et documents</h3>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="image">Image de la pièce</label>
-              <input type="file" id="image" accept="image/*" onChange={handleImageChange} />
-              {formData.image && (
-                <div className="image-preview">
-                  <img src={URL.createObjectURL(formData.image) || "/placeholder.svg"} alt="Aperçu de la pièce" />
-                </div>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="attachments">Documents annexes</label>
-              <input type="file" id="attachments" multiple onChange={handleAttachmentsChange} />
-              {formData.attachments.length > 0 && (
-                <div className="attachments-list">
-                  <h4>Fichiers ajoutés</h4>
-                  <ul>
-                    {formData.attachments.map((file, index) => (
-                      <li key={index}>
-                        {file.name}
-                        <button type="button" className="remove-file-btn" onClick={() => removeAttachment(index)}>
-                          ×
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-
+      <div className="form-section">
+        <h3 className="form-section-title">Information de stock</h3>
+        
+        <div className="form-row">
           <div className="form-group">
-            <label htmlFor="notes">Notes</label>
-            <textarea
-              id="notes"
-              name="notes"
-              value={formData.notes}
+            <label htmlFor="quantity">Quantité *</label>
+            <input
+              type="number"
+              id="quantity"
+              name="quantity"
+              value={formData.quantity}
               onChange={handleChange}
-              rows="3"
-              placeholder="Notes ou commentaires additionnels..."
-            ></textarea>
+              min="0"
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="minQuantity">Quantité minimale</label>
+            <input
+              type="number"
+              id="minQuantity"
+              name="minQuantity"
+              value={formData.minQuantity}
+              onChange={handleChange}
+              min="0"
+            />
           </div>
         </div>
 
-        <div className="form-actions">
-          <button type="button" className="cancel-btn" onClick={onClose}>
-            Annuler
-          </button>
-          <button type="submit" className="submit-btn">
-            Ajouter la pièce
-          </button>
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="location">Emplacement *</label>
+            <input
+              type="text"
+              id="location"
+              name="location"
+              value={formData.location}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="status">Statut</label>
+            <select
+              id="status"
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+            >
+              <option value="En stock">En stock</option>
+              <option value="Stock faible">Stock faible</option>
+              <option value="Rupture de stock">Rupture de stock</option>
+            </select>
+          </div>
         </div>
-      </form>
-    </div>
+      </div>
+
+      <div className="form-section">
+        <h3 className="form-section-title">Prix et dates</h3>
+        
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="unitPrice">Prix unitaire (€) *</label>
+            <input
+              type="number"
+              id="unitPrice"
+              name="unitPrice"
+              value={formData.unitPrice}
+              onChange={handleChange}
+              min="0"
+              step="0.01"
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="lastRestockDate">Dernière date de réapprovisionnement</label>
+            <input
+              type="date"
+              id="lastRestockDate"
+              name="lastRestockDate"
+              value={formData.lastRestockDate}
+              onChange={handleChange}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="form-actions">
+        <button type="button" className="btn btn-outline" onClick={onCancel}>
+          Annuler
+        </button>
+        <button type="submit" className="btn btn-primary" disabled={loading}>
+          {loading ? "Enregistrement..." : isEdit ? "Enregistrer les modifications" : "Ajouter l'article"}
+        </button>
+      </div>
+    </form>
   )
 }
 

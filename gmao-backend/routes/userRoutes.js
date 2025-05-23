@@ -1,15 +1,25 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-const { authMiddleware, roleMiddleware } = require('../middleware/authMiddleware');
+const { verifyToken, checkRole } = require('../middleware/authMiddleware');
 
 // Routes publiques
 router.post('/login', userController.login);
 router.post('/register', userController.register);
 
 // Routes protégées
-router.get('/profile', authMiddleware, (req, res) => {
+router.get('/profile', verifyToken, (req, res) => {
     res.json({ user: req.user });
 });
+
+// Route pour changer son mot de passe (accessible à tous les utilisateurs authentifiés)
+router.post('/change-password', verifyToken, userController.changePassword);
+
+// Routes d'administration des utilisateurs (protégées et réservées aux admins)
+router.get('/', verifyToken, checkRole('admin'), userController.getAllUsers);
+router.get('/:id', verifyToken, checkRole('admin'), userController.getUserById);
+router.put('/:id', verifyToken, checkRole('admin'), userController.updateUser);
+router.delete('/:id', verifyToken, checkRole('admin'), userController.deleteUser);
+router.patch('/:id/status', verifyToken, checkRole('admin'), userController.changeUserStatus);
 
 module.exports = router;

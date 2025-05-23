@@ -6,69 +6,74 @@ const User = require('../models/User');
 // Charger les variables d'environnement
 dotenv.config();
 
-// Connexion à MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => console.log('MongoDB connected for seeding'))
-  .catch(err => console.error('MongoDB connection error:', err));
-
 // Données des utilisateurs de test
 const users = [
   {
-    username: 'admin',
+    firstName: 'admin',
+    lastName: 'admin',
     email: 'admin@gmao.com',
     password: 'Admin123!',
-    role: 'admin'
+    role: 'admin',
+    department: 'Administration',
+    phone: '01 23 45 67 89',
   },
   {
-    username: 'teamleader',
+    firstName: 'teamleader',
+    lastName: 'teamleader',
     email: 'team@gmao.com',
     password: 'Team123!',
-    role: 'team_leader'
+    role: 'team_leader',
+    department: 'Maintenance',
+    phone: '01 23 45 67 90',
   },
   {
-    username: 'technician',
+    firstName: 'technician',
+    lastName: 'technician',
     email: 'tech@gmao.com',
     password: 'Tech123!',
-    role: 'technician'
+    role: 'technician',
+    department: 'Production',
+    phone: '01 23 45 67 91',
   },
   {
-    username: 'aya',
+    firstName: 'aya',
+    lastName: 'aya',
     email: 'AYA@gmail.com',
     password: 'AYA@0000',
-    role: 'admin'
+    role: 'admin',
+    department: 'Administration',
+    phone: '01 23 45 67 92',
   }
 ];
 
-// Fonction pour créer les utilisateurs
 const seedUsers = async () => {
   try {
-    // Supprimer tous les utilisateurs existants
-    await User.deleteMany({});
-    console.log('Utilisateurs existants supprimés');
+    await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('✅ Connexion MongoDB établie');
 
-    // Créer les nouveaux utilisateurs
-    for (const userData of users) {
-      const hashedPassword = await bcrypt.hash(userData.password, 10);
-      const user = new User({
-        username: userData.username,
-        email: userData.email,
-        password: hashedPassword,
-        role: userData.role
-      });
-      await user.save();
-      console.log(`Utilisateur ${userData.username} (${userData.role}) créé`);
-    }
+    await User.deleteMany();
+    console.log('🗑️ Tous les utilisateurs supprimés');
 
-    console.log('Seeding terminé avec succès');
+    const hashedUsers = await Promise.all(users.map(async (user) => ({
+      ...user,
+      password: await bcrypt.hash(user.password, 10),
+      status: 'Actif',
+      lastLogin: new Date(),
+    })));
+
+    await User.insertMany(hashedUsers);
+    console.log('✅ Utilisateurs insérés avec succès');
+
+  } catch (err) {
+    console.error('❌ Erreur lors du seeding:', err.message);
+  } finally {
     mongoose.disconnect();
-  } catch (error) {
-    console.error('Erreur lors du seeding:', error);
-    mongoose.disconnect();
+    console.log('🔌 Déconnexion de MongoDB');
   }
 };
 
-// Exécuter le seeding
-seedUsers(); 
+// Exécuter le script
+seedUsers();

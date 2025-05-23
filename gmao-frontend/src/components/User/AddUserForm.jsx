@@ -1,54 +1,56 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import "./AddUserForm.css"
+import { userAPI } from "../../services/api"
 
-function AddUserForm({ onClose, onSubmit }) {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    role: "Technicien",
-    department: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
-    isActive: true,
-    permissions: {
-      dashboard: true,
-      equipments: true,
-      interventions: true,
-      stock: false,
-      users: false,
-      settings: false,
-    },
-    profileImage: null,
-  })
+function AddUserForm({ user, onClose, onSubmit, isEdit }) {
+  const [formData, setFormData] = useState(
+    user
+      ? { ...user, confirmPassword: "********" }
+      : {
+          firstName: "",
+          lastName: "",
+          email: "",
+          role: "", 
+          department: "",
+          phone: "",
+          password: "",
+          confirmPassword: "",
+          status: "Actif",
+        }
+  )
 
   const [errors, setErrors] = useState({})
+  const [roles, setRoles] = useState([])
+  const [departments, setDepartments] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const roles = [
-    { id: "admin", name: "Administrateur" },
-    { id: "manager", name: "Gestionnaire" },
-    { id: "technician", name: "Technicien" },
-    { id: "storekeeper", name: "Magasinier" },
-    { id: "user", name: "Utilisateur" },
-  ]
+  useEffect(() => {
+    const fetchRolesAndDepartments = async () => {
+      try {
+        setIsLoading(true)
+        // Récupérer les rôles depuis le backend
+        const rolesResponse = await userAPI.getRoles()
+        setRoles(rolesResponse.data)
 
-  const departments = ["Maintenance", "Production", "Logistique", "Qualité", "Administration", "Informatique"]
+        // Récupérer les départements depuis le backend
+        const departmentsResponse = await userAPI.getDepartments()
+        setDepartments(departmentsResponse.data)
+      } catch (error) {
+        console.error("Erreur lors de la récupération des données:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchRolesAndDepartments()
+  }, [])
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
 
-    if (name.startsWith("permission-")) {
-      const permission = name.replace("permission-", "")
-      setFormData((prev) => ({
-        ...prev,
-        permissions: {
-          ...prev.permissions,
-          [permission]: checked,
-        },
-      }))
-    } else if (type === "checkbox") {
+    if (type === "checkbox") {
       setFormData((prev) => ({
         ...prev,
         [name]: checked,
@@ -61,22 +63,17 @@ function AddUserForm({ onClose, onSubmit }) {
     }
   }
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      setFormData((prev) => ({
-        ...prev,
-        profileImage: file,
-      }))
-    }
-  }
-
   const validateForm = () => {
     const formErrors = {}
     let isValid = true
 
-    if (!formData.name.trim()) {
-      formErrors.name = "Le nom est requis"
+    if (!formData.firstName.trim()) {
+      formErrors.firstName = "Le prénom est requis"
+      isValid = false
+    }
+
+    if (!formData.lastName.trim()) {
+      formErrors.lastName = "Le nom est requis"
       isValid = false
     }
 
@@ -88,6 +85,7 @@ function AddUserForm({ onClose, onSubmit }) {
       isValid = false
     }
 
+    if (!isEdit) {
     if (!formData.password) {
       formErrors.password = "Le mot de passe est requis"
       isValid = false
@@ -99,6 +97,18 @@ function AddUserForm({ onClose, onSubmit }) {
     if (formData.password !== formData.confirmPassword) {
       formErrors.confirmPassword = "Les mots de passe ne correspondent pas"
       isValid = false
+      }
+    } else if (formData.password && formData.password !== "********") {
+      // Si c'est une modification et que le mot de passe a été changé
+      if (formData.password.length < 6) {
+        formErrors.password = "Le mot de passe doit contenir au moins 6 caractères"
+        isValid = false
+      }
+
+      if (formData.password !== formData.confirmPassword) {
+        formErrors.confirmPassword = "Les mots de passe ne correspondent pas"
+        isValid = false
+      }
     }
 
     setErrors(formErrors)
@@ -109,12 +119,25 @@ function AddUserForm({ onClose, onSubmit }) {
     e.preventDefault()
 
     if (validateForm()) {
-      // Dans un environnement réel, envoyer les données à l'API
-      console.log("Données de l'utilisateur:", formData)
+      // Préparer les données à soumettre
+      const userData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        role: formData.role,
+        department: formData.department,
+        phone: formData.phone,
+        status: formData.status || "Actif"
+      }
+
+      // Ajouter le mot de passe pour les nouveaux utilisateurs ou si modifié
+      if (!isEdit || (isEdit && formData.password && formData.password !== "********")) {
+        userData.password = formData.password
+      }
 
       // Appeler la fonction de callback
       if (onSubmit) {
-        onSubmit(formData)
+        onSubmit(userData)
       }
 
       // Fermer le formulaire
@@ -125,194 +148,142 @@ function AddUserForm({ onClose, onSubmit }) {
   }
 
   return (
-    <div className="add-user-form">
-      <div className="form-header">
-        <h2>Nouvel utilisateur</h2>
-      </div>
+    <div className="user-form-container">
+      {isLoading ? (
+        <div className="loading-spinner">Chargement...</div>
+      ) : (
+        <form onSubmit={handleSubmit}>
+          <div className="user-form-content">
+            <div className="user-form-column">
 
-      <form onSubmit={handleSubmit}>
-        <div className="form-content">
-          <div className="form-column">
-            <h3>Informations personnelles</h3>
-
-            <div className="form-group">
-              <label htmlFor="name">Nom complet*</label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Prénom Nom"
-              />
-              {errors.name && <span className="error-message">{errors.name}</span>}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="email">Email*</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="email@exemple.com"
-              />
-              {errors.email && <span className="error-message">{errors.email}</span>}
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="role">Rôle*</label>
-                <select id="role" name="role" value={formData.role} onChange={handleChange}>
-                  {roles.map((role) => (
-                    <option key={role.id} value={role.name}>
-                      {role.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="department">Département</label>
-                <select id="department" name="department" value={formData.department} onChange={handleChange}>
-                  <option value="">Sélectionner un département</option>
-                  {departments.map((dept, index) => (
-                    <option key={index} value={dept}>
-                      {dept}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="phone">Téléphone</label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="+33 6 12 34 56 78"
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="profileImage">Photo de profil</label>
-              <input type="file" id="profileImage" accept="image/*" onChange={handleImageChange} />
-              {formData.profileImage && (
-                <div className="image-preview">
-                  <img src={URL.createObjectURL(formData.profileImage) || "/placeholder.svg"} alt="Aperçu du profil" />
+              <div className="user-form-row">
+                <div className="user-form-group">
+                  <label htmlFor="firstName">Prénom*</label>
+                  <input
+                    type="text"
+                    id="firstName"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    placeholder="Prénom"
+                  />
+                  {errors.firstName && <span className="user-form-error-message">{errors.firstName}</span>}
                 </div>
-              )}
-            </div>
-          </div>
 
-          <div className="form-column">
-            <h3>Compte et permissions</h3>
-
-            <div className="form-group">
-              <label htmlFor="password">Mot de passe*</label>
-              <input type="password" id="password" name="password" value={formData.password} onChange={handleChange} />
-              {errors.password && <span className="error-message">{errors.password}</span>}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Confirmer le mot de passe*</label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-              />
-              {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
-            </div>
-
-            <div className="form-group checkbox-group">
-              <label className="checkbox-container">
-                <input type="checkbox" name="isActive" checked={formData.isActive} onChange={handleChange} />
-                <span className="checkbox-label">Compte actif</span>
-              </label>
-            </div>
-
-            <div className="form-group">
-              <label>Permissions</label>
-              <div className="permissions-grid">
-                <label className="checkbox-container">
-                  <input
-                    type="checkbox"
-                    name="permission-dashboard"
-                    checked={formData.permissions.dashboard}
-                    onChange={handleChange}
-                  />
-                  <span className="checkbox-label">Tableau de bord</span>
-                </label>
-
-                <label className="checkbox-container">
-                  <input
-                    type="checkbox"
-                    name="permission-equipments"
-                    checked={formData.permissions.equipments}
-                    onChange={handleChange}
-                  />
-                  <span className="checkbox-label">Équipements</span>
-                </label>
-
-                <label className="checkbox-container">
-                  <input
-                    type="checkbox"
-                    name="permission-interventions"
-                    checked={formData.permissions.interventions}
-                    onChange={handleChange}
-                  />
-                  <span className="checkbox-label">Interventions</span>
-                </label>
-
-                <label className="checkbox-container">
-                  <input
-                    type="checkbox"
-                    name="permission-stock"
-                    checked={formData.permissions.stock}
-                    onChange={handleChange}
-                  />
-                  <span className="checkbox-label">Stock</span>
-                </label>
-
-                <label className="checkbox-container">
-                  <input
-                    type="checkbox"
-                    name="permission-users"
-                    checked={formData.permissions.users}
-                    onChange={handleChange}
-                  />
-                  <span className="checkbox-label">Utilisateurs</span>
-                </label>
-
-                <label className="checkbox-container">
-                  <input
-                    type="checkbox"
-                    name="permission-settings"
-                    checked={formData.permissions.settings}
-                    onChange={handleChange}
-                  />
-                  <span className="checkbox-label">Paramètres</span>
-                </label>
+              <div className="user-form-group">
+                  <label htmlFor="lastName">Nom*</label>
+                <input
+                  type="text"
+                    id="lastName"
+                    name="lastName"
+                    value={formData.lastName}
+                  onChange={handleChange}
+                    placeholder="Nom"
+                />
+                  {errors.lastName && <span className="user-form-error-message">{errors.lastName}</span>}
+                </div>
               </div>
+
+              <div className="user-form-group">
+                <label htmlFor="email">Email*</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="email@exemple.com"
+                />
+                {errors.email && <span className="user-form-error-message">{errors.email}</span>}
+              </div>
+
+              <div className="user-form-row">
+                <div className="user-form-group">
+                  <label htmlFor="role">Rôle*</label>
+                  <select id="role" name="role" value={formData.role} onChange={handleChange}>
+                    <option value="">Sélectionner un rôle</option>
+                    {roles.map((role) => (
+                      <option key={role.id} value={role.id}>
+                        {role.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="user-form-group">
+                  <label htmlFor="department">Département</label>
+                  <select id="department" name="department" value={formData.department} onChange={handleChange}>
+                    <option value="">Sélectionner un département</option>
+                    {departments.map((dept) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="user-form-group">
+                <label htmlFor="phone">Téléphone</label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone || ""}
+                  onChange={handleChange}
+                  placeholder="+33 6 12 34 56 78"
+                />
+              </div>
+
+              <div className="user-form-group">
+                <label htmlFor="status">Statut</label>
+                <select id="status" name="status" value={formData.status || "Actif"} onChange={handleChange}>
+                  <option value="Actif">Actif</option>
+                  <option value="Inactif">Inactif</option>
+                </select>
+              </div>
+
+              <div className="user-form-group">
+                <label htmlFor="password">{isEdit ? "Nouveau mot de passe" : "Mot de passe*"}</label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder={isEdit ? "Laisser vide pour ne pas changer" : "Mot de passe"}
+                />
+                {errors.password && <span className="user-form-error-message">{errors.password}</span>}
+              </div>
+
+              <div className="user-form-group">
+                <label htmlFor="confirmPassword">Confirmer le mot de passe*</label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Confirmer le mot de passe"
+                />
+                {errors.confirmPassword && (
+                  <span className="user-form-error-message">{errors.confirmPassword}</span>
+                )}
+              </div>
+
             </div>
           </div>
-        </div>
 
-        <div className="form-actions">
-          <button type="button" className="cancel-btn" onClick={onClose}>
-            Annuler
-          </button>
-          <button type="submit" className="submit-btn">
-            Créer l'utilisateur
-          </button>
-        </div>
-      </form>
+          <div className="user-form-actions">
+            <button type="button" className="user-form-cancel-btn" onClick={onClose}>
+              Annuler
+            </button>
+            <button type="submit" className="user-form-submit-btn">
+              {isEdit ? "Enregistrer les modifications" : "Ajouter l'utilisateur"}
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   )
 }

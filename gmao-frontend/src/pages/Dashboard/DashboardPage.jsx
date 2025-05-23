@@ -6,11 +6,14 @@ import Sidebar from "../../components/Sidebar/Sidebar"
 import Header from "../../components/Header/Header"
 import DashboardCharts from "../../components/Dashboard/DashboardCharts"
 import PerformanceIndicators from "../../components/Dashboard/PerformanceIndicators"
-import { interventionService } from "../../services/api"
+import { interventionAPI, equipmentAPI, kpiAPI } from "../../services/api"
 import "./DashboardPage.css"
+import { useSidebar } from "../../contexts/SidebarContext"
+import { useAuth } from "../../contexts/AuthContext"
 
-function DashboardPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+const DashboardPage = () => {
+  const { sidebarOpen, toggleSidebar } = useSidebar()
+  const { currentUser } = useAuth()
   const [stats, setStats] = useState([
     { title: "Équipements", count: 0, color: "blue" },
     { title: "Interventions planifiées", count: 0, color: "blue" },
@@ -18,77 +21,68 @@ function DashboardPage() {
     { title: "Retards", count: 0, color: "red" },
   ])
   const [recentInterventions, setRecentInterventions] = useState([])
+  const [equipmentData, setEquipmentData] = useState(null)
+  const [interventionData, setInterventionData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // Dans un environnement réel, ces données viendraient de l'API
-        // const response = await api.get('/dashboard/stats');
-        // setStats(response.data.stats);
-
-        // Simuler les données pour la démo
-        setStats([
-          { title: "Équipements", count: 156, color: "blue" },
-          { title: "Interventions planifiées", count: 23, color: "blue" },
-          { title: "Interventions totales", count: 189, color: "blue" },
-          { title: "Retards", count: 4, color: "red" },
-        ])
-
-        // Récupérer les interventions récentes
-        const interventionsResponse = await interventionService.getAll()
-        setRecentInterventions(interventionsResponse.data.slice(0, 5))
-
-        setLoading(false)
+        setLoading(true);
+        
+        // Récupérer les statistiques générales
+        const statsPromises = [
+          equipmentAPI.getAllEquipments(),
+          interventionAPI.getAllInterventions()
+        ];
+        
+        const [equipmentResponse, interventionResponse] = await Promise.all(statsPromises);
+        
+        // Traiter les données d'équipements
+        if (equipmentResponse?.data) {
+          setEquipmentData(equipmentResponse.data);
+          
+          // Calculer les statistiques
+          const equipmentCount = equipmentResponse.data.length;
+          
+          // Mettre à jour les stats
+          const updatedStats = [...stats];
+          updatedStats[0].count = equipmentCount;
+          
+          // Traiter les données d'interventions si disponibles
+          if (interventionResponse?.data) {
+            const interventions = interventionResponse.data;
+            setInterventionData(interventions);
+            
+            // Mettre à jour les statistiques d'interventions
+            const plannedInterventions = interventions.filter(i => i.status === "Planifiée").length;
+            const totalInterventions = interventions.length;
+            const delayedInterventions = interventions.filter(i => i.status === "En retard").length;
+            
+            updatedStats[1].count = plannedInterventions;
+            updatedStats[2].count = totalInterventions;
+            updatedStats[3].count = delayedInterventions;
+            
+            // Récupérer les interventions récentes (5 dernières)
+            const sortedInterventions = [...interventions].sort((a, b) => 
+              new Date(b.date) - new Date(a.date)
+            );
+            setRecentInterventions(sortedInterventions.slice(0, 5));
+          }
+          
+          setStats(updatedStats);
+        }
       } catch (error) {
-        console.error("Erreur lors du chargement des données du tableau de bord:", error)
-        setError("Impossible de charger les données du tableau de bord")
-        setLoading(false)
+        console.error("Erreur lors du chargement des données du tableau de bord:", error);
+        setError("Impossible de charger les données du tableau de bord");
+      } finally {
+        setLoading(false);
       }
-    }
+    };
 
-    fetchDashboardData()
-  }, [])
-
-  // Données simulées pour la démo
-  useEffect(() => {
-    if (loading && !recentInterventions.length) {
-      setRecentInterventions([
-        {
-          id: 1,
-          reference: "INT-2024-001",
-          equipment: "Pompe P-10",
-          type: "Préventive",
-          priority: "Normale",
-          status: "En cours",
-          date: "2024-01-15",
-          technician: "Jean Dupont",
-        },
-        {
-          id: 2,
-          reference: "INT-2024-002",
-          equipment: "Compresseur Ref.C-123",
-          type: "Curative",
-          priority: "Haute",
-          status: "En attente",
-          date: "2024-01-14",
-          technician: "Marie Martin",
-        },
-        {
-          id: 3,
-          reference: "INT-2024-003",
-          equipment: "Moteur M-405",
-          type: "Préventive",
-          priority: "Basse",
-          status: "Terminée",
-          date: "2024-01-10",
-          technician: "Pierre Durand",
-        },
-      ])
-      setLoading(false)
-    }
-  }, [loading, recentInterventions])
+    fetchDashboardData();
+  }, []);
 
   const getStatusClass = (status) => {
     switch (status) {
@@ -98,6 +92,7 @@ function DashboardPage() {
         return "status-pending"
       case "Terminée":
         return "status-completed"
+      case "En retard":
       case "Retardée":
         return "status-delayed"
       default:
@@ -108,8 +103,10 @@ function DashboardPage() {
   const getPriorityClass = (priority) => {
     switch (priority) {
       case "Haute":
+      case "Critique":
         return "priority-high"
       case "Normale":
+      case "Moyenne":
         return "priority-normal"
       case "Basse":
         return "priority-low"
@@ -134,32 +131,39 @@ function DashboardPage() {
       <Sidebar isOpen={sidebarOpen} />
 
       <div className="dashboard-content">
-        <Header title="Tableau de bord" onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+        <Header title="Tableau de bord" onToggleSidebar={toggleSidebar} />
 
         <main className="dashboard-main">
           <div className="dashboard-welcome">
-            <h2 className="welcome-title">Bienvenue, Thomas Martin</h2>
+            <h2 className="welcome-title">Bienvenue, {currentUser?.firstName || currentUser?.name || "Utilisateur"}</h2>
             <p className="welcome-subtitle">Voici un aperçu de vos activités</p>
           </div>
 
           {/* Stats Cards */}
-          <div className="stats-grid">
-            {stats.map((stat, index) => (
-              <div key={index} className={`stat-card stat-${stat.color}`}>
-                <div className="stat-icon"></div>
-                <div className="stat-info">
-                  <h3 className="stat-title">{stat.title}</h3>
-                  <p className="stat-count">{stat.count}</p>
+          {loading ? (
+            <div className="loading-indicator">Chargement des statistiques...</div>
+          ) : (
+            <div className="stats-grid">
+              {stats.map((stat, index) => (
+                <div key={index} className={`stat-card stat-${stat.color}`}>
+                  <div className="stat-icon"></div>
+                  <div className="stat-info">
+                    <h3 className="stat-title">{stat.title}</h3>
+                    <p className="stat-count">{stat.count}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Performance Indicators */}
           <PerformanceIndicators />
 
           {/* Charts */}
-          <DashboardCharts />
+          <DashboardCharts 
+            equipmentData={equipmentData} 
+            interventionData={interventionData}
+          />
 
           {/* Recent Interventions */}
           <div className="recent-interventions">
@@ -174,6 +178,8 @@ function DashboardPage() {
               <div className="loading-indicator">Chargement des interventions...</div>
             ) : error ? (
               <div className="error-message">{error}</div>
+            ) : recentInterventions.length === 0 ? (
+              <div className="empty-data-message">Aucune intervention récente</div>
             ) : (
               <div className="table-container">
                 <table className="data-table">
@@ -191,7 +197,7 @@ function DashboardPage() {
                   <tbody>
                     {recentInterventions.map((intervention) => (
                       <tr key={intervention.id}>
-                        <td>{intervention.reference}</td>
+                        <td>{intervention.reference || intervention.id}</td>
                         <td>{intervention.equipment}</td>
                         <td>
                           <span className={`badge ${getTypeClass(intervention.type)}`}>{intervention.type}</span>
@@ -205,7 +211,7 @@ function DashboardPage() {
                           <span className={`badge ${getStatusClass(intervention.status)}`}>{intervention.status}</span>
                         </td>
                         <td>{intervention.date}</td>
-                        <td>{intervention.technician}</td>
+                        <td>{intervention.technician?.name || intervention.technician}</td>
                       </tr>
                     ))}
                   </tbody>

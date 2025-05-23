@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom"
 import "./GlobalSearch.css"
 
 function GlobalSearch() {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isActive, setIsActive] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
@@ -91,7 +91,7 @@ function GlobalSearch() {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setIsOpen(false)
+        setIsActive(false)
       }
     }
 
@@ -107,12 +107,13 @@ function GlobalSearch() {
       // Ctrl+K ou Cmd+K pour ouvrir la recherche
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
         e.preventDefault()
-        setIsOpen((prev) => !prev)
+        setIsActive(true)
       }
 
       // Échap pour fermer la recherche
-      if (e.key === "Escape" && isOpen) {
-        setIsOpen(false)
+      if (e.key === "Escape" && isActive) {
+        setIsActive(false)
+        setSearchTerm("")
       }
     }
 
@@ -120,10 +121,10 @@ function GlobalSearch() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown)
     }
-  }, [isOpen])
+  }, [isActive])
 
   const handleSearchFocus = () => {
-    setIsOpen(true)
+    setIsActive(true)
   }
 
   const handleSearchChange = (e) => {
@@ -149,7 +150,7 @@ function GlobalSearch() {
         break
     }
 
-    setIsOpen(false)
+    setIsActive(false)
     setSearchTerm("")
   }
 
@@ -165,44 +166,27 @@ function GlobalSearch() {
 
   return (
     <div className="global-search" ref={searchRef}>
-      <div className="search-trigger" onClick={() => setIsOpen(true)}>
-        <span className="search-icon"></span>
-        <span className="search-placeholder">Rechercher... (Ctrl+K)</span>
+      <div className="search-container">
+        <input
+          type="text"
+          className="search-input"
+          placeholder="Rechercher... "
+          value={searchTerm}
+          onChange={handleSearchChange}
+          onFocus={handleSearchFocus}
+        />
+        {searchTerm && (
+          <button className="clear-search-btn" onClick={() => setSearchTerm("")}>
+            ×
+          </button>
+        )}
       </div>
 
-      {isOpen && (
-        <div className="search-modal">
-          <div className="search-header">
-            <span className="search-icon"></span>
-            <input
-              type="text"
-              className="search-input"
-              placeholder="Rechercher..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              onFocus={handleSearchFocus}
-              autoFocus
-            />
-            <button className="close-search-btn" onClick={() => setIsOpen(false)}>
-              ×
-            </button>
-          </div>
-
+      {isActive && searchTerm.length > 1 && (
+        <div className="search-results-dropdown">
           <div className="search-content">
             {loading ? (
               <div className="search-loading">Recherche en cours...</div>
-            ) : searchTerm.length < 2 ? (
-              <div className="search-empty">
-                <p>Commencez à taper pour rechercher</p>
-                <div className="search-categories">
-                  {categories.map((category) => (
-                    <div key={category.id} className="search-category-item">
-                      <span className={`category-icon icon-${category.icon}`}></span>
-                      <span className="category-name">{category.name}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
             ) : results.length === 0 ? (
               <div className="search-no-results">Aucun résultat trouvé pour "{searchTerm}"</div>
             ) : (
@@ -229,13 +213,6 @@ function GlobalSearch() {
                 ))}
               </div>
             )}
-          </div>
-
-          <div className="search-footer">
-            <div className="search-tip">
-              <span className="tip-icon">💡</span>
-              <span className="tip-text">Astuce: Utilisez Ctrl+K pour ouvrir rapidement la recherche</span>
-            </div>
           </div>
         </div>
       )}

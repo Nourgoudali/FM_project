@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../../contexts/AuthContext"
 import "./LoginPage.css"
-import logoFM from "../../assets/images/logo-fm.jpg"
+import logoFM from "../../assets/images/logo-fm.png"
 
 function LoginPage() {
   const [email, setEmail] = useState("")
@@ -22,8 +22,10 @@ function LoginPage() {
     try {
       await login(email, password)
       navigate("/dashboard")
-    } catch (error) {
-      setError(error.message || "Échec de la connexion. Veuillez vérifier vos identifiants.")
+    } catch (err) {
+      console.error("Erreur lors de la connexion:", err);
+      // Utiliser le message d'erreur retourné par le backend
+      setError(err.message || "Échec de la connexion. Veuillez vérifier vos identifiants.")
     } finally {
       setLoading(false)
     }
@@ -40,7 +42,7 @@ function LoginPage() {
         <div className="login-content">
           <h1 className="login-title">Bienvenue</h1>
           <p className="login-subtitle">Connectez-vous à votre compte GMAO</p>
-
+ 
           {error && <div className="alert alert-danger">{error}</div>}
 
           <form onSubmit={handleSubmit} className="login-form">
@@ -79,24 +81,10 @@ function LoginPage() {
                 <i className="icon-lock"></i>
               </div>
             </div>
-
-            <div className="forgot-password">
-              <button type="button" className="forgot-link" onClick={() => alert("Mot de passe oublié ?")}>
-                Mot de passe oublié ?
-              </button>
-            </div>
-
             <button type="submit" className="btn btn-login" disabled={loading}>
               {loading ? "Connexion en cours..." : "Se connecter"}
             </button>
           </form>
-
-          <div className="login-footer">
-            Vous n'avez pas de compte ?{" "}
-            <button type="button" className="support-link" onClick={() => alert("Contactez le support")}>
-              Contactez le support
-            </button>
-          </div>
         </div>
       </div>
     </div>

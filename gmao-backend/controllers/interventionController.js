@@ -2,17 +2,19 @@ const Intervention = require('../models/Intervention');
 
 const interventionController = {
   create: async (req, res) => {
-    const { reference, equipment, type, priority, date, comment } = req.body;
+    const { equipment, type, priority, date, comment } = req.body;
+
     try {
       const intervention = new Intervention({
-        reference,
         equipment,
         type,
         priority,
         date,
         comment,
         assignedTechnician: req.user.role === 'technician' ? req.user.id : null,
+        // ❌ reference est gérée automatiquement par le hook → ne pas inclure ici
       });
+
       await intervention.save();
       res.status(201).json(intervention);
     } catch (err) {
@@ -43,15 +45,18 @@ const interventionController = {
   update: async (req, res) => {
     const { id } = req.params;
     const { status, delayJustification, ...updates } = req.body;
+
     try {
       if (status === 'delayed' && !delayJustification) {
         return res.status(400).json({ message: 'Delay justification is required' });
       }
+
       const intervention = await Intervention.findByIdAndUpdate(
         id,
         { ...updates, status, delayJustification },
         { new: true }
       );
+
       if (!intervention) return res.status(404).json({ message: 'Intervention not found' });
       res.json(intervention);
     } catch (err) {
@@ -61,6 +66,7 @@ const interventionController = {
 
   delete: async (req, res) => {
     const { id } = req.params;
+
     try {
       const intervention = await Intervention.findByIdAndDelete(id);
       if (!intervention) return res.status(404).json({ message: 'Intervention not found' });

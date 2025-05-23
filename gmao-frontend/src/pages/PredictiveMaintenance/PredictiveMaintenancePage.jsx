@@ -1,41 +1,232 @@
-"use client"
-
 import { useState, useEffect, useMemo } from "react"
 import Sidebar from "../../components/Sidebar/Sidebar"
 import Header from "../../components/Header/Header"
+import Modal from "../../components/Modal/Modal"
 import "./PredictiveMaintenancePage.css"
+import { useSidebar } from "../../contexts/SidebarContext"
+import { sensorAPI, equipmentAPI, interventionAPI } from "../../services/api"
 
 function PredictiveMaintenancePage() {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const { sidebarOpen, toggleSidebar } = useSidebar()
   const [selectedEquipment, setSelectedEquipment] = useState(null)
   const [timeRange, setTimeRange] = useState("month")
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [equipments, setEquipments] = useState([])
+  const [sensorData, setSensorData] = useState({
+    vibrationData: { week: [], month: [], year: [] },
+    temperatureData: { week: [], month: [], year: [] },
+    currentData: { week: [], month: [], year: [] },
+  })
+  const [recommendations, setRecommendations] = useState([])
+  
+  // États pour les modals
+  const [showPlanModal, setShowPlanModal] = useState(false)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [showOptimizationModal, setShowOptimizationModal] = useState(false)
+  const [currentAction, setCurrentAction] = useState(null)
+  const [maintenanceTasks, setMaintenanceTasks] = useState([])
+  const [maintenanceParts, setMaintenanceParts] = useState([])
+  const [technicians, setTechnicians] = useState([])
 
-  // Données simulées pour la démo
-  const equipments = useMemo(() => [
-    { id: 1, name: "Pompe P-10", healthScore: 87, nextMaintenance: "2024-02-15", status: "Normal" },
-    { id: 2, name: "Compresseur Ref.C-123", healthScore: 62, nextMaintenance: "2024-01-25", status: "Attention" },
-    { id: 3, name: "Moteur M-405", healthScore: 93, nextMaintenance: "2024-03-10", status: "Normal" },
-    { id: 4, name: "Convoyeur CV-200", healthScore: 45, nextMaintenance: "2024-01-20", status: "Critique" },
-    { id: 5, name: "Chaudière CH-100", healthScore: 78, nextMaintenance: "2024-02-05", status: "Normal" },
-  ], [])
-
+  // Récupérer les données des équipements et capteurs
   useEffect(() => {
-    // Simuler le chargement des données
-    setTimeout(() => {
-      setLoading(false)
-      setSelectedEquipment(equipments[0])
-    }, 1000)
-  }, [equipments])
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Récupérer les équipements avec leur statut de santé
+        const equipmentResponse = await equipmentAPI.getPredictiveEquipments();
+        
+        if (equipmentResponse.data && equipmentResponse.data.length > 0) {
+          setEquipments(equipmentResponse.data);
+          
+          // Sélectionner le premier équipement par défaut
+          const firstEquipment = equipmentResponse.data[0];
+          setSelectedEquipment(firstEquipment);
+          
+          // Récupérer les données des capteurs pour le premier équipement
+          await fetchSensorData(firstEquipment.id);
+        } else {
+          setError("Aucun équipement disponible.");
+        }
+      } catch (err) {
+        console.error("Erreur lors du chargement des données:", err);
+        setError("Impossible de charger les données des équipements. Veuillez réessayer plus tard.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleEquipmentChange = (equipmentId) => {
-    const equipment = equipments.find((eq) => eq.id === Number.parseInt(equipmentId))
-    setSelectedEquipment(equipment)
-  }
+    fetchData();
+    
+    // Récupérer la liste des techniciens pour le formulaire de planification
+    const fetchTechnicians = async () => {
+      try {
+        const response = await interventionAPI.getTechnicians();
+        if (response.data) {
+          setTechnicians(response.data);
+        }
+      } catch (err) {
+        console.error("Erreur lors du chargement des techniciens:", err);
+      }
+    };
+    
+    fetchTechnicians();
+  }, []);
+
+  // Fonction pour déterminer le statut en fonction du score de santé
+  const determineStatus = (healthScore) => {
+    if (healthScore >= 80) return "Normal";
+    if (healthScore >= 60) return "Attention";
+    return "Critique";
+  };
+
+  // Charger les données de capteur pour un équipement spécifique
+  const fetchSensorData = async (equipmentId) => {
+    try {
+      setError(null);
+      
+      // Récupérer les données des capteurs
+      const sensorResponse = await sensorAPI.getSensorsByEquipment(equipmentId);
+      
+      if (sensorResponse.data) {
+        setSensorData(sensorResponse.data.sensorReadings || {
+          vibrationData: { week: [], month: [], year: [] },
+          temperatureData: { week: [], month: [], year: [] },
+          currentData: { week: [], month: [], year: [] }
+        });
+        
+        // Récupérer les recommandations basées sur les données du capteur
+        const recommendationsResponse = await sensorAPI.getRecommendationsForEquipment(equipmentId);
+        if (recommendationsResponse.data) {
+          setRecommendations(recommendationsResponse.data);
+        } else {
+          setRecommendations([]);
+        }
+      } else {
+        setSensorData({
+          vibrationData: { week: [], month: [], year: [] },
+          temperatureData: { week: [], month: [], year: [] },
+          currentData: { week: [], month: [], year: [] }
+        });
+        setRecommendations([]);
+      }
+    } catch (err) {
+      console.error("Erreur lors du chargement des données de capteur:", err);
+      setError("Impossible de charger les données de capteur pour cet équipement.");
+    }
+  };
+
+  const handleEquipmentChange = async (equipmentId) => {
+    try {
+      const equipment = equipments.find((eq) => eq.id === Number.parseInt(equipmentId));
+      if (!equipment) return;
+      
+      setSelectedEquipment(equipment);
+      setLoading(true);
+      
+      // Récupérer les données de capteurs et recommandations pour le nouvel équipement
+      await fetchSensorData(equipment.id);
+    } catch (err) {
+      console.error("Erreur lors du changement d'équipement:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleTimeRangeChange = (range) => {
     setTimeRange(range)
   }
+
+  // Gestionnaires pour les actions des boutons
+  const handlePlanMaintenance = (action) => {
+    setCurrentAction(action)
+    setShowPlanModal(true)
+  }
+
+  const handleViewDetails = async (action) => {
+    try {
+      setCurrentAction(action);
+      setLoading(true);
+      
+      if (selectedEquipment) {
+        // Récupérer les détails de maintenance pour l'équipement sélectionné
+        const tasksResponse = await interventionAPI.getMaintenanceTasks(selectedEquipment.id);
+        if (tasksResponse.data) {
+          setMaintenanceTasks(tasksResponse.data);
+        } else {
+          setMaintenanceTasks([]);
+        }
+        
+        // Récupérer les pièces nécessaires pour la maintenance
+        const partsResponse = await interventionAPI.getMaintenanceParts(selectedEquipment.id);
+        if (partsResponse.data) {
+          setMaintenanceParts(partsResponse.data);
+        } else {
+          setMaintenanceParts([]);
+        }
+      }
+      
+      setShowDetailsModal(true);
+    } catch (err) {
+      console.error("Erreur lors du chargement des détails de maintenance:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleApplyOptimization = (action) => {
+    setCurrentAction(action)
+    setShowOptimizationModal(true)
+  }
+
+  const handleConfirmPlan = async () => {
+    try {
+      // Récupérer les données du formulaire
+      const planDate = document.getElementById('plan-date').value;
+      const technicianId = document.getElementById('plan-technician').value;
+      const priority = document.getElementById('plan-priority').value;
+      const notes = document.getElementById('plan-notes').value;
+      
+      // Créer une intervention basée sur la recommandation
+      const interventionData = {
+        equipmentId: selectedEquipment.id,
+        type: "Préventive",
+        priority: priority === "urgent" ? "Critique" : priority === "high" ? "Haute" : "Moyenne",
+        status: "Planifiée",
+        date: planDate,
+        description: `${currentAction.title}: ${currentAction.description} ${notes ? `Notes: ${notes}` : ''}`,
+        technicianId: technicianId
+      };
+      
+      // Appel à l'API pour créer l'intervention
+      await interventionAPI.createIntervention(interventionData);
+      
+      alert(`Maintenance planifiée avec succès pour ${selectedEquipment?.name}`);
+      setShowPlanModal(false);
+    } catch (error) {
+      console.error("Erreur lors de la planification de la maintenance:", error);
+      alert(`Erreur lors de la planification: ${error.message}`);
+    }
+  };
+
+  const handleApplyOptimizationConfirm = async () => {
+    try {
+      // Appeler l'API pour appliquer les optimisations
+      await sensorAPI.applyOptimization(selectedEquipment.id);
+      
+      alert(`Optimisation énergétique appliquée avec succès à ${selectedEquipment?.name}`);
+      setShowOptimizationModal(false);
+      
+      // Rafraîchir les données des capteurs après l'optimisation
+      fetchSensorData(selectedEquipment.id);
+    } catch (error) {
+      console.error("Erreur lors de l'application de l'optimisation:", error);
+      alert(`Erreur lors de l'application: ${error.message}`);
+    }
+  };
 
   const getHealthScoreClass = (score) => {
     if (score >= 80) return "health-good"
@@ -56,42 +247,11 @@ function PredictiveMaintenancePage() {
     }
   }
 
-  // Données simulées pour les graphiques
-  const vibrationData = {
-    week: [0.8, 0.9, 1.1, 1.0, 0.9, 1.2, 1.3],
-    month: [0.8, 0.9, 1.1, 1.0, 0.9, 1.2, 1.3, 1.1, 1.0, 0.9, 1.1, 1.2, 1.3, 1.4, 1.2, 1.1, 1.0, 0.9, 1.1, 1.2, 1.3],
-    year: [
-      0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.2, 1.1, 1.0, 0.9, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0,
-      1.9, 1.8, 1.7, 1.6, 1.5, 1.4, 1.3,
-    ],
-  }
-
-  const temperatureData = {
-    week: [45, 46, 47, 48, 50, 52, 53],
-    month: [45, 46, 47, 48, 50, 52, 53, 52, 51, 50, 49, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57],
-    year: [
-      45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 64, 63, 62, 61, 60, 59, 58,
-      57, 56,
-    ],
-  }
-
-  const currentData = {
-    week: [10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8],
-    month: [
-      10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.7, 10.6, 10.5, 10.4, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9, 11.0,
-      11.1, 11.2,
-    ],
-    year: [
-      10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9, 11.0, 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7, 11.8, 11.9, 12.0,
-      12.1, 12.2, 12.1, 12.0, 11.9, 11.8, 11.7, 11.6, 11.5, 11.4, 11.3,
-    ],
-  }
-
   // Fonction pour générer un graphique simple en CSS
   const renderGraph = (data, label, unit, threshold = null) => {
-    const currentData = data[timeRange]
-    const max = Math.max(...currentData) * 1.2
-    const thresholdPercent = threshold ? (threshold / max) * 100 : null
+    const currentData = data[timeRange] || [];
+    const max = currentData.length > 0 ? Math.max(...currentData) * 1.2 : 100;
+    const thresholdPercent = threshold ? (threshold / max) * 100 : null;
 
     return (
       <div className="graph-container">
@@ -150,11 +310,13 @@ function PredictiveMaintenancePage() {
       <Sidebar isOpen={sidebarOpen} />
 
       <div className="predictive-content">
-        <Header title="Maintenance Prédictive" onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+        <Header title="Maintenance Prédictive" onToggleSidebar={toggleSidebar} />
 
         <main className="predictive-main">
           {loading ? (
             <div className="loading-indicator">Chargement des données...</div>
+          ) : error ? (
+            <div className="error-message">{error}</div>
           ) : (
             <>
               {/* Filtres */}
@@ -262,9 +424,9 @@ function PredictiveMaintenancePage() {
                 <h3 className="section-title">Analyse des paramètres</h3>
 
                 <div className="graphs-grid">
-                  {renderGraph(vibrationData, "Vibrations", "mm/s", 1.5)}
-                  {renderGraph(temperatureData, "Température", "°C", 60)}
-                  {renderGraph(currentData, "Courant", "A", 12.0)}
+                  {renderGraph(sensorData.vibrationData || {}, "Vibrations", "mm/s", 1.5)}
+                  {renderGraph(sensorData.temperatureData || {}, "Température", "°C", 60)}
+                  {renderGraph(sensorData.currentData || {}, "Courant", "A", 12.0)}
                 </div>
               </div>
 
@@ -272,48 +434,237 @@ function PredictiveMaintenancePage() {
               <div className="recommendations-section">
                 <h3 className="section-title">Recommandations</h3>
 
-                <div className="recommendations-list">
-                  <div className="recommendation-card">
-                    <div className="recommendation-icon warning"></div>
-                    <div className="recommendation-content">
-                      <h4 className="recommendation-title">Vérifier les vibrations</h4>
-                      <p className="recommendation-description">
-                        Les niveaux de vibration approchent du seuil critique. Une inspection est recommandée dans les 7
-                        jours.
-                      </p>
-                    </div>
-                    <button className="btn btn-outline">Planifier</button>
+                {recommendations.length > 0 ? (
+                  <div className="recommendations-list">
+                    {recommendations.map((recommendation) => (
+                      <div key={recommendation.id} className="recommendation-card">
+                        <div className={`recommendation-icon ${recommendation.type}`}></div>
+                        <div className="recommendation-content">
+                          <h4 className="recommendation-title">{recommendation.title}</h4>
+                          <p className="recommendation-description">{recommendation.description}</p>
+                        </div>
+                        {recommendation.action === "Planifier" ? (
+                          <button 
+                            className="btn btn-outline"
+                            onClick={() => handlePlanMaintenance(recommendation)}
+                          >
+                            {recommendation.action}
+                          </button>
+                        ) : recommendation.action === "Voir détails" ? (
+                          <button 
+                            className="btn btn-outline"
+                            onClick={() => handleViewDetails(recommendation)}
+                          >
+                            {recommendation.action}
+                          </button>
+                        ) : (
+                          <button 
+                            className="btn btn-outline"
+                            onClick={() => handleApplyOptimization(recommendation)}
+                          >
+                            {recommendation.action}
+                          </button>
+                        )}
+                      </div>
+                    ))}
                   </div>
-
-                  <div className="recommendation-card">
-                    <div className="recommendation-icon info"></div>
-                    <div className="recommendation-content">
-                      <h4 className="recommendation-title">Maintenance préventive</h4>
-                      <p className="recommendation-description">
-                        La maintenance préventive régulière est prévue pour le {selectedEquipment?.nextMaintenance}.
-                        Préparez les pièces nécessaires.
-                      </p>
-                    </div>
-                    <button className="btn btn-outline">Voir détails</button>
+                ) : (
+                  <div className="no-data-message">
+                    Aucune recommandation disponible pour cet équipement.
                   </div>
-
-                  <div className="recommendation-card">
-                    <div className="recommendation-icon success"></div>
-                    <div className="recommendation-content">
-                      <h4 className="recommendation-title">Optimisation énergétique</h4>
-                      <p className="recommendation-description">
-                        L'analyse des données suggère qu'une optimisation des paramètres pourrait réduire la
-                        consommation d'énergie de 8%.
-                      </p>
-                    </div>
-                    <button className="btn btn-outline">Appliquer</button>
-                  </div>
-                </div>
+                )}
               </div>
             </>
           )}
         </main>
       </div>
+
+      {/* Modal de Planification */}
+      <Modal
+        isOpen={showPlanModal}
+        onClose={() => setShowPlanModal(false)}
+        title="Planifier une intervention"
+        size="medium"
+      >
+        <div className="planning-modal">
+          <div className="planning-content">
+            <h3>Vérification des {currentAction?.title} pour {selectedEquipment?.name}</h3>
+            
+            <div className="plan-form">
+              <div className="form-group">
+                <label htmlFor="plan-date">Date d'intervention</label>
+                <input 
+                  type="date" 
+                  id="plan-date" 
+                  className="form-control"
+                  defaultValue={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="plan-technician">Technicien</label>
+                <select id="plan-technician" className="form-control">
+                  <option value="">Sélectionnez un technicien</option>
+                  {technicians.map(technician => (
+                    <option key={technician.id} value={technician.id}>
+                      {technician.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="plan-priority">Priorité</label>
+                <select id="plan-priority" className="form-control">
+                  <option value="normal">Normale</option>
+                  <option value="high">Élevée</option>
+                  <option value="urgent">Urgente</option>
+                </select>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="plan-notes">Notes</label>
+                <textarea 
+                  id="plan-notes" 
+                  className="form-control" 
+                  rows="3"
+                  placeholder="Ajoutez des notes ou instructions spécifiques..."
+                ></textarea>
+              </div>
+            </div>
+          </div>
+          
+          <div className="modal-actions">
+            <button className="btn btn-outline" onClick={() => setShowPlanModal(false)}>
+              Annuler
+            </button>
+            <button className="btn btn-primary" onClick={handleConfirmPlan}>
+              Confirmer
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal de Détails */}
+      <Modal
+        isOpen={showDetailsModal}
+        onClose={() => setShowDetailsModal(false)}
+        title="Détails de maintenance préventive"
+        size="medium"
+      >
+        <div className="details-modal">
+          <div className="details-content">
+            <div className="details-header">
+              <h3>{selectedEquipment?.name}</h3>
+              <span className="details-date">Prévue le: {selectedEquipment?.nextMaintenance}</span>
+            </div>
+            
+            <div className="details-section">
+              <h4>Opérations à effectuer</h4>
+              {maintenanceTasks.length > 0 ? (
+                <ul className="details-checklist">
+                  {maintenanceTasks.map((task) => (
+                    <li key={task.id} className="checklist-item">
+                      <input type="checkbox" id={`task-${task.id}`} />
+                      <label htmlFor={`task-${task.id}`}>{task.description}</label>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>Aucune tâche de maintenance définie pour cet équipement.</p>
+              )}
+            </div>
+            
+            <div className="details-section">
+              <h4>Pièces nécessaires</h4>
+              {maintenanceParts.length > 0 ? (
+                <div className="parts-list">
+                  {maintenanceParts.map((part) => (
+                    <div key={part.id} className="part-item">
+                      <span className="part-name">{part.name}</span>
+                      <span className="part-ref">Réf: {part.reference}</span>
+                      <span className={`part-stock ${part.inStock ? part.stockLevel === 'low' ? 'low' : 'available' : 'unavailable'}`}>
+                        {part.inStock ? (part.stockLevel === 'low' ? 'Stock faible' : 'En stock') : 'Non disponible'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p>Aucune pièce définie pour cette maintenance.</p>
+              )}
+            </div>
+          </div>
+          
+          <div className="modal-actions">
+            <button className="btn btn-outline" onClick={() => setShowDetailsModal(false)}>
+              Fermer
+            </button>
+            <button className="btn btn-primary">
+              Exporter en PDF
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal d'Optimisation */}
+      <Modal
+        isOpen={showOptimizationModal}
+        onClose={() => setShowOptimizationModal(false)}
+        title="Appliquer l'optimisation énergétique"
+        size="medium"
+      >
+        <div className="optimization-modal">
+          <div className="optimization-content">
+            <div className="optimization-header">
+              <div className="optimization-icon success"></div>
+              <div className="optimization-summary">
+                <h3>Optimisation énergétique pour {selectedEquipment?.name}</h3>
+                <p>{currentAction?.description}</p>
+              </div>
+            </div>
+            
+            {currentAction?.optimizationParams ? (
+              <div className="optimization-params">
+                <h4>Paramètres à modifier</h4>
+                
+                {currentAction.optimizationParams.map((param, index) => (
+                  <div key={index} className="param-item">
+                    <div className="param-info">
+                      <span className="param-name">{param.name}</span>
+                      <div className="param-change">
+                        <span className="param-old">{param.currentValue}</span>
+                        <span className="param-arrow">→</span>
+                        <span className="param-new">{param.newValue}</span>
+                      </div>
+                    </div>
+                    <div className={`param-impact ${param.impact.includes('-') ? 'positive' : 'negative'}`}>
+                      {param.impact}
+                    </div>
+                  </div>
+                ))}
+                
+                {currentAction.warning && (
+                  <div className="optimization-warning">
+                    <span className="warning-icon">⚠️</span>
+                    <p>{currentAction.warning}</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p>Données d'optimisation non disponibles.</p>
+            )}
+          </div>
+          
+          <div className="modal-actions">
+            <button className="btn btn-outline" onClick={() => setShowOptimizationModal(false)}>
+              Annuler
+            </button>
+            <button className="btn btn-success" onClick={handleApplyOptimizationConfirm}>
+              Appliquer les changements
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

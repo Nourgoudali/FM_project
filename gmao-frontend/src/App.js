@@ -21,19 +21,18 @@ import NotificationSystem from "./components/Notifications/NotificationSystem"
 
 // Context
 import { AuthProvider, useAuth } from "./contexts/AuthContext"
+import { SidebarProvider } from "./contexts/SidebarContext"
 
 // Composant pour les routes protégées
 const ProtectedRoute = ({ children }) => {
     const { isAuthenticated, loading, user } = useAuth();
 
-    console.log('ProtectedRoute:', { isAuthenticated, loading, user });
 
     if (loading) {
         return <div>Chargement...</div>;
     }
 
     if (!isAuthenticated) {
-        console.warn('ProtectedRoute redirect: not authenticated', { isAuthenticated, user });
         return <Navigate to="/login" replace />;
     }
 
@@ -43,86 +42,96 @@ const ProtectedRoute = ({ children }) => {
 function App() {
     return (
         <AuthProvider>
-            <Router future={{ 
-                v7_relativeSplatPath: true,
-                v7_startTransition: true 
-            }}>
-                <Routes>
-                    {/* Routes publiques */}
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/login" element={<LoginPage />} />
+            <SidebarProvider>
+                <Router future={{ 
+                    v7_relativeSplatPath: true,
+                    v7_startTransition: true 
+                }}>
+                    <Routes>
+                        {/* Routes publiques */}
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/login" element={<LoginPage />} />
 
-                    {/* Routes protégées */}
-                    <Route
-                        path="/dashboard"
-                        element={
-                            <ProtectedRoute>
-                                <DashboardPage />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/users"
-                        element={
-                            <ProtectedRoute>
-                                <UserManagementPage />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/equipments"
-                        element={
-                            <ProtectedRoute>
-                                <EquipmentManagementPage />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/interventions"
-                        element={
-                            <ProtectedRoute>
-                                <InterventionManagementPage />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/stock"
-                        element={
-                            <ProtectedRoute>
-                                <StockManagementPage />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/documentation"
-                        element={
-                            <ProtectedRoute>
-                                <DocumentationPage />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/predictive"
-                        element={
-                            <ProtectedRoute>
-                                <PredictiveMaintenancePage />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/settings"
-                        element={
-                            <ProtectedRoute>
-                                <SettingsPage />
-                            </ProtectedRoute>
-                        }
-                    />
+                        {/* Routes protégées */}
+                        <Route
+                            path="/dashboard"
+                            element={
+                                <ProtectedRoute>
+                                    <DashboardPage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/users"
+                            element={
+                                <ProtectedRoute>
+                                    <UserManagementPage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/equipments"
+                            element={
+                                <ProtectedRoute>
+                                    <EquipmentManagementPage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/interventions"
+                            element={
+                                <ProtectedRoute>
+                                    <InterventionManagementPage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/stock"
+                            element={
+                                <ProtectedRoute>
+                                    <StockManagementPage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/documentation"
+                            element={
+                                <ProtectedRoute>
+                                    <DocumentationPage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/predictive"
+                            element={
+                                <ProtectedRoute>
+                                    <PredictiveMaintenancePage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/settings"
+                            element={
+                                <ProtectedRoute>
+                                    <SettingsPage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/profile"
+                            element={
+                                <ProtectedRoute>
+                                    <ProfilePage />
+                                </ProtectedRoute>
+                            }
+                        />
 
-                    {/* Redirection par défaut */}
-                    <Route path="*" element={<NotFoundPage />} />
-                </Routes>
-                <NotificationSystem />
-            </Router>
+                        {/* Redirection par défaut */}
+                        <Route path="*" element={<NotFoundPage />} />
+                    </Routes>
+                    <NotificationSystem />
+                </Router>
+            </SidebarProvider>
         </AuthProvider>
     )
 }

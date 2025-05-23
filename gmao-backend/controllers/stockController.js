@@ -21,6 +21,17 @@ const stockController = {
     }
   },
 
+  getById: async (req, res) => {
+    const { id } = req.params;
+    try {
+      const stock = await Stock.findById(id).populate('equipment');
+      if (!stock) return res.status(404).json({ message: 'Stock not found' });
+      res.json(stock);
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  },
+
   update: async (req, res) => {
     const { id } = req.params;
     const updates = req.body;

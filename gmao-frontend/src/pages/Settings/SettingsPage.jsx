@@ -1,13 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState, useEffect } from "react"
 import Sidebar from "../../components/Sidebar/Sidebar"
 import Header from "../../components/Header/Header"
 import "./SettingsPage.css"
+import { useSidebar } from "../../contexts/SidebarContext"
+import { configurationAPI } from "../../services/api"
 
-function SettingsPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+const SettingsPage = () => {
+  const { sidebarOpen, toggleSidebar } = useSidebar()
   const [activeTab, setActiveTab] = useState("general")
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [generalSettings, setGeneralSettings] = useState({
     companyName: "GMAO Équipements Critiques",
     language: "fr",
@@ -34,6 +38,47 @@ function SettingsPage() {
     webhookUrl: "https://example.com/webhook",
     enableApi: true,
   })
+
+  // Charger les configurations depuis l'API
+  useEffect(() => {
+    const fetchConfigurations = async () => {
+      try {
+        setLoading(true);
+        const response = await configurationAPI.getAllConfigurations();
+        
+        if (response && response.data) {
+          // Organiser les configurations par catégorie
+          const configs = response.data;
+          
+          // Paramètres généraux
+          const generalConfig = configs.find(config => config.category === 'general');
+          if (generalConfig && generalConfig.settings) {
+            setGeneralSettings(generalConfig.settings);
+          }
+          
+          // Paramètres de notification
+          const notificationConfig = configs.find(config => config.category === 'notifications');
+          if (notificationConfig && notificationConfig.settings) {
+            setNotificationSettings(notificationConfig.settings);
+          }
+          
+          // Paramètres API
+          const apiConfig = configs.find(config => config.category === 'api');
+          if (apiConfig && apiConfig.settings) {
+            setApiSettings(apiConfig.settings);
+          }
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement des configurations:", error);
+        setError("Impossible de charger les configurations");
+        // Les états par défaut sont déjà initialisés, donc pas besoin de fallback
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchConfigurations();
+  }, []);
 
   const handleGeneralSettingsChange = (e) => {
     const { name, value } = e.target
@@ -67,10 +112,61 @@ function SettingsPage() {
     })
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    // Ici, vous implémenteriez la logique pour sauvegarder les paramètres
-    alert("Paramètres sauvegardés avec succès!")
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      // Sauvegarder les paramètres généraux
+      await configurationAPI.updateConfiguration('general', { 
+        category: 'general',
+        settings: generalSettings 
+      });
+      
+      // Sauvegarder les paramètres de notification
+      await configurationAPI.updateConfiguration('notifications', {
+        category: 'notifications',
+        settings: notificationSettings
+      });
+      
+      // Sauvegarder les paramètres API
+      await configurationAPI.updateConfiguration('api', {
+        category: 'api',
+        settings: apiSettings
+      });
+      
+      alert("Paramètres sauvegardés avec succès!");
+    } catch (error) {
+      console.error("Erreur lors de la sauvegarde des paramètres:", error);
+      alert("Une erreur est survenue lors de la sauvegarde des paramètres");
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="settings-container">
+        <Sidebar isOpen={sidebarOpen} />
+        <div className="settings-content">
+          <Header title="Paramètres" onToggleSidebar={toggleSidebar} />
+          <main className="settings-main">
+            <div className="loading-indicator">Chargement des paramètres...</div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="settings-container">
+        <Sidebar isOpen={sidebarOpen} />
+        <div className="settings-content">
+          <Header title="Paramètres" onToggleSidebar={toggleSidebar} />
+          <main className="settings-main">
+            <div className="error-message">{error}</div>
+          </main>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -78,7 +174,7 @@ function SettingsPage() {
       <Sidebar isOpen={sidebarOpen} />
 
       <div className="settings-content">
-        <Header title="Paramètres" onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+        <Header title="Paramètres" onToggleSidebar={toggleSidebar} />
 
         <main className="settings-main">
           <div className="settings-layout">

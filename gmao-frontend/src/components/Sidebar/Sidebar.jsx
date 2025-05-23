@@ -2,29 +2,34 @@
 import { Link, useLocation } from "react-router-dom"
 import { useAuth } from "../../contexts/AuthContext"
 import "./Sidebar.css"
-import logoFM from "../../assets/images/logo-fm.jpg"
+import logoFM from "../../assets/images/logo-fm.png";
+import {FaUser, FaBox, FaCalendarAlt, FaTools, FaHandsHelping} from "react-icons/fa";
+import { MdSpaceDashboard } from "react-icons/md";
+import { IoDocumentText } from "react-icons/io5";
+import { GrVmMaintenance } from "react-icons/gr";
+import { IoMdSettings } from "react-icons/io";
 
-function Sidebar() {
+function Sidebar({ isOpen }) {
   const location = useLocation()
   const { currentUser } = useAuth()
 
   const menuItems = [
-    { path: "/dashboard", name: "Tableau de bord", icon: "dashboard" },
-    { path: "/users", name: "Utilisateurs", icon: "user" },
-    { path: "/interventions", name: "Interventions", icon: "intervention" },
-    { path: "/equipments", name: "Équipements", icon: "equipment" },
-    { path: "/stock", name: "Stock", icon: "stock" },
-    { path: "/documentation", name: "Documentation", icon: "document" },
-    { path: "/predictive", name: "Maintenance Prédictive", icon: "chart" },
-    { path: "/settings", name: "Paramètres", icon: "settings" },
+    { path: "/dashboard", name: "Tableau de bord", icon: <MdSpaceDashboard /> },
+    { path: "/users", name: "Utilisateurs", icon: <FaUser /> },
+    { path: "/interventions", name: "Interventions", icon: <FaCalendarAlt /> },
+    { path: "/equipments", name: "Équipements", icon: <FaTools /> },
+    { path: "/stock", name: "Stock", icon: <FaBox /> },
+    { path: "/documentation", name: "Documentation", icon: <IoDocumentText /> },
+    { path: "/predictive", name: "Maintenance Prédictive", icon: <GrVmMaintenance /> },
+    { path: "/settings", name: "Paramètres", icon: <IoMdSettings /> },
     { divider: true },
-    { path: "/profile", name: "Profil", icon: "user" },
+    { path: "/profile", name: "Profil", icon: <FaUser /> },
   ]
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? "open" : "closed"}`}>
       <div className="sidebar-header">
-        <Link to="/" className="sidebar-logo">
+        <Link to="/dashboard" className="sidebar-logo">
           <img src={logoFM || "/placeholder.svg"} alt="FM Logo" className="logo-image" />
           <span className="logo-text">GMAO</span>
         </Link>
@@ -38,7 +43,7 @@ function Sidebar() {
             ) : (
               <li key={item.path} className="nav-item">
                 <Link to={item.path} className={`nav-link ${location.pathname === item.path ? "active" : ""}`}>
-                  <span className={`nav-icon icon-${item.icon}`}></span>
+                  <span className="nav-icon">{item.icon}</span>
                   <span className="nav-text">{item.name}</span>
                 </Link>
               </li>
@@ -47,17 +52,7 @@ function Sidebar() {
         </ul>
       </nav>
 
-      {currentUser && (
-        <div className="sidebar-footer">
-          <div className="user-info">
-            <div className="user-avatar">{currentUser.name ? currentUser.name.charAt(0) : (currentUser.email ? currentUser.email.charAt(0) : 'U')}</div>
-            <div className="user-details">
-              <div className="user-name">{currentUser.name || currentUser.email || 'Utilisateur'}</div>
-              <div className="user-role">{currentUser.role || ''}</div>
-            </div>
-          </div>
-        </div>
-      )}
+      
     </aside>
   )
 }

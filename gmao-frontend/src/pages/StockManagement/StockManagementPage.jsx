@@ -2,17 +2,23 @@
 
 import { useState, useEffect } from "react"
 import { FaPlus, FaEdit, FaTrash, FaSearch, FaFileExport, FaFilter, FaSort } from "react-icons/fa"
+import Sidebar from "../../components/Sidebar/Sidebar"
+import Header from "../../components/Header/Header"
 import "./StockManagementPage.css"
 import Modal from "../../components/Modal/Modal"
 import AddStockItemForm from "../../components/Stock/AddStockItemForm"
+import { useSidebar } from "../../contexts/SidebarContext"
+import { stockAPI } from "../../services/api"
 
 const StockManagementPage = () => {
+  const { sidebarOpen, toggleSidebar } = useSidebar()
   const [stockItems, setStockItems] = useState([])
   const [filteredItems, setFilteredItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [currentItem, setCurrentItem] = useState(null)
   const [sortConfig, setSortConfig] = useState({ key: "name", direction: "ascending" })
   const [filters, setFilters] = useState({
@@ -23,10 +29,17 @@ const StockManagementPage = () => {
   })
   const [showFilters, setShowFilters] = useState(false)
 
-  // Simuler le chargement des données depuis l'API
+  // Chargement des données depuis l'API
   useEffect(() => {
-    // Simulation d'un appel API
-    setTimeout(() => {
+    const fetchStockItems = async () => {
+      setLoading(true);
+      try {
+        const response = await stockAPI.getAllStocks();
+        if (response.data) {
+          setStockItems(response.data);
+          setFilteredItems(response.data);
+        } else {
+          // Données fictives comme fallback en cas d'API non disponible
       const mockStockItems = [
         {
           id: 1,
@@ -93,13 +106,19 @@ const StockManagementPage = () => {
           lastRestockDate: "2023-02-18",
           status: "Rupture de stock",
         },
-      ]
+          ];
+          setStockItems(mockStockItems);
+          setFilteredItems(mockStockItems);
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement des articles de stock:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      setStockItems(mockStockItems)
-      setFilteredItems(mockStockItems)
-      setLoading(false)
-    }, 1000)
-  }, [])
+    fetchStockItems();
+  }, []);
 
   // Filtrer les éléments en fonction du terme de recherche et des filtres
   useEffect(() => {
@@ -156,28 +175,74 @@ const StockManagementPage = () => {
     setFilteredItems(sortedItems)
   }
 
+  // Gérer l'ouverture du modal d'édition
+  const handleOpenEditModal = (item) => {
+    setCurrentItem(item)
+    setShowEditModal(true)
+  }
+
+  // Gérer l'ouverture du modal de suppression
+  const handleOpenDeleteModal = (item) => {
+    setCurrentItem(item)
+    setShowDeleteModal(true)
+  }
+
   // Gérer l'ajout d'un nouvel élément
-  const handleAddItem = (newItem) => {
-    const updatedItems = [...stockItems, { ...newItem, id: stockItems.length + 1 }]
-    setStockItems(updatedItems)
-    setFilteredItems(updatedItems)
-    setShowAddModal(false)
+  const handleAddItem = async (newItem) => {
+    try {
+      const response = await stockAPI.createStock(newItem);
+      if (response.data) {
+        setStockItems([...stockItems, response.data]);
+        setShowAddModal(false);
+      } else {
+        // Fallback si pas de réponse valide
+        const tempItem = { ...newItem, id: stockItems.length + 1 };
+        setStockItems([...stockItems, tempItem]);
+        setShowAddModal(false);
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'ajout de l'article:", error);
+      alert("Une erreur est survenue lors de l'ajout de l'article");
+    }
   }
 
   // Gérer la modification d'un élément
-  const handleEditItem = (updatedItem) => {
-    const updatedItems = stockItems.map((item) => (item.id === updatedItem.id ? updatedItem : item))
-    setStockItems(updatedItems)
-    setFilteredItems(updatedItems)
-    setShowEditModal(false)
+  const handleEditItem = async (updatedItem) => {
+    try {
+      const response = await stockAPI.updateStock(updatedItem.id, updatedItem);
+      if (response.data) {
+        const updatedItems = stockItems.map((item) => 
+          item.id === updatedItem.id ? response.data : item
+        );
+        setStockItems(updatedItems);
+        setShowEditModal(false);
+      } else {
+        // Fallback si pas de réponse valide
+        const updatedItems = stockItems.map((item) => 
+          item.id === updatedItem.id ? updatedItem : item
+        );
+        setStockItems(updatedItems);
+        setShowEditModal(false);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la modification de l'article:", error);
+      alert("Une erreur est survenue lors de la modification de l'article");
+    }
   }
 
   // Gérer la suppression d'un élément
-  const handleDeleteItem = (id) => {
-    if (window.confirm("Êtes-vous sûr de vouloir supprimer cet élément ?")) {
-      const updatedItems = stockItems.filter((item) => item.id !== id)
-      setStockItems(updatedItems)
-      setFilteredItems(updatedItems)
+  const handleDeleteItem = async () => {
+    if (currentItem) {
+      try {
+        await stockAPI.deleteStock(currentItem.id);
+        const updatedItems = stockItems.filter((item) => item.id !== currentItem.id);
+        setStockItems(updatedItems);
+        setShowDeleteModal(false);
+        setCurrentItem(null);
+      } catch (error) {
+        console.error("Erreur lors de la suppression de l'article:", error);
+        alert("Une erreur est survenue lors de la suppression de l'article");
+      }
     }
   }
 
@@ -186,218 +251,196 @@ const StockManagementPage = () => {
   const statuses = ["all", "En stock", "Stock faible", "Rupture de stock"]
 
   return (
-    <div className="stock-management-page">
-      <div className="page-header">
-        <h1>Gestion du Stock</h1>
-        <button className="add-button" onClick={() => setShowAddModal(true)}>
-          <FaPlus /> Ajouter une pièce
-        </button>
-      </div>
-
-      <div className="stock-controls">
-        <div className="search-bar">
-          <FaSearch className="search-icon" />
-          <input
-            type="text"
-            placeholder="Rechercher par nom, référence ou fournisseur..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        <div className="filter-controls">
-          <button className="filter-button" onClick={() => setShowFilters(!showFilters)}>
-            <FaFilter /> Filtres
-          </button>
-
-          <button className="export-button">
-            <FaFileExport /> Exporter
-          </button>
-        </div>
-      </div>
-
-      {showFilters && (
-        <div className="filters-panel">
-          <div className="filter-group">
-            <label>Catégorie:</label>
-            <select value={filters.category} onChange={(e) => setFilters({ ...filters, category: e.target.value })}>
-              {categories.map((category, index) => (
-                <option key={index} value={category}>
-                  {category === "all" ? "Toutes les catégories" : category}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="filter-group">
-            <label>Statut:</label>
-            <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
-              {statuses.map((status, index) => (
-                <option key={index} value={status}>
-                  {status === "all" ? "Tous les statuts" : status}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="filter-group">
-            <label>Quantité min:</label>
-            <input
-              type="number"
-              value={filters.minQuantity}
-              onChange={(e) => setFilters({ ...filters, minQuantity: e.target.value })}
-            />
-          </div>
-
-          <div className="filter-group">
-            <label>Quantité max:</label>
-            <input
-              type="number"
-              value={filters.maxQuantity}
-              onChange={(e) => setFilters({ ...filters, maxQuantity: e.target.value })}
-            />
-          </div>
-
-          <button
-            className="reset-filters"
-            onClick={() =>
-              setFilters({
-                category: "all",
-                status: "all",
-                minQuantity: "",
-                maxQuantity: "",
-              })
-            }
-          >
-            Réinitialiser
-          </button>
-        </div>
-      )}
-
-      {loading ? (
-        <div className="loading-spinner">Chargement...</div>
-      ) : (
-        <>
-          <div className="stock-summary">
-            <div className="summary-card">
-              <h3>Total des pièces</h3>
-              <p>{stockItems.length}</p>
+    <div className="stock-management-container">
+      <Sidebar isOpen={sidebarOpen} />
+      
+      <div className="stock-management-content">
+        <Header title="Gestion du Stock" onToggleSidebar={toggleSidebar} />
+        
+        <main className="stock-management-main">
+          <div className="stock-controls">
+            <div className="search-bar">
+              <input
+                type="text"
+                placeholder="Rechercher par nom, référence ou fournisseur..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-            <div className="summary-card">
-              <h3>Valeur totale</h3>
-              <p>{stockItems.reduce((total, item) => total + item.quantity * item.unitPrice, 0).toFixed(2)} €</p>
-            </div>
-            <div className="summary-card">
-              <h3>Stock faible</h3>
-              <p>{stockItems.filter((item) => item.status === "Stock faible").length}</p>
-            </div>
-            <div className="summary-card">
-              <h3>Rupture de stock</h3>
-              <p>{stockItems.filter((item) => item.status === "Rupture de stock").length}</p>
+
+            <div className="filter-controls">
+              <button className="filter-button" onClick={() => setShowFilters(!showFilters)}>
+                <FaFilter /> Filtres
+              </button>
+
+              <button className="export-button">
+                <FaFileExport /> Exporter
+              </button>
+              
+              <button className="add-button" onClick={() => setShowAddModal(true)}>
+                <FaPlus /> Ajouter une pièce
+              </button>
             </div>
           </div>
 
-          <div className="stock-table-container">
-            <table className="stock-table">
-              <thead>
-                <tr>
-                  <th onClick={() => requestSort("name")}>
-                    Nom <FaSort className="sort-icon" />
-                  </th>
-                  <th onClick={() => requestSort("reference")}>
-                    Référence <FaSort className="sort-icon" />
-                  </th>
-                  <th onClick={() => requestSort("category")}>
-                    Catégorie <FaSort className="sort-icon" />
-                  </th>
-                  <th onClick={() => requestSort("quantity")}>
-                    Quantité <FaSort className="sort-icon" />
-                  </th>
-                  <th onClick={() => requestSort("location")}>
-                    Emplacement <FaSort className="sort-icon" />
-                  </th>
-                  <th onClick={() => requestSort("unitPrice")}>
-                    Prix unitaire <FaSort className="sort-icon" />
-                  </th>
-                  <th onClick={() => requestSort("supplier")}>
-                    Fournisseur <FaSort className="sort-icon" />
-                  </th>
-                  <th onClick={() => requestSort("status")}>
-                    Statut <FaSort className="sort-icon" />
-                  </th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredItems.length > 0 ? (
-                  filteredItems.map((item) => (
-                    <tr
-                      key={item.id}
-                      className={
-                        item.status === "Rupture de stock"
-                          ? "stock-out"
-                          : item.status === "Stock faible"
-                            ? "low-stock"
-                            : ""
-                      }
-                    >
-                      <td>{item.name}</td>
+          {showFilters && (
+            <div className="filters-panel">
+              <div className="filter-group">
+                <label>Catégorie:</label>
+                <select value={filters.category} onChange={(e) => setFilters({ ...filters, category: e.target.value })}>
+                  {categories.map((category, index) => (
+                    <option key={index} value={category}>
+                      {category === "all" ? "Toutes les catégories" : category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="filter-group">
+                <label>Statut:</label>
+                <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
+                  {statuses.map((status, index) => (
+                    <option key={index} value={status}>
+                      {status === "all" ? "Tous les statuts" : status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="filter-group">
+                <label>Quantité min:</label>
+                <input
+                  type="number"
+                  value={filters.minQuantity}
+                  onChange={(e) => setFilters({ ...filters, minQuantity: e.target.value })}
+                />
+              </div>
+
+              <div className="filter-group">
+                <label>Quantité max:</label>
+                <input
+                  type="number"
+                  value={filters.maxQuantity}
+                  onChange={(e) => setFilters({ ...filters, maxQuantity: e.target.value })}
+                />
+              </div>
+
+              <button
+                className="reset-filters"
+                onClick={() =>
+                  setFilters({
+                    category: "all",
+                    status: "all",
+                    minQuantity: "",
+                    maxQuantity: "",
+                  })
+                }
+              >
+                Réinitialiser
+              </button>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="loading-indicator">Chargement des pièces...</div>
+          ) : (
+            <div className="stock-table-container">
+              <table className="stock-table">
+                <thead>
+                  <tr>
+                    <th onClick={() => requestSort("reference")}>
+                      Référence <FaSort className="sort-icon" />
+                    </th>
+                    <th onClick={() => requestSort("name")}>
+                      Nom <FaSort className="sort-icon" />
+                    </th>
+                    <th onClick={() => requestSort("category")}>
+                      Catégorie <FaSort className="sort-icon" />
+                    </th>
+                    <th onClick={() => requestSort("quantity")}>
+                      Quantité <FaSort className="sort-icon" />
+                    </th>
+                    <th onClick={() => requestSort("location")}>
+                      Emplacement <FaSort className="sort-icon" />
+                    </th>
+                    <th onClick={() => requestSort("unitPrice")}>
+                      Prix unitaire <FaSort className="sort-icon" />
+                    </th>
+                    <th onClick={() => requestSort("status")}>
+                      Statut <FaSort className="sort-icon" />
+                    </th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredItems.map((item) => (
+                    <tr key={item.id}>
                       <td>{item.reference}</td>
+                      <td>{item.name}</td>
                       <td>{item.category}</td>
-                      <td>{item.quantity}</td>
+                      <td>
+                        <div className="quantity-cell">
+                          <span className="quantity-value">{item.quantity}</span>
+                          {item.quantity <= item.minQuantity && <span className="alert-icon">⚠️</span>}
+                        </div>
+                      </td>
                       <td>{item.location}</td>
                       <td>{item.unitPrice.toFixed(2)} €</td>
-                      <td>{item.supplier}</td>
                       <td>
-                        <span className={`status-badge ${item.status.toLowerCase().replace(/\s+/g, "-")}`}>
+                        <span className={`status-badge ${item.status.replace(/\s+/g, "-").toLowerCase()}`}>
                           {item.status}
                         </span>
                       </td>
                       <td className="actions-cell">
-                        <button
-                          className="edit-button"
-                          onClick={() => {
-                            setCurrentItem(item)
-                            setShowEditModal(true)
-                          }}
-                        >
+                        <button className="action-btn edit" onClick={() => handleOpenEditModal(item)} title="Modifier">
                           <FaEdit />
                         </button>
-                        <button className="delete-button" onClick={() => handleDeleteItem(item.id)}>
+                        <button className="action-btn delete" onClick={() => handleOpenDeleteModal(item)} title="Supprimer">
                           <FaTrash />
                         </button>
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="9" className="no-results">
-                      Aucun élément trouvé
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </main>
+      </div>
 
-      {showAddModal && (
-        <Modal title="Ajouter une pièce" onClose={() => setShowAddModal(false)}>
+      {/* Modal d'ajout d'article */}
+      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Ajouter un article">
           <AddStockItemForm onSubmit={handleAddItem} onCancel={() => setShowAddModal(false)} />
         </Modal>
-      )}
 
-      {showEditModal && currentItem && (
-        <Modal title="Modifier une pièce" onClose={() => setShowEditModal(false)}>
+      {/* Modal d'édition d'article */}
+      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Modifier l'article">
+        {currentItem && (
           <AddStockItemForm
             item={currentItem}
             onSubmit={handleEditItem}
             onCancel={() => setShowEditModal(false)}
-            isEditing={true}
+            isEdit
           />
+        )}
+      </Modal>
+
+      {/* Modal de confirmation de suppression */}
+      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Confirmer la suppression" size="small">
+        <div className="delete-confirmation">
+          <p>Êtes-vous sûr de vouloir supprimer l'article <strong>{currentItem?.name}</strong> ?</p>
+          <p>Cette action est irréversible.</p>
+          
+          <div className="modal-actions">
+            <button className="btn btn-outline" onClick={() => setShowDeleteModal(false)}>
+              Annuler
+            </button>
+            <button className="btn btn-danger" onClick={handleDeleteItem}>
+              Supprimer
+            </button>
+          </div>
+        </div>
         </Modal>
-      )}
     </div>
   )
 }

@@ -20,9 +20,9 @@ dotenv.config();
 // Initialize Express app
 const app = express();
 
-// Configuration CORS avec options explicites
+// ✅ Correct CORS configuration
 app.use(cors({
-  origin: '*', // Allow all origins in development
+  origin: ['http://localhost:3001', 'http://localhost:3000'], // List your frontend URLs here
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -35,8 +35,8 @@ mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .then(() => console.log('MongoDB connected successfully'))
+  .catch(() => console.error('MongoDB connection failed'));
 
 // Apply Routes
 app.use('/api/users', userRoutes);
