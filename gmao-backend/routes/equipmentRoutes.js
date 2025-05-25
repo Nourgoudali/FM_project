@@ -1,12 +1,13 @@
 const express = require('express');
 const equipmentController = require('../controllers/equipmentController');
-const { verifyToken, checkRole } = require('../middleware/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-router.post('/', verifyToken, checkRole('admin'), equipmentController.create);
-router.get('/', verifyToken, equipmentController.getAll);
-router.put('/:id', verifyToken, checkRole('admin'), equipmentController.update);
-router.delete('/:id', verifyToken, checkRole('admin'), equipmentController.delete);
+router.post('/', authMiddleware.verifyToken, authMiddleware.checkRole('admin'), equipmentController.create);
+router.get('/', authMiddleware.verifyToken, equipmentController.getAll);
+router.get('/reference/:reference', authMiddleware.verifyToken, equipmentController.getByReference);
+router.put('/:id', authMiddleware.verifyToken, authMiddleware.checkRole('admin'), equipmentController.update);
+router.delete('/:id', authMiddleware.verifyToken, authMiddleware.checkRole('admin'), equipmentController.delete);
 
 module.exports = router;

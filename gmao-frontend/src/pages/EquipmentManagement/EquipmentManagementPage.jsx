@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Sidebar from "../../components/Sidebar/Sidebar"
 import Header from "../../components/Header/Header"
 import Modal from "../../components/Modal/Modal"
-import AddEquipmentForm from "../../components/Equipment/AddEquipmentForm"
+import { AddEquipmentForm } from "../../components/Equipment/AddEquipmentForm"
 import "./EquipmentManagementPage.css"
 import { useSidebar } from "../../contexts/SidebarContext"
 import { equipmentAPI } from "../../services/api"
@@ -57,15 +57,16 @@ const EquipmentManagementPage = () => {
   // Filtrer les équipements en fonction de la recherche et du filtre de statut
   const filteredEquipments = equipments.filter((equipment) => {
     // Convert reference to consistent format (remove spaces and hyphens)
-    const cleanReference = equipment.reference?.replace(/\s|-/g, '').toLowerCase();
+    const cleanReference = (equipment?.reference || '').replace(/\s|-/g, '').toLowerCase();
     
     const matchesSearch = cleanReference.includes(searchTerm.toLowerCase()) ||
-      equipment.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      equipment.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      equipment.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      equipment.brand?.toLowerCase().includes(searchTerm.toLowerCase());
+      (equipment?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (equipment?.category || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (equipment?.location || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (equipment?.brand || '').toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = filterStatus === "all" || equipment.status?.toLowerCase() === filterStatus.toLowerCase();
+    const matchesStatus = filterStatus === "all" || 
+      (equipment?.status || '').toLowerCase() === filterStatus.toLowerCase();
 
     return matchesSearch && matchesStatus;
   });
@@ -136,7 +137,13 @@ const EquipmentManagementPage = () => {
   // Handler pour édition (remplace l'équipement dans la liste)
   const handleEditEquipment = async (updatedEquipment) => {
     try {
-      const response = await equipmentAPI.updateEquipment(updatedEquipment._id, updatedEquipment);
+      // Ensure we have the ID from the original equipment
+      const equipmentId = updatedEquipment._id || updatedEquipment.id;
+      if (!equipmentId) {
+        throw new Error('ID d\'équipement non valide');
+      }
+
+      const response = await equipmentAPI.updateEquipment(equipmentId, updatedEquipment);
       if (response.data) {
         // Refresh the entire list to ensure consistency
         const updatedEquipments = await equipmentAPI.getAllEquipments();
@@ -155,14 +162,30 @@ const EquipmentManagementPage = () => {
   const handleDeleteEquipmentModal = async () => {
     if (selectedEquipment) {
       try {
-        // Use _id for MongoDB
-        const idToDelete = selectedEquipment._id || selectedEquipment.id;
-        await equipmentAPI.deleteEquipment(idToDelete);
-        setEquipments(equipments.filter(eq => eq._id === idToDelete || eq.id === idToDelete));
-        handleCloseModals();
+        // Utiliser _id pour MongoDB ou id pour les données locales
+        const equipmentId = selectedEquipment._id || selectedEquipment.id;
+        if (!equipmentId) {
+          throw new Error('ID d\'équipement non valide');
+        }
+        
+        console.log('Suppression de l\'équipement avec ID:', equipmentId);
+        const response = await equipmentAPI.deleteEquipment(equipmentId);
+        
+        if (response.status === 200) {
+          // Mettre à jour la liste des équipements en filtrant celui qui a été supprimé
+          setEquipments(prevEquipments => 
+            prevEquipments.filter(eq => {
+              const currentId = eq._id || eq.id;
+              return currentId !== equipmentId;
+            })
+          );
+          handleCloseModals();
+        } else {
+          throw new Error('Échec de la suppression de l\'équipement');
+        }
       } catch (error) {
         console.error("Erreur lors de la suppression de l'équipement:", error);
-        alert("Une erreur est survenue lors de la suppression de l'équipement");
+        alert("Une erreur est survenue lors de la suppression de l'équipement: " + error.message);
       }
     }
   }
@@ -336,32 +359,27 @@ const EquipmentManagementPage = () => {
                   </thead>
                   <tbody>
                     {filteredEquipments.map((equipment) => (
-                      <tr key={equipment.id}>
-                        <td>{equipment.reference}</td>
-                        <td>{equipment.name}</td>
-                        <td>{equipment.category}</td>
-                        <td>{equipment.location}</td>
+                      <tr key={equipment._id}>
+                        <td>{equipment.reference || '-'}</td>
+                        <td>{equipment.name || '-'}</td>
+                        <td>{equipment.category || '-'}</td>
+                        <td>{equipment.location || '-'}</td>
+                        <td>{equipment.status || '-'}</td>
                         <td>
-                          <span className={`emp-status-badge ${getStatusColor(equipment.status)}`}>{equipment.status}</span>
-                        </td>
-                        <td>
-                          <div className="emp-availability-inline">
-                            <div className="emp-availability-bar-small-container">
-                              <div
-                                className={`emp-availability-bar-small ${getAvailabilityColor(equipment.availability)}`}
-                                style={{ width: `${equipment.availability}%` }}
-                              ></div>
-                            </div>
-                            <span>{equipment.availability}%</span>
-                          </div>
-                        </td>
-                        <td>
-                          <div className="emp-table-actions">
-                            <button className="emp-action-btn emp-edit-btn" title="Modifier" onClick={() => handleOpenEditModal(equipment)}>
-                              <span className="emp-action-icon emp-edit-icon"></span>
+                          <div className="btn-group">
+                            <button
+                              className="btn btn-sm btn-primary"
+                              onClick={() => handleOpenEditModal(equipment)}
+                              title="Modifier l'équipement"
+                            >
+                              <FaEdit /> Modifier
                             </button>
-                            <button className="emp-action-btn emp-delete-btn" title="Supprimer" onClick={() => handleOpenDeleteModal(equipment)}>
-                              <span className="emp-action-icon emp-delete-icon"></span>
+                            <button
+                              className="btn btn-sm btn-danger"
+                              onClick={() => handleOpenDeleteModal(equipment)}
+                              title="Supprimer l'équipement"
+                            >
+                              <FaTrash /> Supprimer
                             </button>
                           </div>
                         </td>

@@ -4,9 +4,8 @@ import { useState, useEffect } from "react"
 import "./AddEquipmentForm.css"
 import { equipmentAPI } from "../../services/api"
 
-function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null, isEdit = false }) {
+export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null, isEdit = false }) {
   const [formData, setFormData] = useState({
-    reference: initialData?.reference || "",
     name: initialData?.name || "",
     category: initialData?.category || "",
     location: initialData?.location || "",
@@ -15,19 +14,18 @@ function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null, isEdi
     serialNumber: initialData?.serialNumber || "",
     purchaseDate: initialData?.purchaseDate || "",
     warrantyEnd: initialData?.warrantyEnd || "",
-    status: initialData?.status || "operational",
+    status: initialData?.status || "En service",
     description: initialData?.description || "",
   })
 
   const [loading, setLoading] = useState(false)
-  const [errorMessage, setErrorMessage] = useState(null)
+  const [error, setError] = useState(null)
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(initialData?.image || null)
 
   useEffect(() => {
     if (initialData) {
       setFormData({
-        reference: initialData.reference || "",
         name: initialData.name || "",
         category: initialData.category || "",
         location: initialData.location || "",
@@ -36,7 +34,7 @@ function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null, isEdi
         serialNumber: initialData.serialNumber || "",
         purchaseDate: initialData.purchaseDate || "",
         warrantyEnd: initialData.warrantyEnd || "",
-        status: initialData?.status || "operational",
+        status: initialData.status || "En service",
         description: initialData.description || "",
       })
       setImagePreview(initialData.image || null)
@@ -66,91 +64,73 @@ function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null, isEdi
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-    setErrorMessage(null)
+    setError(null)
 
     try {
-      // Créer un FormData pour envoyer l'image
-      const data = new FormData()
+      // Préparer les données du formulaire
+      // Map status from French to English
+      const statusMap = {
+        'En service': 'operational',
+        'En maintenance': 'maintenance',
+        'Hors service': 'out_of_service'
+      };
 
-      // Ajouter toutes les données du formulaire
-      data.append('reference', formData.reference)
-      data.append('name', formData.name)
-      data.append('category', formData.category)
-      data.append('location', formData.location)
-      data.append('status', formData.status || 'operational')
-      data.append('brand', formData.brand || '')
-      data.append('description', formData.description || '')
-      data.append('purchaseDate', formData.purchaseDate || '')
-      data.append('warrantyEnd', formData.warrantyEnd || '')
-      data.append('serialNumber', formData.serialNumber || '')
-
-      // Ajouter l'image si elle existe
-      if (imageFile) {
-        data.append("image", imageFile)
-      }
-
-      // Envoyer les données à l'API
-      const response = await equipmentAPI.createEquipment(data)
-      
-      // Pour édition, garder l'id existant
-      const equipmentToReturn = {
-        _id: response.data._id,
-        reference: formData.reference,
+      // Prepare data for submission
+      const data = {
         name: formData.name,
         category: formData.category,
         location: formData.location,
-        status: formData.status || 'operational',
-        brand: formData.brand || '',
-        description: formData.description || '',
-        image: response.data.image || "/placeholder.svg?height=100&width=100",
-        availability: response.data.availability || 100,
+        status: statusMap[formData.status] || 'operational',
+        brand: formData.brand,
+        model: formData.model,
+        serialNumber: formData.serialNumber,
+        purchaseDate: formData.purchaseDate,
+        warrantyEnd: formData.warrantyEnd,
+        description: formData.description,
+        image: imageFile ? imageFile : undefined
       }
 
-      onEquipmentAdded(equipmentToReturn)
-      onClose()
+      try {
+        // Envoyer les données à l'API
+        let response;
+        if (isEdit && initialData) {
+          // Pour la mise à jour, on utilise l'ID de l'équipement existant
+          response = await equipmentAPI.updateEquipment(initialData.id, data);
+        } else {
+          // Pour la création, on utilise l'endpoint de création
+          response = await equipmentAPI.createEquipment(data);
+        }
+
+        const equipmentToReturn = {
+          ...(isEdit && initialData ? { id: initialData.id } : { id: response.data._id }),
+          ...formData,
+          image: response.data.image || "/placeholder.svg?height=100&width=100",
+          availability: initialData?.availability || 100,
+        }
+
+        onEquipmentAdded(equipmentToReturn)
+        onClose()
+      } catch (err) {
+        console.error("Erreur lors de l'enregistrement de l'équipement:", err)
+        setError("Une erreur est survenue lors de l'enregistrement de l'équipement. Veuillez réessayer.")
+      }
     } catch (err) {
-      console.error("Erreur lors de l'ajout de l'équipement:", err)
-      
-      // Get error message from backend
-      const errorMessage = err.response?.data?.message || 
-                          err.response?.data?.errors?.reference || 
-                          "Une erreur est survenue lors de l'ajout de l'équipement. Veuillez vérifier les données et réessayer.";
-      
-      // Show error message in form
-      setErrorMessage(errorMessage)
-      
-      // Don't close the modal on error
+      console.error("Erreur lors de l'enregistrement de l'équipement:", err)
+      setError("Une erreur est survenue lors de l'enregistrement de l'équipement. Veuillez réessayer.")
+    } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="aef-form-container">
-      {errorMessage && (
-        <div className="error-message">
-          {errorMessage}
-        </div>
-      )}
-      <form onSubmit={handleSubmit} className="aef-equipment-form">
+    <form onSubmit={handleSubmit} className="aef-equipment-form">
+      {error && <div className="aef-form-error">{error}</div>}
 
       <div className="aef-form-section">
         <h3 className="aef-form-section-title">Informations générales</h3>
 
         <div className="aef-form-row">
-          <div className="aef-form-group">
-            <label htmlFor="reference" className="aef-form-label">
-              Référence *
-            </label>
-            <input
-              type="text"
-              id="reference"
-              name="reference"
-              value={formData.reference}
-              onChange={handleChange}
-              className="aef-form-control"
-              required
-            />
-          </div>
+          {/* Le champ de référence a été supprimé car il est généré automatiquement */}
 
           <div className="aef-form-group">
             <label htmlFor="name" className="aef-form-label">
@@ -366,8 +346,5 @@ function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null, isEdi
         </button>
       </div>
     </form>
-    </div>
   )
 }
-
-export default AddEquipmentForm

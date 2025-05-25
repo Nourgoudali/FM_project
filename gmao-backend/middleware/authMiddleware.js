@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User'); // Assure-toi que le nom du fichier correspond bien
 
-exports.verifyToken = async (req, res, next) => {
+module.exports.verifyToken = async (req, res, next) => {
   try {
     const bearerHeader = req.header('Authorization');
 
@@ -39,7 +39,7 @@ exports.verifyToken = async (req, res, next) => {
   }
 };
 
-exports.checkRole = (roles) => {
+module.exports.checkRole = (roles) => {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ message: 'Utilisateur non authentifié' });

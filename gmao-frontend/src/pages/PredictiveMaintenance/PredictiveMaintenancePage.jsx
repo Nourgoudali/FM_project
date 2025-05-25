@@ -55,7 +55,11 @@ function PredictiveMaintenancePage() {
           setSelectedEquipment(firstEquipment);
           
           // Récupérer les données des capteurs pour le premier équipement
-          await fetchSensorData(firstEquipment.id);
+          if (!firstEquipment || !firstEquipment._id) {
+            setError("Impossible de trouver l'ID de l'équipement");
+            return;
+          }
+          await fetchSensorData(firstEquipment._id.toString());
         } else {
           setError("Aucun équipement disponible.");
         }
@@ -74,13 +78,22 @@ function PredictiveMaintenancePage() {
       try {
         // Utiliser l'API existante pour récupérer les utilisateurs avec le rôle technicien
         const response = await userAPI.getAllUsers();
-        if (response.data) {
+        
+        if (response && response.data) {
           // Filtrer pour ne garder que les techniciens
-          const technicianUsers = response.data.filter(user => user.role === 'technician');
+          const technicianUsers = response.data
+            .filter(user => user && user.role === 'technician')
+            .map(user => ({
+              ...user,
+              status: user.status || 'active', // Provide a default status if not present
+              availability: user.availability || 100 // Provide a default availability if not present
+            }));
+          
           setTechnicians(technicianUsers);
         }
       } catch (err) {
         console.error("Erreur lors du chargement des techniciens:", err);
+        setError("Impossible de charger la liste des techniciens. Veuillez réessayer plus tard.");
       }
     };
     
@@ -99,59 +112,59 @@ function PredictiveMaintenancePage() {
     try {
       setError(null);
       
-      // Récupérer les données des capteurs
-      const sensorResponse = await sensorAPI.getSensorsByEquipment(equipmentId);
+      // Vérifier si l'ID est valide
+      if (!equipmentId) {
+        throw new Error('ID d\'équipement invalide');
+      }
       
-      if (sensorResponse.data && sensorResponse.data.length > 0) {
-        // Organiser les données par type de capteur (vibration, température, courant)
+      // Récupérer les données des capteurs
+      const sensorData = await sensorAPI.getSensorsByEquipment(equipmentId);
+      
+      if (sensorData && sensorData.length > 0) {
+        // Organiser les données par type de capteur et période
+        const now = new Date();
+        const oneWeekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+        const oneMonthAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
+        
         const organizedData = {
           vibrationData: { week: [], month: [], year: [] },
           temperatureData: { week: [], month: [], year: [] },
           currentData: { week: [], month: [], year: [] }
         };
         
-        // Organiser les données par type de métrique
-        sensorResponse.data.forEach(reading => {
+        // Organiser les données par type de métrique et période
+        sensorData.forEach(reading => {
+          const readingDate = new Date(reading.timestamp);
+          
           if (reading.metric === 'vibration') {
-            if (!organizedData.vibrationData.week.includes(reading.value)) {
-              organizedData.vibrationData.week.push(reading.value);
-            }
-            if (!organizedData.vibrationData.month.includes(reading.value)) {
-              organizedData.vibrationData.month.push(reading.value);
-            }
-            if (!organizedData.vibrationData.year.includes(reading.value)) {
-              organizedData.vibrationData.year.push(reading.value);
-            }
+            if (readingDate >= oneWeekAgo) organizedData.vibrationData.week.push(reading);
+            if (readingDate >= oneMonthAgo) organizedData.vibrationData.month.push(reading);
+            organizedData.vibrationData.year.push(reading);
           } else if (reading.metric === 'temperature') {
-            if (!organizedData.temperatureData.week.includes(reading.value)) {
-              organizedData.temperatureData.week.push(reading.value);
-            }
-            if (!organizedData.temperatureData.month.includes(reading.value)) {
-              organizedData.temperatureData.month.push(reading.value);
-            }
-            if (!organizedData.temperatureData.year.includes(reading.value)) {
-              organizedData.temperatureData.year.push(reading.value);
-            }
+            if (readingDate >= oneWeekAgo) organizedData.temperatureData.week.push(reading);
+            if (readingDate >= oneMonthAgo) organizedData.temperatureData.month.push(reading);
+            organizedData.temperatureData.year.push(reading);
           } else if (reading.metric === 'current') {
-            if (!organizedData.currentData.week.includes(reading.value)) {
-              organizedData.currentData.week.push(reading.value);
-            }
-            if (!organizedData.currentData.month.includes(reading.value)) {
-              organizedData.currentData.month.push(reading.value);
-            }
-            if (!organizedData.currentData.year.includes(reading.value)) {
-              organizedData.currentData.year.push(reading.value);
-            }
+            if (readingDate >= oneWeekAgo) organizedData.currentData.week.push(reading);
+            if (readingDate >= oneMonthAgo) organizedData.currentData.month.push(reading);
+            organizedData.currentData.year.push(reading);
           }
+        });
+        
+        // Trier les données par date (plus récent en premier)
+        Object.keys(organizedData).forEach(metric => {
+          Object.keys(organizedData[metric]).forEach(period => {
+            organizedData[metric][period].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+          });
         });
         
         setSensorData(organizedData);
         
         // Récupérer les recommandations
         try {
-          const recommendationResponse = await sensorAPI.getRecommendationsForEquipment(equipmentId);
-          if (recommendationResponse.data && recommendationResponse.data.length > 0) {
-            setRecommendations(recommendationResponse.data);
+          const recommendations = await sensorAPI.getRecommendationsForEquipment(equipmentId);
+          if (recommendations && recommendations.length > 0) {
+            setRecommendations(recommendations);
           } else {
             setRecommendations([]);
           }
@@ -181,14 +194,21 @@ function PredictiveMaintenancePage() {
 
   const handleEquipmentChange = async (equipmentId) => {
     try {
+      // Vérifier si l'ID est valide
+      if (!equipmentId) {
+        throw new Error('ID d\'équipement invalide');
+      }
+      
       const equipment = equipments.find((eq) => 
         (eq._id && eq._id.toString() === equipmentId) || 
         (eq.id && eq.id.toString() === equipmentId)
       );
       
-      if (!equipment) return;
+      if (!equipment) {
+        throw new Error('Équipement non trouvé');
+      }
       
-    setSelectedEquipment(equipment);
+      setSelectedEquipment(equipment);
       setLoading(true);
       setError(null);
       

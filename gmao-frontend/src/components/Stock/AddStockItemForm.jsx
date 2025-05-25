@@ -2,21 +2,76 @@
 
 import { useState, useEffect } from "react"
 import "./AddStockItemForm.css"
+import { equipmentAPI } from "../../services/api"
 
 function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
-  const [formData, setFormData] = useState({
+  // Initialize form data with empty values
+  const emptyFormData = {
     name: "",
     reference: "",
-    category: "",
+    equipment: "",
     quantity: 0,
-    minQuantity: 0,
-    location: "",
-    unitPrice: 0,
+    minThreshold: 0,
     supplier: "",
-    lastRestockDate: "",
-    status: "En stock",
-  })
+    leadTime: 0,
+  };
 
+  // Ensure form data is always initialized with empty values
+  useEffect(() => {
+    if (!isEdit) {
+      setFormData(emptyFormData);
+    }
+  }, [isEdit])
+
+  // Initialize form data based on mode
+  const initialData = item && isEdit 
+    ? {
+        name: item.name || "",
+        reference: item.reference || "",
+        equipment: item.equipment ? item.equipment._id : "",
+        quantity: item.quantity || 0,
+        minThreshold: item.minThreshold || 0,
+        supplier: item.supplier || "",
+        leadTime: item.leadTime || 0,
+      }
+    : emptyFormData
+
+  const [formData, setFormData] = useState(initialData)
+
+  // Update form data when item changes
+  useEffect(() => {
+    if (item && isEdit) {
+      const newData = {
+        name: item.name || "",
+        reference: item.reference || "",
+        equipment: item.equipment ? item.equipment._id : "",
+        quantity: item.quantity || 0,
+        minThreshold: item.minThreshold || 0,
+        supplier: item.supplier || "",
+        leadTime: item.leadTime || 0,
+      }
+      setFormData(newData)
+    }
+  }, [item, isEdit])
+  const [equipmentList, setEquipmentList] = useState([])
+
+  // Fetch equipment list for dropdown
+  useEffect(() => {
+    const fetchEquipment = async () => {
+      try {
+        const response = await equipmentAPI.getAllEquipments();
+        if (response.data) {
+          setEquipmentList(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching equipment list:", error);
+      }
+    };
+    fetchEquipment();
+  }, []);
+
+  const [apiLoading, setApiLoading] = useState(false)
+  const [apiError, setApiError] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -26,14 +81,11 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
       setFormData({
         name: item.name || "",
         reference: item.reference || "",
-        category: item.category || "",
+        equipment: item.equipment ? item.equipment._id : "",
         quantity: item.quantity || 0,
-        minQuantity: item.minQuantity || 0,
-        location: item.location || "",
-        unitPrice: item.unitPrice || 0,
+        minThreshold: item.minThreshold || 0,
         supplier: item.supplier || "",
-        lastRestockDate: item.lastRestockDate || "",
-        status: item.status || "En stock",
+        leadTime: item.leadTime || 0,
       })
     }
   }, [item, isEdit])
@@ -48,8 +100,8 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
-    setError(null)
+    setApiLoading(true);
+    setApiError(null);
 
     try {
       // Simuler un délai réseau
@@ -57,21 +109,21 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
       
       // Préparer l'objet à retourner, avec l'ID si on est en mode édition
       const itemToSubmit = {
-        ...(isEdit && item ? { id: item.id } : {}),
+        ...(isEdit && item ? { _id: item._id } : {}),
         ...formData,
       }
       
       onSubmit(itemToSubmit)
     } catch (err) {
-      setError("Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.")
+      setApiError("Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.")
     } finally {
-      setLoading(false)
+      setApiLoading(false);
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="stock-form">
-      {error && <div className="form-error">{error}</div>}
+      {apiError && <div className="form-error">{apiError}</div>}
 
       <div className="form-section">
         <h3 className="form-section-title">Informations générales</h3>
@@ -104,33 +156,50 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
 
         <div className="form-row">
           <div className="form-group">
-            <label htmlFor="category">Catégorie *</label>
+            <label htmlFor="equipment">Équipement *</label>
             <select
-              id="category"
-              name="category"
-              value={formData.category}
+              id="equipment"
+              name="equipment"
+              value={formData.equipment || ''}
               onChange={handleChange}
               required
+              disabled={apiLoading}
             >
-              <option value="">Sélectionnez une catégorie</option>
-              <option value="Mécanique">Mécanique</option>
-              <option value="Électrique">Électrique</option>
-              <option value="Fluides">Fluides</option>
-              <option value="Transmission">Transmission</option>
-              <option value="Filtration">Filtration</option>
-              <option value="Autre">Autre</option>
+              <option value="">Sélectionnez un équipement</option>
+              {equipmentList.map((equipment) => (
+                <option key={equipment._id} value={equipment._id}>
+                  {equipment.name}
+                </option>
+              ))}
             </select>
+            {apiError && <div className="form-error">{apiError}</div>}
           </div>
           
           <div className="form-group">
-            <label htmlFor="supplier">Fournisseur</label>
+            <label htmlFor="minThreshold">Seuil minimum *</label>
             <input
-              type="text"
-              id="supplier"
-              name="supplier"
-              value={formData.supplier}
+              type="number"
+              id="minThreshold"
+              name="minThreshold"
+              value={formData.minThreshold}
               onChange={handleChange}
+              required
             />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="leadTime">Délai de livraison *</label>
+            <input
+              type="number"
+              id="leadTime"
+              name="leadTime"
+              value={formData.leadTime}
+              onChange={handleChange}
+              required
+            />
+            <span className="form-help">en jours</span>
           </div>
         </div>
       </div>
@@ -147,19 +216,7 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
               name="quantity"
               value={formData.quantity}
               onChange={handleChange}
-              min="0"
               required
-            />
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="minQuantity">Quantité minimale</label>
-            <input
-              type="number"
-              id="minQuantity"
-              name="minQuantity"
-              value={formData.minQuantity}
-              onChange={handleChange}
               min="0"
             />
           </div>
@@ -167,29 +224,14 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
 
         <div className="form-row">
           <div className="form-group">
-            <label htmlFor="location">Emplacement *</label>
+            <label htmlFor="supplier">Fournisseur</label>
             <input
               type="text"
-              id="location"
-              name="location"
-              value={formData.location}
+              id="supplier"
+              name="supplier"
+              value={formData.supplier}
               onChange={handleChange}
-              required
             />
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="status">Statut</label>
-            <select
-              id="status"
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-            >
-              <option value="En stock">En stock</option>
-              <option value="Stock faible">Stock faible</option>
-              <option value="Rupture de stock">Rupture de stock</option>
-            </select>
           </div>
         </div>
       </div>

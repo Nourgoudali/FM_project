@@ -209,40 +209,50 @@ const StockManagementPage = () => {
   // Gérer la modification d'un élément
   const handleEditItem = async (updatedItem) => {
     try {
-      const response = await stockAPI.updateStock(updatedItem.id, updatedItem);
+      // Ensure we have an ID before making the request
+      if (!updatedItem._id) {
+        throw new Error('ID de l\'article non défini');
+      }
+
+      const response = await stockAPI.updateStock(updatedItem._id, updatedItem);
       if (response.data) {
         const updatedItems = stockItems.map((item) => 
-          item.id === updatedItem.id ? response.data : item
+          item._id === updatedItem._id ? response.data : item
         );
         setStockItems(updatedItems);
         setShowEditModal(false);
       } else {
         // Fallback si pas de réponse valide
         const updatedItems = stockItems.map((item) => 
-          item.id === updatedItem.id ? updatedItem : item
+          item._id === updatedItem._id ? updatedItem : item
         );
         setStockItems(updatedItems);
         setShowEditModal(false);
       }
     } catch (error) {
       console.error("Erreur lors de la modification de l'article:", error);
-      alert("Une erreur est survenue lors de la modification de l'article");
+      alert(error.message || "Une erreur est survenue lors de la modification de l'article");
     }
   }
 
   // Gérer la suppression d'un élément
   const handleDeleteItem = async () => {
-    if (currentItem) {
-      try {
-        await stockAPI.deleteStock(currentItem.id);
-        const updatedItems = stockItems.filter((item) => item.id !== currentItem.id);
-        setStockItems(updatedItems);
-        setShowDeleteModal(false);
-        setCurrentItem(null);
-      } catch (error) {
-        console.error("Erreur lors de la suppression de l'article:", error);
-        alert("Une erreur est survenue lors de la suppression de l'article");
-      }
+    if (!currentItem || !currentItem._id) {
+      alert("Article non valide");
+      setShowDeleteModal(false);
+      setCurrentItem(null);
+      return;
+    }
+
+    try {
+      await stockAPI.deleteStock(currentItem._id);
+      const updatedItems = stockItems.filter((item) => item._id !== currentItem._id);
+      setStockItems(updatedItems);
+      setShowDeleteModal(false);
+      setCurrentItem(null);
+    } catch (error) {
+      console.error("Erreur lors de la suppression de l'article:", error);
+      alert(error.response?.data?.message || "Une erreur est survenue lors de la suppression de l'article");
     }
   }
 
@@ -363,11 +373,14 @@ const StockManagementPage = () => {
                     <th onClick={() => requestSort("location")}>
                       Emplacement <FaSort className="sort-icon" />
                     </th>
-                    <th onClick={() => requestSort("unitPrice")}>
-                      Prix unitaire <FaSort className="sort-icon" />
+                    <th onClick={() => requestSort("supplier")}>
+                      Fournisseur <FaSort className="sort-icon" />
                     </th>
-                    <th onClick={() => requestSort("status")}>
-                      Statut <FaSort className="sort-icon" />
+                    <th onClick={() => requestSort("leadTime")}>
+                      Délai de livraison <FaSort className="sort-icon" />
+                    </th>
+                    <th onClick={() => requestSort("equipment")}>
+                      Équipement <FaSort className="sort-icon" />
                     </th>
                     <th>Actions</th>
                   </tr>
@@ -380,14 +393,9 @@ const StockManagementPage = () => {
                       <td>{item.category}</td>
                       <td>{item.quantity}</td>
                       <td>{item.location}</td>
-                      <td>{item.unitPrice.toFixed(2)} €</td>
                       <td>{item.supplier}</td>
-                      <td>{new Date(item.lastRestockDate).toLocaleDateString()}</td>
-                      <td>
-                        <span className={`status-badge ${item.status.toLowerCase().replace(/\s+/g, '-')}`}>
-                          {item.status}
-                        </span>
-                      </td>
+                      <td>{item.leadTime} jours</td>
+                      <td>{item.equipment ? item.equipment.name : ''}</td>
                       <td className="actions-cell">
                         <button className="action-btn edit" onClick={() => handleOpenEditModal(item)}>
                           <FaEdit />

@@ -191,37 +191,19 @@ export const userAPI = {
 // API pour les interventions
 export const interventionAPI = {
   // Récupérer toutes les interventions
-  getAllInterventions: () => API.get('/interventions', {
-    headers: { 'Authorization': `Bearer ${localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : ''}` }
-  }),
+  getAllInterventions: () => API.get('/interventions'),
   // Récupérer une intervention par ID
-  getInterventionById: (id) => API.get(`/interventions/${id}`, {
-    headers: { 'Authorization': `Bearer ${localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : ''}` }
-  }),
+  getInterventionById: (id) => API.get(`/interventions/${id}`),
   // Créer une nouvelle intervention
-  createIntervention: (interventionData) => API.post('/interventions', interventionData, {
-    headers: { 'Authorization': `Bearer ${localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : ''}` }
-  }),
+  createIntervention: (interventionData) => API.post('/interventions', interventionData),
   // Mettre à jour une intervention
-  updateIntervention: (id, interventionData) => API.put(`/interventions/${id}`, interventionData, {
-    headers: { 'Authorization': `Bearer ${localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : ''}` }
-  }),
+  updateIntervention: (id, interventionData) => API.put(`/interventions/${id}`, interventionData),
   // Supprimer une intervention
-  deleteIntervention: (id) => API.delete(`/interventions/${id}`, {
-    headers: { 'Authorization': `Bearer ${localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : ''}` }
-  }),
-  // Récupérer les techniciens disponibles pour les interventions
-  getTechnicians: () => API.get('/users?role=technician', {
-    headers: { 'Authorization': `Bearer ${localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : ''}` }
-  }),
+  deleteIntervention: (id) => API.delete(`/interventions/${id}`),
   // Récupérer les tâches de maintenance pour un équipement
-  getMaintenanceTasks: (equipmentId) => API.get(`/interventions/tasks/${equipmentId}`, {
-    headers: { 'Authorization': `Bearer ${localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : ''}` }
-  }),
+  getMaintenanceTasks: (equipmentId) => API.get(`/interventions/tasks/${equipmentId}`),
   // Récupérer les pièces nécessaires pour la maintenance d'un équipement
-  getMaintenanceParts: (equipmentId) => API.get(`/stock/parts/${equipmentId}`, {
-    headers: { 'Authorization': `Bearer ${localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : ''}` }
-  }),
+  getMaintenanceParts: (equipmentId) => API.get(`/interventions/parts/${equipmentId}`)
 };
 
 // API pour les équipements
@@ -231,7 +213,26 @@ export const equipmentAPI = {
   // Récupérer un équipement par ID
   getEquipment: async (id) => API.get(`/equipment/${id}`),
   // Créer un nouvel équipement
-  createEquipment: async (equipmentData) => API.post('/equipment', equipmentData),
+  createEquipment: async (equipmentData) => {
+    // Create FormData object
+    const formData = new FormData();
+    
+    // Add all fields to FormData
+    Object.keys(equipmentData).forEach(key => {
+      if (key === 'image' && equipmentData[key]) {
+        formData.append(key, equipmentData[key]);
+      } else if (equipmentData[key] !== undefined) {
+        formData.append(key, String(equipmentData[key]));
+      }
+    });
+
+    return API.post('/equipment', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : ''}`
+      }
+    });
+  },
   // Mettre à jour un équipement
   updateEquipment: async (id, equipmentData) => API.put(`/equipment/${id}`, equipmentData),
   // Supprimer un équipement
@@ -287,15 +288,15 @@ export const purchaseOrderAPI = {
 // API pour les capteurs
 export const sensorAPI = {
   // Récupérer tous les capteurs par équipement
-  getSensorsByEquipment: (equipmentId) => API.get(`/sensors/equipment/${equipmentId}`),
+  getSensorsByEquipment: (equipmentId) => API.get(`/sensors/${equipmentId}`),
   // Récupérer les alertes
   getAlerts: () => API.get('/sensors/alerts'),
   // Créer un nouveau capteur
   createSensor: (sensorData) => API.post('/sensors', sensorData),
   // Récupérer les recommandations pour un équipement
-  getRecommendationsForEquipment: (equipmentId) => API.get(`/sensors/equipment/${equipmentId}/recommendations`),
+  getRecommendationsForEquipment: (equipmentId) => API.get(`/sensors/${equipmentId}/recommendations`),
   // Appliquer l'optimisation énergétique
-  applyOptimization: (equipmentId) => API.post(`/sensors/equipment/${equipmentId}/optimize`),
+  applyOptimization: (equipmentId, params) => API.post(`/sensors/${equipmentId}/optimization`, params),
 };
 
 // API pour les indicateurs de performance (KPI)
@@ -342,7 +343,9 @@ export const documentAPI = {
     
     // Ajouter les données du document
     Object.keys(documentData).forEach(key => {
-      formData.append(key, documentData[key]);
+      if (documentData[key] !== null && documentData[key] !== undefined) {
+        formData.append(key, documentData[key]);
+      }
     });
     
     // Ajouter le fichier si présent
@@ -358,6 +361,8 @@ export const documentAPI = {
   },
   // Supprimer un document
   deleteDocument: (id) => API.delete(`/documents/${id}`),
+  // Générer un QR code pour un document
+  generateQRCode: (documentId) => API.post(`/documents/${documentId}/qr-code`),
   // Récupérer les documents par équipement
   getDocumentsByEquipment: (equipmentId) => API.get(`/documents/equipment/${equipmentId}`),
 };

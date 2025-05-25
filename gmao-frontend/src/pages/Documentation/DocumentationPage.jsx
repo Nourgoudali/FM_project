@@ -6,7 +6,7 @@ import Header from "../../components/Header/Header"
 import Modal from "../../components/Modal/Modal"
 import "./DocumentationPage.css"
 import { useSidebar } from "../../contexts/SidebarContext"
-import { documentAPI } from "../../services/api"
+import { documentAPI, equipmentAPI, API } from "../../services/api"
 
 const DocumentationPage = () => {
   const { sidebarOpen, toggleSidebar } = useSidebar()
@@ -23,6 +23,7 @@ const DocumentationPage = () => {
     category: "Manuel",
     equipment: "",
     file: null,
+    fileUrl: "", // Ajout du champ fileUrl
   })
   // Nouveaux états pour les modals
   const [showQRModal, setShowQRModal] = useState(false)
@@ -32,14 +33,23 @@ const DocumentationPage = () => {
   // Catégories de documents
   const categories = ["Manuel", "Procédure", "Schéma", "Fiche technique", "Rapport"]
 
-  // Équipements (normalement récupérés depuis l'API)
-  const equipments = [
-    { id: 1, name: "Pompe P-10" },
-    { id: 2, name: "Compresseur Ref.C-123" },
-    { id: 3, name: "Moteur M-405" },
-    { id: 4, name: "Convoyeur CV-200" },
-    { id: 5, name: "Chaudière CH-100" },
-  ]
+  // Équipements (récupérés depuis l'API)
+  const [equipments, setEquipments] = useState([])
+
+  // Récupérer les équipements au chargement
+  useEffect(() => {
+    const fetchEquipments = async () => {
+      try {
+        const response = await equipmentAPI.getAllEquipments();
+        if (response && response.data) {
+          setEquipments(response.data);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération des équipements:", error);
+      }
+    };
+    fetchEquipments();
+  }, [])
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -157,9 +167,25 @@ const DocumentationPage = () => {
   const handleUploadFormChange = (e) => {
     const { name, value, files } = e.target
     if (name === "file" && files.length > 0) {
+      const file = files[0]
+      if (file.size > 0) { // Vérifier que le fichier n'est pas vide
+        setUploadForm({
+          ...uploadForm,
+          file,
+          fileUrl: file.name // Mettre à jour le fileUrl immédiatement
+        })
+      }
+    } else if (name === "equipment") {
+      // Store only the equipment ID when selected
       setUploadForm({
         ...uploadForm,
-        file: files[0],
+        equipment: value || null,
+      })
+    } else if (name === "generateQR") {
+      // Handle QR code checkbox
+      setUploadForm({
+        ...uploadForm,
+        generateQR: value === "on",
       })
     } else {
       setUploadForm({
@@ -175,57 +201,62 @@ const DocumentationPage = () => {
     setError(null)
 
     try {
-      // Créer un objet FormData pour l'upload du fichier
+      // Vérifier que tous les champs requis sont remplis
+      if (!uploadForm.title.trim() || !uploadForm.category || !uploadForm.file) {
+        throw new Error("Veuillez remplir tous les champs requis");
+      }
+
+      // Vérifier le fichier
+      if (!uploadForm.file || !uploadForm.file.name) {
+        throw new Error("Veuillez sélectionner un fichier valide");
+      }
+
+      // Préparer les données du document
       const documentData = {
-        title: uploadForm.title,
-        description: uploadForm.description,
+        title: uploadForm.title.trim(),
+        description: uploadForm.description || '',
         category: uploadForm.category,
-        equipment: uploadForm.equipment,
+        equipment: uploadForm.equipment || null,
+        fileUrl: uploadForm.file.name,
+        qrCode: uploadForm.generateQR || false
       };
 
-      // Appel à l'API pour créer un nouveau document
-      const response = await documentAPI.createDocument(documentData, uploadForm.file);
-      
-      if (response && response.data) {
-        // Ajouter le nouveau document à la liste
-        setDocuments([...documents, response.data]);
-        setShowUploadModal(false);
-        // Réinitialiser le formulaire
-        setUploadForm({
-          title: "",
-          description: "",
-          category: "Manuel",
-          equipment: "",
-          file: null,
-        });
-      } else {
-        // Fallback si l'API échoue
-        const newDocument = {
-          id: documents.length + 1,
-          title: uploadForm.title,
-          description: uploadForm.description,
-          category: uploadForm.category,
-          equipment: uploadForm.equipment,
-          uploadDate: new Date().toISOString().split("T")[0],
-          uploadedBy: "Thomas Martin", // Normalement récupéré depuis le contexte d'authentification
-          fileSize: "1.0 MB", // Normalement calculé à partir du fichier
-          fileType: uploadForm.file ? uploadForm.file.name.split(".").pop().toUpperCase() : "PDF",
-          qrCode: true,
-        };
+      try {
+        const response = await documentAPI.uploadDocument(documentData, uploadForm.file);
+        
+        if (!response) {
+          throw new Error('Réponse API invalide');
+        }
 
-        setDocuments([...documents, newDocument]);
-        setShowUploadModal(false);
-        setUploadForm({
-          title: "",
-          description: "",
-          category: "Manuel",
-          equipment: "",
-          file: null,
-        });
+        // Vérifier si c'est une erreur
+        if (response.error) {
+          throw new Error(response.error.message || 'Erreur lors de l\'upload');
+        }
+
+        // Vérifier si c'est une réponse réussie
+        if (response.data) {
+          // Ajouter le nouveau document à la liste
+          setDocuments(prevDocs => [...prevDocs, response.data]);
+          setShowUploadModal(false);
+          // Réinitialiser le formulaire
+          setUploadForm({
+            title: "",
+            description: "",
+            category: "Manuel",
+            equipment: "",
+            file: null,
+            generateQR: false
+          });
+        } else {
+          throw new Error('Réponse invalide du serveur');
+        }
+      } catch (error) {
+        console.error("Erreur détaillée:", error);
+        throw new Error(error.message || 'Erreur lors de l\'upload du document');
       }
     } catch (error) {
       console.error("Erreur lors de l'upload du document:", error)
-      setError("Impossible d'uploader le document")
+      setError(error.response?.data?.message || "Impossible d'uploader le document")
     } finally {
       setLoading(false)
     }
@@ -256,6 +287,25 @@ const DocumentationPage = () => {
     setShowQRModal(true)
   }
 
+  const handleDownloadQRCode = async (document) => {
+    try {
+      // Simuler le téléchargement du QR code
+      // Dans une vraie application, vous devriez appeler une API pour générer le QR code
+      const qrCodeData = await documentAPI.generateQRCode(document._id);
+      
+      // Créer un lien de téléchargement pour le QR code
+      const link = document.createElement('a');
+      link.href = qrCodeData.url; // URL du QR code généré
+      link.download = `${document.title}-qr.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Erreur lors du téléchargement du QR code:", error);
+      setError("Impossible de télécharger le QR code");
+    }
+  }
+
   const handleDownloadDocument = async (document) => {
     try {
       // Appel à l'API pour télécharger le document
@@ -281,25 +331,32 @@ const DocumentationPage = () => {
   }
 
   const handleOpenDeleteModal = (document) => {
+    if (!document || !document._id) {
+      setError("Document invalide");
+      return;
+    }
     setCurrentDocument(document)
     setShowDeleteModal(true)
   }
 
   const handleDeleteDocument = async () => {
-    if (!currentDocument) return;
+    if (!currentDocument || !currentDocument._id) {
+      setError("Document non sélectionné");
+      return;
+    }
     
     try {
       // Appel à l'API pour supprimer le document
-      await documentAPI.deleteDocument(currentDocument.id);
+      await documentAPI.deleteDocument(currentDocument._id);
       
       // Mettre à jour la liste des documents
-      const updatedDocuments = documents.filter((doc) => doc.id !== currentDocument.id);
+      const updatedDocuments = documents.filter((doc) => doc._id === currentDocument._id);
       setDocuments(updatedDocuments);
       setShowDeleteModal(false);
       setCurrentDocument(null);
     } catch (error) {
       console.error("Erreur lors de la suppression du document:", error);
-      setError("Impossible de supprimer le document");
+      setError(error.response?.data?.message || "Impossible de supprimer le document");
     }
   }
 
@@ -354,10 +411,10 @@ const DocumentationPage = () => {
                 <div className="no-results">Aucun document trouvé</div>
               ) : (
                 filteredDocuments.map((document) => (
-                  <div key={document._id || document.id || `doc-${document.title.toLowerCase().replace(/\s+/g, '-')}`} className="document-card">
+                  <div key={document._id || `doc-${(document.title || 'document').toLowerCase().replace(/\s+/g, '-')}`} className="document-card">
                     <div className="document-header">
                       <div className="document-icon">
-                        <span className={`file-icon file-${document.fileType.toLowerCase()}`}></span>
+                        <span className={`file-icon file-${(document.fileType || 'pdf').toLowerCase()}`}></span>
                       </div>
                       <div className="document-actions">
                         <button 
@@ -402,7 +459,7 @@ const DocumentationPage = () => {
                     <div className="document-footer">
                       <div className="document-meta">
                         <span className="document-category">{document.category}</span>
-                        {document.equipment && <span className="document-equipment">{document.equipment}</span>}
+                        {document.equipment && <span className="document-equipment">{document.equipment.name}</span>}
                       </div>
                       <div className="document-info">
                         <div className="info-item">
@@ -415,7 +472,7 @@ const DocumentationPage = () => {
                         </div>
                         <div className="info-item">
                           <span className="info-label">Par:</span>
-                          <span className="info-value">{document.uploadedBy}</span>
+                          <span className="info-value">{document.uploadedBy ? `${document.uploadedBy.firstName} ${document.uploadedBy.lastName}` : 'Utilisateur inconnu'}</span>
                         </div>
                       </div>
                       {document.qrCode && (
@@ -505,13 +562,13 @@ const DocumentationPage = () => {
                   <select
                     id="equipment"
                     name="equipment"
-                    value={uploadForm.equipment}
+                    value={uploadForm.equipment ? uploadForm.equipment._id : ""}
                     onChange={handleUploadFormChange}
-                    className="form-control"
+                    className="form-select"
                   >
-                    <option value="">Aucun</option>
+                    <option value="">Aucun équipement</option>
                     {equipments.map((equipment) => (
-                      <option key={`equip-${equipment._id || equipment.id}`} value={equipment.name}>
+                      <option key={equipment._id} value={equipment._id}>
                         {equipment.name}
                       </option>
                     ))}
@@ -542,7 +599,14 @@ const DocumentationPage = () => {
               </div>
 
               <div className="form-group checkbox-group">
-                <input type="checkbox" id="generateQR" className="checkbox-input" defaultChecked />
+                <input 
+                  type="checkbox" 
+                  id="generateQR" 
+                  name="generateQR" 
+                  className="checkbox-input" 
+                  checked={uploadForm.generateQR || false}
+                  onChange={handleUploadFormChange}
+                />
                 <label htmlFor="generateQR" className="checkbox-label">
                   Générer un QR code pour ce document
                 </label>
@@ -591,7 +655,7 @@ const DocumentationPage = () => {
               <button className="btn btn-outline" onClick={() => setShowQRModal(false)}>
                 Fermer
               </button>
-              <button className="btn btn-primary">
+              <button className="btn btn-primary" onClick={() => handleDownloadQRCode(currentDocument)}>
                 Télécharger le QR code
               </button>
             </div>
