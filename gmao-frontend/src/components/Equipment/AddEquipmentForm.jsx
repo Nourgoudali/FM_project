@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import "./AddEquipmentForm.css"
+import { equipmentAPI } from "../../services/api"
 
 function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null, isEdit = false }) {
   const [formData, setFormData] = useState({
@@ -14,12 +15,12 @@ function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null, isEdi
     serialNumber: initialData?.serialNumber || "",
     purchaseDate: initialData?.purchaseDate || "",
     warrantyEnd: initialData?.warrantyEnd || "",
-    status: initialData?.status || "En service",
+    status: initialData?.status || "operational",
     description: initialData?.description || "",
   })
 
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [errorMessage, setErrorMessage] = useState(null)
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(initialData?.image || null)
 
@@ -35,7 +36,7 @@ function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null, isEdi
         serialNumber: initialData.serialNumber || "",
         purchaseDate: initialData.purchaseDate || "",
         warrantyEnd: initialData.warrantyEnd || "",
-        status: initialData.status || "En service",
+        status: initialData?.status || "operational",
         description: initialData.description || "",
       })
       setImagePreview(initialData.image || null)
@@ -65,46 +66,72 @@ function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null, isEdi
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-    setError(null)
+    setErrorMessage(null)
 
     try {
       // Créer un FormData pour envoyer l'image
       const data = new FormData()
 
       // Ajouter toutes les données du formulaire
-      Object.keys(formData).forEach((key) => {
-        data.append(key, formData[key])
-      })
+      data.append('reference', formData.reference)
+      data.append('name', formData.name)
+      data.append('category', formData.category)
+      data.append('location', formData.location)
+      data.append('status', formData.status || 'operational')
+      data.append('brand', formData.brand || '')
+      data.append('description', formData.description || '')
+      data.append('purchaseDate', formData.purchaseDate || '')
+      data.append('warrantyEnd', formData.warrantyEnd || '')
+      data.append('serialNumber', formData.serialNumber || '')
 
       // Ajouter l'image si elle existe
       if (imageFile) {
         data.append("image", imageFile)
       }
 
-      // Simuler une API
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
+      // Envoyer les données à l'API
+      const response = await equipmentAPI.createEquipment(data)
+      
       // Pour édition, garder l'id existant
       const equipmentToReturn = {
-        ...(isEdit && initialData ? { id: initialData.id } : { id: Date.now() }),
-        ...formData,
-        image: imagePreview || "/placeholder.svg?height=100&width=100",
-        availability: initialData?.availability || 100,
+        _id: response.data._id,
+        reference: formData.reference,
+        name: formData.name,
+        category: formData.category,
+        location: formData.location,
+        status: formData.status || 'operational',
+        brand: formData.brand || '',
+        description: formData.description || '',
+        image: response.data.image || "/placeholder.svg?height=100&width=100",
+        availability: response.data.availability || 100,
       }
 
       onEquipmentAdded(equipmentToReturn)
       onClose()
     } catch (err) {
       console.error("Erreur lors de l'ajout de l'équipement:", err)
-      setError("Une erreur est survenue lors de l'enregistrement de l'équipement. Veuillez réessayer.")
-    } finally {
+      
+      // Get error message from backend
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.errors?.reference || 
+                          "Une erreur est survenue lors de l'ajout de l'équipement. Veuillez vérifier les données et réessayer.";
+      
+      // Show error message in form
+      setErrorMessage(errorMessage)
+      
+      // Don't close the modal on error
       setLoading(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="aef-equipment-form">
-      {error && <div className="aef-form-error">{error}</div>}
+    <div className="aef-form-container">
+      {errorMessage && (
+        <div className="error-message">
+          {errorMessage}
+        </div>
+      )}
+      <form onSubmit={handleSubmit} className="aef-equipment-form">
 
       <div className="aef-form-section">
         <h3 className="aef-form-section-title">Informations générales</h3>
@@ -339,6 +366,7 @@ function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null, isEdi
         </button>
       </div>
     </form>
+    </div>
   )
 }
 

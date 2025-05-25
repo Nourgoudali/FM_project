@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const multer = require('multer');
 const userRoutes = require('./routes/userRoutes');
 const interventionRoutes = require('./routes/interventionRoutes');
 const equipmentRoutes = require('./routes/equipmentRoutes');
@@ -29,6 +30,22 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+
+const upload = multer({ storage: storage });
+app.use('/uploads', express.static('uploads'));
+
+// Middleware for handling FormData
+app.use(upload.any());
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {

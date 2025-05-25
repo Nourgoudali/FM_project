@@ -218,7 +218,7 @@ const InterventionManagementPage = () => {
     try {
       // Appel à l'API pour mettre à jour l'intervention
       const response = await interventionAPI.updateIntervention(
-        updatedIntervention.id, 
+        updatedIntervention._id || updatedIntervention.id, 
         updatedIntervention
       );
       
@@ -362,7 +362,7 @@ const InterventionManagementPage = () => {
                 </thead>
                 <tbody>
                   {interventions.map((intervention) => (
-                    <tr key={intervention._id || intervention.id || `intervention-${intervention.equipment}-${intervention.date}`}>
+                    <tr key={intervention._id}>
                       <td>{intervention.id}</td>
                       <td>{intervention.equipment}</td>
                       <td>

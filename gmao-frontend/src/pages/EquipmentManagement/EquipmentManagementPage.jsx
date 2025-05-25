@@ -8,6 +8,7 @@ import AddEquipmentForm from "../../components/Equipment/AddEquipmentForm"
 import "./EquipmentManagementPage.css"
 import { useSidebar } from "../../contexts/SidebarContext"
 import { equipmentAPI } from "../../services/api"
+import { FaHistory, FaEdit, FaTrash } from "react-icons/fa"
 
 const EquipmentManagementPage = () => {
   const { sidebarOpen, toggleSidebar } = useSidebar()
@@ -18,6 +19,7 @@ const EquipmentManagementPage = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [errorMessage, setErrorMessage] = useState(null);
 
   // Nouveaux états pour les modaux
   const [showHistoryModal, setShowHistoryModal] = useState(false)
@@ -28,105 +30,45 @@ const EquipmentManagementPage = () => {
   useEffect(() => {
     const fetchEquipments = async () => {
       try {
+        setLoading(true);
+        setError(null);
+        setErrorMessage(null);
+        
         // Utilisation de l'API pour récupérer les équipements
         const response = await equipmentAPI.getAllEquipments();
         
         if (response.data) {
           setEquipments(response.data);
         } else {
-          // Données fictives comme fallback en cas d'API non disponible
-          const mockEquipments = [
-            {
-              id: 1,
-              reference: "EQ-2024-001",
-              name: "Pompe P-10",
-              category: "Pompe",
-              location: "Atelier A",
-              status: "En service",
-              brand: "Grundfos",
-              availability: 98,
-              image: "/placeholder.svg?height=100&width=100",
-            },
-            {
-              id: 2,
-              reference: "EQ-2024-002",
-              name: "Compresseur Ref.C-123",
-              category: "Compresseur",
-              location: "Atelier B",
-              status: "En maintenance",
-              brand: "Atlas Copco",
-              availability: 75,
-              image: "/placeholder.svg?height=100&width=100",
-            },
-            {
-              id: 3,
-              reference: "EQ-2024-003",
-              name: "Moteur M-405",
-              category: "Moteur",
-              location: "Atelier A",
-              status: "En service",
-              brand: "Siemens",
-              availability: 95,
-              image: "/placeholder.svg?height=100&width=100",
-            },
-            {
-              id: 4,
-              reference: "EQ-2024-004",
-              name: "Convoyeur CV-200",
-              category: "Convoyeur",
-              location: "Atelier C",
-              status: "Hors service",
-              brand: "Interroll",
-              availability: 0,
-              image: "/placeholder.svg?height=100&width=100",
-            },
-            {
-              id: 5,
-              reference: "EQ-2024-005",
-              name: "Chaudière CH-100",
-              category: "Chaudière",
-              location: "Atelier B",
-              status: "En service",
-              brand: "Viessmann",
-              availability: 92,
-              image: "/placeholder.svg?height=100&width=100",
-            },
-            {
-              id: 6,
-              reference: "EQ-2024-006",
-              name: "Robot R-300",
-              category: "Robot",
-              location: "Atelier D",
-              status: "En service",
-              brand: "ABB",
-              availability: 88,
-              image: "/placeholder.svg?height=100&width=100",
-            },
-          ]
-          setEquipments(mockEquipments)
+          throw new Error('Invalid response from server');
         }
-        setLoading(false)
       } catch (error) {
-        console.error("Erreur lors du chargement des équipements:", error)
-        setError("Impossible de charger les équipements")
-        setLoading(false)
+        console.error('Erreur lors de la récupération des équipements:', error);
+        setError('Erreur lors de la récupération des équipements. Veuillez réessayer.');
+        setErrorMessage('Erreur lors de la récupération des équipements. Veuillez réessayer.');
+      } finally {
+        setLoading(false);
       }
-    }
-
-    fetchEquipments()
+    };
+    
+    fetchEquipments();
   }, [])
 
   // Filtrer les équipements en fonction de la recherche et du filtre de statut
   const filteredEquipments = equipments.filter((equipment) => {
-    const matchesSearch =
-      equipment.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      equipment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      equipment.location.toLowerCase().includes(searchTerm.toLowerCase())
+    // Convert reference to consistent format (remove spaces and hyphens)
+    const cleanReference = equipment.reference?.replace(/\s|-/g, '').toLowerCase();
+    
+    const matchesSearch = cleanReference.includes(searchTerm.toLowerCase()) ||
+      equipment.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      equipment.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      equipment.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      equipment.brand?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = filterStatus === "all" || equipment.status === filterStatus
+    const matchesStatus = filterStatus === "all" || equipment.status?.toLowerCase() === filterStatus.toLowerCase();
 
-    return matchesSearch && matchesStatus
-  })
+    return matchesSearch && matchesStatus;
+  });
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -147,20 +89,24 @@ const EquipmentManagementPage = () => {
     return "bg-red-500"
   }
 
-  const handleAddEquipment = async (newEquipment) => {
-    try {
-      const response = await equipmentAPI.createEquipment(newEquipment);
-      if (response.data) {
-        setEquipments([response.data, ...equipments]);
-      } else {
-        // Fallback si pas de réponse valide
-        newEquipment.id = equipments.length + 1;
-        setEquipments([newEquipment, ...equipments]);
-      }
-      setShowAddModal(false);
-    } catch (error) {
+  const handleAddEquipment = async (newEquipment, error = null) => {
+    // If there's an error, show it and return
+    if (error) {
       console.error("Erreur lors de l'ajout de l'équipement:", error);
-      alert("Une erreur est survenue lors de l'ajout de l'équipement");
+      setErrorMessage(error);
+      return;
+    }
+
+    try {
+      // Only update state if we have new equipment
+      if (newEquipment) {
+        setEquipments(prevEquipments => [...prevEquipments, newEquipment]);
+        setErrorMessage(null);
+        setShowAddModal(false);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de l'état:", error);
+      setErrorMessage("Une erreur est survenue lors de la mise à jour de l'état.");
     }
   }
 
@@ -171,7 +117,7 @@ const EquipmentManagementPage = () => {
   }
   
   const handleOpenEditModal = (equipment) => {
-    setSelectedEquipment(equipment)
+    setSelectedEquipment({ ...equipment, id: equipment._id })
     setShowEditModal(true)
   }
   
@@ -190,12 +136,13 @@ const EquipmentManagementPage = () => {
   // Handler pour édition (remplace l'équipement dans la liste)
   const handleEditEquipment = async (updatedEquipment) => {
     try {
-      const response = await equipmentAPI.updateEquipment(updatedEquipment.id, updatedEquipment);
+      const response = await equipmentAPI.updateEquipment(updatedEquipment._id, updatedEquipment);
       if (response.data) {
-        setEquipments(equipments.map(eq => eq.id === updatedEquipment.id ? response.data : eq));
+        // Refresh the entire list to ensure consistency
+        const updatedEquipments = await equipmentAPI.getAllEquipments();
+        setEquipments(updatedEquipments.data);
       } else {
-        // Fallback si pas de réponse valide
-        setEquipments(equipments.map(eq => eq.id === updatedEquipment.id ? updatedEquipment : eq));
+        throw new Error('Invalid response from server');
       }
       handleCloseModals();
     } catch (error) {
@@ -208,8 +155,10 @@ const EquipmentManagementPage = () => {
   const handleDeleteEquipmentModal = async () => {
     if (selectedEquipment) {
       try {
-        await equipmentAPI.deleteEquipment(selectedEquipment.id);
-        setEquipments(equipments.filter(eq => eq.id !== selectedEquipment.id));
+        // Use _id for MongoDB
+        const idToDelete = selectedEquipment._id || selectedEquipment.id;
+        await equipmentAPI.deleteEquipment(idToDelete);
+        setEquipments(equipments.filter(eq => eq._id === idToDelete || eq.id === idToDelete));
         handleCloseModals();
       } catch (error) {
         console.error("Erreur lors de la suppression de l'équipement:", error);
@@ -275,6 +224,12 @@ const EquipmentManagementPage = () => {
             </div>
           </div>
 
+          {errorMessage && (
+            <div className="error-message">
+              {errorMessage}
+            </div>
+          )}
+
           {/* Grid View */}
           {view === "grid" && (
             <div className="emp-equipment-grid">
@@ -286,39 +241,39 @@ const EquipmentManagementPage = () => {
                 <div className="emp-no-results">Aucun équipement trouvé</div>
               ) : (
                 filteredEquipments.map((equipment) => (
-                  <div key={equipment._id || equipment.id || `equipment-${equipment.reference}`} className="emp-equipment-card">
+                  <div key={equipment._id} className="emp-equipment-card">
                     <div className="emp-equipment-header">
                       <div className="emp-equipment-image">
-                        <img src={equipment.image} alt={equipment.name} />
+                        <img src={equipment.image || "/placeholder.svg?height=100&width=100"} alt={equipment.name} />
                       </div>
                       <div className="emp-equipment-actions">
-                        <button
-                          className="emp-action-btn emp-history-btn"
-                          onClick={() => handleOpenHistoryModal(equipment)}
-                          title="Historique"
-                        >
-                          <span className="icon-history"></span>
-                        </button>
-                        <button
-                          className="emp-action-btn emp-edit-btn"
-                          onClick={() => handleOpenEditModal(equipment)}
-                          title="Modifier"
-                        >
-                          <span className="icon-edit"></span>
-                        </button>
-                        <button
-                          className="emp-action-btn emp-delete-btn"
-                          onClick={() => handleOpenDeleteModal(equipment)}
-                          title="Supprimer"
-                        >
-                          <span className="icon-delete"></span>
-                        </button>
+                         <button
+                           className="emp-action-btn emp-history-btn"
+                           onClick={() => handleOpenHistoryModal(equipment)}
+                           title="Historique"
+                         >
+                           <FaHistory className="emp-action-icon" />
+                         </button>
+                         <button
+                           className="emp-action-btn emp-edit-btn"
+                           onClick={() => handleOpenEditModal(equipment)}
+                           title="Modifier"
+                         >
+                           <FaEdit className="emp-action-icon" />
+                         </button>
+                         <button
+                           className="emp-action-btn emp-delete-btn"
+                           onClick={() => handleOpenDeleteModal(equipment)}
+                           title="Supprimer"
+                         >
+                           <FaTrash className="emp-action-icon" />
+                         </button>
                       </div>
                     </div>
 
                     <div className="emp-equipment-content">
                       <h3 className="emp-equipment-name">{equipment.name}</h3>
-                      <p className="emp-equipment-reference">{equipment.reference}</p>
+                      <p className="emp-equipment-reference">Référence: {equipment.reference}</p>
                       
                       <div className="emp-equipment-details">
                         <div className="emp-detail-item">

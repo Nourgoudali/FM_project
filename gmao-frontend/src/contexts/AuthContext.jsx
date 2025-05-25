@@ -3,6 +3,24 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { userAPI } from '../services/api';
 
+// Fonctions utilitaires pour l'authentification
+const getCurrentUser = () => {
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
+};
+
+const isAuthenticated = () => {
+    const user = localStorage.getItem('user');
+    if (!user) return false;
+    
+    try {
+        const parsedUser = JSON.parse(user);
+        return !!parsedUser?.token;
+    } catch {
+        return false;
+    }
+};
+
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
@@ -13,24 +31,6 @@ export const AuthProvider = ({ children }) => {
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
-    // Fonctions utilitaires pour l'authentification
-    function getCurrentUser() {
-        const user = localStorage.getItem('user');
-        return user ? JSON.parse(user) : null;
-    }
-
-    function isAuthenticated() {
-        const user = localStorage.getItem('user');
-        if (!user) return false;
-        
-        try {
-            const parsedUser = JSON.parse(user);
-            return !!parsedUser?.token;
-        } catch {
-            return false;
-        }
-    }
 
     useEffect(() => {
         console.log('AuthContext: Vérification initiale de l\'authentification');
@@ -55,7 +55,6 @@ export const AuthProvider = ({ children }) => {
         }, 50);
         
         return () => clearTimeout(timer);
-
     }, []);
 
     useEffect(() => {
@@ -129,7 +128,7 @@ export const AuthProvider = ({ children }) => {
             {children}
         </AuthContext.Provider>
     );
-};
+}
 
 export const useAuth = () => {
     const context = useContext(AuthContext);

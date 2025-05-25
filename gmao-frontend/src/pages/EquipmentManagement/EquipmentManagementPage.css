@@ -1,13 +1,42 @@
 .emp-equipment-management-container {
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
-  }
-  
-  .emp-equipment-management-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.error-message {
+  background-color: #ff6b6b;
+  color: white;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+.emp-equipment-management-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.emp-equipment-management-main {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+  background-color: var(--background-color);
+}
+
+/* Actions Bar */
+.emp-actions-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
     overflow: hidden;
   }
   
@@ -181,6 +210,39 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+  }
+  
+  .emp-action-btn {
+    padding: 0.5rem;
+    border: none;
+    border-radius: var(--radius);
+    background-color: transparent;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .emp-action-btn:hover {
+    background-color: var(--hover-color);
+  }
+  
+  .emp-action-icon {
+    font-size: 1.25rem;
+  }
+  
+  .emp-history-btn {
+    color: var(--primary-color);
+  }
+  
+  .emp-edit-btn {
+    color: var(--success-color);
+  }
+  
+  .emp-delete-btn {
+    color: var(--danger-color);
   }
   
   .emp-btn-primary {

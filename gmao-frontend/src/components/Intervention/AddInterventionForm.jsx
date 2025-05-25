@@ -2,75 +2,34 @@
 
 import { useState, useEffect } from "react"
 import "./AddInterventionForm.css"
+import { interventionAPI, userAPI, equipmentAPI } from "../../services/api"
 
 function AddInterventionForm({ onClose, onSubmit }) {
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState({
-    // Informations générales
-    reference: "",
     type: "Préventive",
-    priority: "Normale",
-    status: "Planifiée",
-    description: "",
-
-    // Planification
-    startDate: "",
-    endDate: "",
-    estimatedDuration: "",
-    technician: "",
-
-    // Équipement et pièces
-    equipment: "",
-    location: "",
+    priority: "Basse",
+    startDate: new Date().toISOString().split('T')[0],
+    assignedTechnician: null,
+    equipment: null,
+    comment: "",
     parts: [],
-
-    // Informations complémentaires
     instructions: "",
-    documents: [],
     notes: "",
+    endDate: null,
+    estimatedDuration: null
   })
 
-  const [equipments, setEquipments] = useState([])
-  const [technicians, setTechnicians] = useState([])
-  const [parts, setParts] = useState([])
-  const [selectedParts, setSelectedParts] = useState([])
-  const [errors, setErrors] = useState({})
-
-  // Simuler le chargement des données
-  useEffect(() => {
-    // Dans un environnement réel, ces données viendraient de l'API
-    setEquipments([
-      { id: 1, name: "Pompe P-10", location: "Bâtiment A - Salle 101" },
-      { id: 2, name: "Compresseur C-123", location: "Bâtiment B - Salle 203" },
-      { id: 3, name: "Moteur M-405", location: "Bâtiment A - Salle 105" },
-      { id: 4, name: "Convoyeur CV-200", location: "Bâtiment C - Zone 3" },
-    ])
-
-    setTechnicians([
-      { id: 1, name: "Jean Dupont" },
-      { id: 2, name: "Marie Martin" },
-      { id: 3, name: "Pierre Durand" },
-      { id: 4, name: "Sophie Lefebvre" },
-    ])
-
-    setParts([
-      { id: 1, reference: "P001", name: "Filtre hydraulique", stock: 15 },
-      { id: 2, reference: "P002", name: "Joint torique", stock: 42 },
-      { id: 3, reference: "P003", name: "Courroie de transmission", stock: 8 },
-      { id: 4, reference: "P004", name: "Roulement à billes", stock: 23 },
-    ])
-  }, [])
-
-  const handleChange = (e) => {
-    const { name, value } = e.target
+  // Gestion des sélections
+  const handleSelectionChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [field]: value,
     }))
 
     // Mise à jour automatique de la localisation si un équipement est sélectionné
-    if (name === "equipment") {
-      const selectedEquipment = equipments.find((eq) => eq.id === Number.parseInt(value))
+    if (field === "equipment") {
+      const selectedEquipment = equipments.find((eq) => eq._id === value)
       if (selectedEquipment) {
         setFormData((prev) => ({
           ...prev,
@@ -78,6 +37,70 @@ function AddInterventionForm({ onClose, onSubmit }) {
         }))
       }
     }
+  }
+
+  const [equipments, setEquipments] = useState([])
+  const [technicians, setTechnicians] = useState([])
+  const [parts, setParts] = useState([])
+  const [selectedParts, setSelectedParts] = useState([])
+  const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(true)
+
+  // Charger les données depuis l'API
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Charger les équipements
+        const equipmentRes = await equipmentAPI.getAllInterventions()
+        setEquipments(equipmentRes.data)
+
+        // Charger les techniciens
+        const techniciansRes = await userAPI.getTechnicians()
+        setTechnicians(techniciansRes.data)
+
+        // Charger les pièces
+        const partsRes = await stockAPI.getAllStocks()
+        setParts(partsRes.data)
+      } catch (error) {
+        console.error("Erreur lors du chargement des données:", error)
+        setErrors({
+          general: "Erreur lors du chargement des données"
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
+
+  // Validation des données avant l'envoi
+  const validateData = () => {
+    const errors = {}
+    
+    // Vérifier les champs requis
+    if (!formData.equipment) {
+      errors.equipment = "Un équipement doit être sélectionné"
+    }
+    
+    if (!['Préventive', 'Curative', 'Corrective'].includes(formData.type)) {
+      errors.type = "Le type doit être Préventive, Curative ou Corrective"
+    }
+    
+    if (!['Basse', 'Moyenne', 'Haute', 'Critique'].includes(formData.priority)) {
+      errors.priority = "La priorité doit être Basse, Moyenne, Haute ou Critique"
+    }
+    
+    if (!formData.startDate) {
+      errors.startDate = "La date de début est requise"
+    }
+    
+    if (errors.equipment || errors.type || errors.priority || errors.startDate) {
+      setErrors(errors)
+      return false
+    }
+    
+    return true
   }
 
   const handleAddPart = (partId) => {
@@ -149,28 +172,145 @@ function AddInterventionForm({ onClose, onSubmit }) {
     setCurrentStep(currentStep - 1)
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    if (validateStep(currentStep)) {
-      // Préparer les données finales
-      const finalData = {
-        ...formData,
-        parts: selectedParts,
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      // Validation des données
+      if (!formData.equipment || !formData.type || !formData.priority || !formData.startDate) {
+        throw new Error('Veuillez remplir tous les champs obligatoires');
       }
 
-      // Dans un environnement réel, envoyer les données à l'API
-      console.log("Données de l'intervention:", finalData)
-
-      // Appeler la fonction de callback
-      if (onSubmit) {
-        onSubmit(finalData)
+      // Validation des types
+      if (!['Préventive', 'Curative', 'Corrective'].includes(formData.type)) {
+        throw new Error('Type invalide. Doit être Préventive, Curative ou Corrective');
       }
 
-      // Fermer le formulaire
-      if (onClose) {
+      // Validation de la priorité
+      if (!['Basse', 'Moyenne', 'Haute', 'Critique'].includes(formData.priority)) {
+        throw new Error('Priorité invalide. Doit être Basse, Moyenne, Haute ou Critique');
+      }
+
+      // Préparation des données à envoyer
+      const interventionData = {
+        equipment: formData.equipment?._id, // MongoDB ID from selected equipment
+        type: formData.type, // Must be Préventive, Curative, or Corrective
+        priority: formData.priority, // Must be Basse, Moyenne, Haute, ou Critique
+        startDate: formData.startDate, // Required - date string
+        endDate: formData.endDate || null,
+        estimatedDuration: formData.estimatedDuration ? Number(formData.estimatedDuration) : null,
+        assignedTechnician: formData.assignedTechnician?._id, // MongoDB ID from selected technician
+        parts: selectedParts.map((part) => ({
+          _id: part._id,
+          quantity: Number(part.quantity)
+        })),
+        instructions: formData.instructions || "",
+        notes: formData.notes || "",
+        comment: formData.comment || ""
+      };
+
+      // Log the data being sent
+      console.log("Données envoyées au backend:", {
+        ...interventionData,
+        assignedTechnician: interventionData.assignedTechnician ? 'Technicien ID' : 'Aucun technicien',
+        equipment: interventionData.equipment ? 'Équipement ID' : 'Aucun équipement'
+      });
+
+      // Validation des données
+      if (!interventionData.equipment || !interventionData.type || !interventionData.priority || !interventionData.startDate) {
+        console.error('Validation failed:', {
+          equipment: !interventionData.equipment,
+          type: !interventionData.type,
+          priority: !interventionData.priority,
+          startDate: !interventionData.startDate
+        });
+        throw new Error('Veuillez remplir tous les champs obligatoires');
+      }
+
+      // Validation des types
+      if (!['Préventive', 'Curative', 'Corrective'].includes(interventionData.type)) {
+        throw new Error('Type invalide. Doit être Préventive, Curative ou Corrective');
+      }
+
+      // Validation de la priorité
+      if (!['Basse', 'Moyenne', 'Haute', 'Critique'].includes(interventionData.priority)) {
+        throw new Error('Priorité invalide. Doit être Basse, Moyenne, Haute ou Critique');
+      }
+
+      // Log the data being sent
+      console.log("Données envoyées au backend:", {
+        ...interventionData,
+        assignedTechnician: interventionData.assignedTechnician ? 'Technicien ID' : 'Aucun technicien',
+        equipment: interventionData.equipment ? 'Équipement ID' : 'Aucun équipement'
+      });
+
+      try {
+        const response = await interventionAPI.createIntervention(interventionData);
+        console.log("Réponse API:", response.data);
+        
+        // Appel de la fonction onSubmit si fournie
+        if (onSubmit) {
+          onSubmit(response.data);
+        }
+        
+        // Fermer le formulaire
+        onClose();
+      } catch (apiError) {
+        console.error("Erreur API:", apiError);
+        setError(apiError.response?.data?.message || "Une erreur est survenue lors de la création de l'intervention");
+      }
+
+      try {
+        const response = await interventionAPI.createIntervention(interventionData)
+        console.log("Réponse API:", response.data)
+        
+        // Appel de la fonction onSubmit si fournie
+        if (onSubmit) {
+          onSubmit(response.data)
+        }
+
+        // Fermer le formulaire
         onClose()
+      } catch (apiError) {
+        console.error("Erreur API:", apiError)
+        
+        // Analyser l'erreur
+        let errorMessage = "Une erreur est survenue lors de la création de l'intervention"
+        let errorDetails = {}
+
+        if (apiError.response) {
+          // Le serveur a répondu avec une erreur
+          errorMessage = apiError.response.data?.message || errorMessage
+          errorDetails = apiError.response.data?.errors || {}
+        } else if (apiError.request) {
+          // La requête a été faite mais pas de réponse
+          errorMessage = "Le serveur n'a pas répondu"
+        } else {
+          // Quelque chose s'est mal passé lors de la configuration de la requête
+          errorMessage = "Erreur lors de la configuration de la requête"
+        }
+
+        // Mettre à jour les erreurs
+        setErrors(errorDetails)
+        // Afficher un message général
+        if (onSubmit) {
+          onSubmit({ success: false, message: errorMessage })
+        }
+        throw new Error(errorMessage)
       }
+    } catch (error) {
+      console.error("Erreur lors de la création de l'intervention:", error)
+      setErrors({
+        general: error.message
+      })
+    } finally {
+      setLoading(false)
     }
+  }
   }
 
   return (
@@ -194,26 +334,13 @@ function AddInterventionForm({ onClose, onSubmit }) {
           <div className="form-step">
             <h3>Informations générales</h3>
 
-            <div className="form-group">
-              <label htmlFor="reference">Référence*</label>
-              <input
-                type="text"
-                id="reference"
-                name="reference"
-                value={formData.reference}
-                onChange={handleChange}
-                placeholder="Ex: INT-2024-001"
-              />
-              {errors.reference && <span className="error-message">{errors.reference}</span>}
-            </div>
-
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="type">Type d'intervention*</label>
                 <select id="type" name="type" value={formData.type} onChange={handleChange}>
                   <option value="Préventive">Préventive</option>
                   <option value="Curative">Curative</option>
-                  <option value="Améliorative">Améliorative</option>
+                  <option value="Corrective">Corrective</option>
                 </select>
               </div>
 
@@ -221,59 +348,86 @@ function AddInterventionForm({ onClose, onSubmit }) {
                 <label htmlFor="priority">Priorité*</label>
                 <select id="priority" name="priority" value={formData.priority} onChange={handleChange}>
                   <option value="Basse">Basse</option>
-                  <option value="Normale">Normale</option>
+                  <option value="Moyenne">Moyenne</option>
                   <option value="Haute">Haute</option>
-                  <option value="Urgente">Urgente</option>
+                  <option value="Critique">Critique</option>
                 </select>
               </div>
             </div>
 
             <div className="form-group">
-              <label htmlFor="status">Statut*</label>
-              <select id="status" name="status" value={formData.status} onChange={handleChange}>
-                <option value="Planifiée">Planifiée</option>
-                <option value="En attente">En attente</option>
-                <option value="En cours">En cours</option>
-                <option value="Terminée">Terminée</option>
-                <option value="Annulée">Annulée</option>
+              <label htmlFor="startDate">Date de début*</label>
+              <input
+                type="date"
+                id="startDate"
+                name="startDate"
+                value={formData.startDate}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="endDate">Date de fin</label>
+              <input
+                type="date"
+                id="endDate"
+                name="endDate"
+                value={formData.endDate}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="assignedTechnician">Technicien*</label>
+              <select
+                id="assignedTechnician"
+                name="assignedTechnician"
+                value={formData.assignedTechnician}
+                onChange={(e) => handleSelectionChange('assignedTechnician', e.target.value)}
+                required
+              >
+                <option value="">Sélectionner un technicien</option>
+                {technicians.map((tech) => (
+                  <option key={tech._id} value={tech._id}>
+                    {tech.name} ({tech.initials})
+                  </option>
+                ))}
               </select>
             </div>
 
             <div className="form-group">
-              <label htmlFor="description">Description*</label>
-              <textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows="4"
-                placeholder="Décrivez l'intervention..."
-              ></textarea>
-              {errors.description && <span className="error-message">{errors.description}</span>}
-            </div>
-          </div>
-        )}
-
-        {/* Étape 2: Planification */}
-        {currentStep === 2 && (
-          <div className="form-step">
-            <h3>Planification</h3>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="startDate">Date de début*</label>
-                <input type="date" id="startDate" name="startDate" value={formData.startDate} onChange={handleChange} />
-                {errors.startDate && <span className="error-message">{errors.startDate}</span>}
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="endDate">Date de fin</label>
-                <input type="date" id="endDate" name="endDate" value={formData.endDate} onChange={handleChange} />
-              </div>
+              <label htmlFor="equipment">Équipement*</label>
+              <select
+                id="equipment"
+                name="equipment"
+                value={formData.equipment?._id}
+                onChange={(e) => handleSelectionChange('equipment', equipments.find(eq => eq._id === e.target.value))}
+                required
+              >
+                <option value="">Sélectionner un équipement</option>
+                {equipments.map((eq) => (
+                  <option key={eq._id} value={eq._id}>
+                    {eq.name} - {eq.location}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="form-group">
-              <label htmlFor="estimatedDuration">Durée estimée (heures)</label>
+              <label htmlFor="location">Localisation</label>
+              <input
+                type="text"
+                id="location"
+                name="location"
+                value={formData.location}
+                onChange={handleChange}
+                disabled
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="estimatedDuration">Durée estimée (min)</label>
               <input
                 type="number"
                 id="estimatedDuration"
@@ -281,21 +435,40 @@ function AddInterventionForm({ onClose, onSubmit }) {
                 value={formData.estimatedDuration}
                 onChange={handleChange}
                 min="0"
-                step="0.5"
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="technician">Technicien assigné*</label>
-              <select id="technician" name="technician" value={formData.technician} onChange={handleChange}>
-                <option value="">Sélectionner un technicien</option>
-                {technicians.map((tech) => (
-                  <option key={`tech-${tech._id || tech.id || tech.name.toLowerCase().replace(/\s+/g, '-')}`} value={tech.id}>
-                    {tech.name}
-                  </option>
-                ))}
-              </select>
-              {errors.technician && <span className="error-message">{errors.technician}</span>}
+              <label htmlFor="comment">Commentaire</label>
+              <textarea
+                id="comment"
+                name="comment"
+                value={formData.comment}
+                onChange={handleChange}
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="instructions">Instructions</label>
+              <textarea
+                id="instructions"
+                name="instructions"
+                value={formData.instructions}
+                onChange={handleChange}
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="notes">Notes</label>
+              <textarea
+                id="notes"
+                name="notes"
+                value={formData.notes}
+                onChange={handleChange}
+                rows="3"
+              ></textarea>
             </div>
           </div>
         )}

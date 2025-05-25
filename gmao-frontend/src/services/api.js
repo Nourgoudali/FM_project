@@ -2,11 +2,73 @@ import axios from 'axios';
 
 // Configuration de base d'axios
 const API = axios.create({
-  baseURL: 'http://localhost:5000/api', // Adapter l'URL selon votre configuration
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  baseURL: 'http://localhost:5000/api',
+  timeout: 10000 // 10 second timeout
 });
+
+// Ajouter un intercepteur pour les requêtes
+API.interceptors.request.use(
+  async config => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      if (user.token) {
+        config.headers.Authorization = `Bearer ${user.token}`;
+      }
+
+      return config;
+    } catch (error) {
+      console.error('Erreur lors de la configuration de la requête:', error);
+      return config;
+    }
+  },
+  error => {
+    console.error('Erreur dans l\'intercepteur de requête:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Ajouter un intercepteur pour les réponses
+API.interceptors.response.use(
+  response => response,
+  async error => {
+    const originalRequest = error.config;
+    
+    if (error.response) {
+      console.error('Erreur API:', error.response.status, error.response.data);
+      
+      // Si c'est une erreur 401 et qu'on a un refresh token
+      if (error.response.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+        
+        try {
+          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          
+          if (user.refreshToken) {
+            const refreshResponse = await API.post('/auth/refresh', {
+              refreshToken: user.refreshToken
+            });
+
+            const updatedUser = { ...user, token: refreshResponse.data.token };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            
+            originalRequest.headers.Authorization = `Bearer ${refreshResponse.data.token}`;
+            return API(originalRequest);
+          }
+        } catch (refreshError) {
+          console.error('Erreur lors du refresh du token:', refreshError);
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+          return Promise.reject(refreshError);
+        }
+      }
+    } else {
+      console.error('Erreur réseau:', error.message);
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 // Intercepteur pour gérer les erreurs
 API.interceptors.response.use(
@@ -25,10 +87,13 @@ API.interceptors.request.use(
       const userData = localStorage.getItem('user');
       
       if (userData) {
-        // Extraire le token de l'objet utilisateur
         const user = JSON.parse(userData);
         if (user && user.token) {
           config.headers.Authorization = `Bearer ${user.token}`;
+          // Ajouter le refresh token si présent
+          if (user.refreshToken) {
+            config.headers['X-Refresh-Token'] = user.refreshToken;
+          }
         }
       }
     } catch (error) {
@@ -38,6 +103,49 @@ API.interceptors.request.use(
     return config;
   },
   error => {
+    return Promise.reject(error);
+  }
+);
+
+// Intercepteur pour gérer les erreurs d'authentification
+API.interceptors.response.use(
+  response => response,
+  async error => {
+    const originalRequest = error.config;
+    
+    // Si l'erreur est 401 et qu'on a un refresh token
+    if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      try {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          const user = JSON.parse(userData);
+          if (user.refreshToken) {
+            // Appel à l'endpoint de refresh token
+            const response = await API.post('/auth/refresh', {
+              refreshToken: user.refreshToken
+            });
+            
+            // Mettre à jour le token dans localStorage
+            const updatedUser = { ...user, token: response.data.token };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            
+            // Réessayer la requête avec le nouveau token
+            originalRequest.headers.Authorization = `Bearer ${response.data.token}`;
+            return API(originalRequest);
+          }
+        }
+      } catch (refreshError) {
+        // Si le refresh échoue, déconnecter l'utilisateur
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+    
+    // Pour les autres erreurs, on affiche le message
+    console.error('Erreur API:', error.message);
     return Promise.reject(error);
   }
 );
@@ -83,35 +191,51 @@ export const userAPI = {
 // API pour les interventions
 export const interventionAPI = {
   // Récupérer toutes les interventions
-  getAllInterventions: () => API.get('/interventions'),
+  getAllInterventions: () => API.get('/interventions', {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : ''}` }
+  }),
   // Récupérer une intervention par ID
-  getInterventionById: (id) => API.get(`/interventions/${id}`),
+  getInterventionById: (id) => API.get(`/interventions/${id}`, {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : ''}` }
+  }),
   // Créer une nouvelle intervention
-  createIntervention: (interventionData) => API.post('/interventions', interventionData),
+  createIntervention: (interventionData) => API.post('/interventions', interventionData, {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : ''}` }
+  }),
   // Mettre à jour une intervention
-  updateIntervention: (id, interventionData) => API.put(`/interventions/${id}`, interventionData),
+  updateIntervention: (id, interventionData) => API.put(`/interventions/${id}`, interventionData, {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : ''}` }
+  }),
   // Supprimer une intervention
-  deleteIntervention: (id) => API.delete(`/interventions/${id}`),
+  deleteIntervention: (id) => API.delete(`/interventions/${id}`, {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : ''}` }
+  }),
   // Récupérer les techniciens disponibles pour les interventions
-  getTechnicians: () => API.get('/users?role=technician'),
+  getTechnicians: () => API.get('/users?role=technician', {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : ''}` }
+  }),
   // Récupérer les tâches de maintenance pour un équipement
-  getMaintenanceTasks: (equipmentId) => API.get(`/interventions/tasks/${equipmentId}`),
+  getMaintenanceTasks: (equipmentId) => API.get(`/interventions/tasks/${equipmentId}`, {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : ''}` }
+  }),
   // Récupérer les pièces nécessaires pour la maintenance d'un équipement
-  getMaintenanceParts: (equipmentId) => API.get(`/stock/parts/${equipmentId}`),
+  getMaintenanceParts: (equipmentId) => API.get(`/stock/parts/${equipmentId}`, {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : ''}` }
+  }),
 };
 
 // API pour les équipements
 export const equipmentAPI = {
   // Récupérer tous les équipements
-  getAllEquipments: () => API.get('/equipment'),
+  getAllEquipments: async () => API.get('/equipment'),
   // Récupérer un équipement par ID
-  getEquipmentById: (id) => API.get(`/equipment/${id}`),
+  getEquipment: async (id) => API.get(`/equipment/${id}`),
   // Créer un nouvel équipement
-  createEquipment: (equipmentData) => API.post('/equipment', equipmentData),
+  createEquipment: async (equipmentData) => API.post('/equipment', equipmentData),
   // Mettre à jour un équipement
-  updateEquipment: (id, equipmentData) => API.put(`/equipment/${id}`, equipmentData),
+  updateEquipment: async (id, equipmentData) => API.put(`/equipment/${id}`, equipmentData),
   // Supprimer un équipement
-  deleteEquipment: (id) => API.delete(`/equipment/${id}`),
+  deleteEquipment: async (id) => API.delete(`/equipment/${id}`),
   // Récupérer les équipements avec leurs données de maintenance prédictive
   getPredictiveEquipments: () => API.get('/equipment'),
 };
@@ -177,15 +301,15 @@ export const sensorAPI = {
 // API pour les indicateurs de performance (KPI)
 export const kpiAPI = {
   // Générer des KPIs
-  generateKPI: () => API.post('/kpi/generate'),
+  generateKPI: () => API.post('/api/kpi/generate'),
   // Obtenir les derniers KPIs
-  getLatestKPI: () => API.get('/kpi/latest'),
+  getLatestKPI: () => API.get('/api/kpi/latest'),
   // Obtenir les KPIs pour un équipement spécifique
-  getEquipmentKPI: (id) => API.get(`/kpi/equipment/${id}`),
+  getEquipmentKPI: (id) => API.get(`/api/kpi/equipment/${id}`),
   // Obtenir les KPIs de fiabilité
-  getReliabilityKPI: () => API.get('/kpi/reliability'),
+  getReliabilityKPI: () => API.get('/api/kpi/reliability'),
   // Obtenir les KPIs de maintenance
-  getMaintenanceKPI: () => API.get('/kpi/maintenance'),
+  getMaintenanceKPI: () => API.get('/api/kpi/maintenance'),
 };
 
 // API pour les journaux d'activité (logs)
