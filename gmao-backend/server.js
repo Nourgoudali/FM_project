@@ -14,6 +14,7 @@ const kpiRoutes = require('./routes/kpiRoutes');
 const sensorRoutes = require('./routes/sensorRoutes');
 const logRoutes = require('./routes/logRoutes');
 const configurationRoutes = require('./routes/configurationRoutes');
+const fournisseurRoutes = require('./routes/fournisseursRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -64,6 +65,7 @@ app.use('/api/kpi', kpiRoutes);
 app.use('/api/sensors', sensorRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/configurations', configurationRoutes);
+app.use('/api/fournisseurs', fournisseurRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

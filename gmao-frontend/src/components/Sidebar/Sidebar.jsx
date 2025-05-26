@@ -10,7 +10,8 @@ import {
   FaHandsHelping,
   FaSignOutAlt,
   FaChevronLeft,
-  FaBars
+  FaBars,
+  FaBuilding
 } from "react-icons/fa";
 import { MdSpaceDashboard } from "react-icons/md";
 import { IoDocumentText } from "react-icons/io5";
@@ -30,6 +31,7 @@ function Sidebar({ isOpen }) {
     { path: "/interventions", name: "Interventions", icon: <FaCalendarAlt /> },
     { path: "/equipments", name: "Équipements", icon: <FaTools /> },
     { path: "/stock", name: "Stock", icon: <FaBox /> },
+    { path: "/fournisseurs", name: "Fournisseurs", icon: <FaBuilding /> },
     { path: "/documentation", name: "Documentation", icon: <IoDocumentText /> },
     { path: "/predictive", name: "Maintenance Prédictive", icon: <GrVmMaintenance /> },
     { divider: true },

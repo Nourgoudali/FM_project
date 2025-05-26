@@ -9,6 +9,7 @@ import UserManagementPage from "./pages/UserManagement/UserManagementPage"
 import InterventionManagementPage from "./pages/InterventionManagement/InterventionManagementPage"
 import EquipmentManagementPage from "./pages/EquipmentManagement/EquipmentManagementPage"
 import StockManagementPage from "./pages/StockManagement/StockManagementPage"
+import SupplierManagementPage from "./pages/SupplierManagement/SupplierManagementPage"
 import DocumentationPage from "./pages/Documentation/DocumentationPage"
 import PredictiveMaintenancePage from "./pages/PredictiveMaintenance/PredictiveMaintenancePage"
 import ProfilePage from "./pages/Profile/ProfilePage"
@@ -103,6 +104,14 @@ function App() {
                             element={
                                 <ProtectedRoute>
                                     <StockManagementPage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/fournisseurs"
+                            element={
+                                <ProtectedRoute>
+                                    <SupplierManagementPage />
                                 </ProtectedRoute>
                             }
                         />

@@ -8,7 +8,6 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
   // Initialize form data with empty values
   const emptyFormData = {
     name: "",
-    reference: "",
     equipment: "",
     quantity: 0,
     minThreshold: 0,
@@ -27,7 +26,6 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
   const initialData = item && isEdit 
     ? {
         name: item.name || "",
-        reference: item.reference || "",
         equipment: item.equipment ? item.equipment._id : "",
         quantity: item.quantity || 0,
         minThreshold: item.minThreshold || 0,
@@ -43,7 +41,6 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
     if (item && isEdit) {
       const newData = {
         name: item.name || "",
-        reference: item.reference || "",
         equipment: item.equipment ? item.equipment._id : "",
         quantity: item.quantity || 0,
         minThreshold: item.minThreshold || 0,
@@ -80,7 +77,6 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
     if (item && isEdit) {
       setFormData({
         name: item.name || "",
-        reference: item.reference || "",
         equipment: item.equipment ? item.equipment._id : "",
         quantity: item.quantity || 0,
         minThreshold: item.minThreshold || 0,
@@ -129,19 +125,7 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
         <h3 className="form-section-title">Informations générales</h3>
         
         <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="reference">Référence *</label>
-            <input
-              type="text"
-              id="reference"
-              name="reference"
-              value={formData.reference}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          
-          <div className="form-group">
+          <div className="form-group full-width">
             <label htmlFor="name">Nom *</label>
             <input
               type="text"
@@ -168,7 +152,7 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
               <option value="">Sélectionnez un équipement</option>
               {equipmentList.map((equipment) => (
                 <option key={equipment._id} value={equipment._id}>
-                  {equipment.name}
+                  {equipment.reference} - {equipment.name}
                 </option>
               ))}
             </select>
@@ -190,7 +174,7 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
 
         <div className="form-row">
           <div className="form-group">
-            <label htmlFor="leadTime">Délai de livraison *</label>
+            <label htmlFor="leadTime">Délai de livraison (en jours) *</label>
             <input
               type="number"
               id="leadTime"
@@ -199,7 +183,6 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
               onChange={handleChange}
               required
             />
-            <span className="form-help">en jours</span>
           </div>
         </div>
       </div>

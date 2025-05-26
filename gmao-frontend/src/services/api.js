@@ -394,9 +394,28 @@ export const documentAPI = {
   getDocumentsByEquipment: (equipmentId) => API.get(`/documents/equipment/${equipmentId}`),
 };
 
+// API pour les fournisseurs
+export const fournisseurAPI = {
+  // Récupérer tous les fournisseurs
+  getAllFournisseurs: () => API.get('/fournisseurs'),
+  
+  // Récupérer un fournisseur par ID
+  getFournisseurById: (id) => API.get(`/fournisseurs/${id}`),
+  
+  // Créer un nouveau fournisseur
+  createFournisseur: (fournisseurData) => API.post('/fournisseurs', fournisseurData),
+  
+  // Mettre à jour un fournisseur
+  updateFournisseur: (id, fournisseurData) => API.put(`/fournisseurs/${id}`, fournisseurData),
+  
+  // Supprimer un fournisseur
+  deleteFournisseur: (id) => API.delete(`/fournisseurs/${id}`),
+};
+
 export default {
   userAPI,
   interventionAPI,
+  fournisseurAPI,
   equipmentAPI,
   planningAPI,
   stockAPI,

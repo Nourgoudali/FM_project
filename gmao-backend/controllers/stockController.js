@@ -2,9 +2,9 @@ const Stock = require('../models/Stock');
 
 const stockController = {
   create: async (req, res) => {
-    const { reference, name, equipment, quantity, minThreshold, supplier, leadTime } = req.body;
+    const { name, equipment, quantity, minThreshold, supplier, leadTime } = req.body;
     try {
-      const stock = new Stock({ reference, name, equipment, quantity, minThreshold, supplier, leadTime });
+      const stock = new Stock({ name, equipment, quantity, minThreshold, supplier, leadTime });
       await stock.save();
       res.status(201).json(stock);
     } catch (err) {
