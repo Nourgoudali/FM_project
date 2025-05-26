@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import "./NewInterventionModal.css"
 import { FaTimes } from "react-icons/fa"
+import { equipmentAPI, userAPI } from "../../services/api"
 
 function NewInterventionModal({ onClose, onSubmit }) {
   const [formData, setFormData] = useState({
@@ -15,6 +16,39 @@ function NewInterventionModal({ onClose, onSubmit }) {
     location: "",
   })
 
+  const [equipments, setEquipments] = useState([])
+  const [technicians, setTechnicians] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  // Charger les équipements et les techniciens
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        // Récupérer les équipements
+        const equipmentsResponse = await equipmentAPI.getAllEquipments()
+        if (equipmentsResponse?.data) {
+          setEquipments(equipmentsResponse.data)
+        }
+
+        // Récupérer les utilisateurs avec le rôle technicien
+        const usersResponse = await userAPI.getAllUsers()
+        if (usersResponse?.data) {
+          const techniciansList = usersResponse.data.filter(user => user.role === 'technicien')
+          setTechnicians(techniciansList)
+        }
+      } catch (err) {
+        console.error("Erreur lors du chargement des données:", err)
+        setError("Impossible de charger les données nécessaires")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({
@@ -26,9 +60,47 @@ function NewInterventionModal({ onClose, onSubmit }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     if (onSubmit) {
-      onSubmit(formData)
+      // Trouver l'équipement sélectionné
+      const selectedEquipment = equipments.find(eq => eq._id === formData.equipment)
+      // Trouver le technicien sélectionné
+      const selectedTechnician = technicians.find(tech => tech._id === formData.technician)
+
+      const interventionData = {
+        ...formData,
+        equipment: selectedEquipment?._id,
+        technician: selectedTechnician ? {
+          initials: selectedTechnician.firstName.charAt(0) + selectedTechnician.lastName.charAt(0),
+          name: `${selectedTechnician.firstName} ${selectedTechnician.lastName}`,
+          color: '#4263EB' // Couleur par défaut
+        } : null
+      }
+
+      onSubmit(interventionData)
     }
     onClose()
+  }
+
+  if (loading) {
+    return (
+      <div className="modal-overlay">
+        <div className="modal-container">
+          <div className="loading-message">Chargement des données...</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="modal-overlay">
+        <div className="modal-container">
+          <div className="error-message">{error}</div>
+          <button className="close-btn" onClick={onClose}>
+            <FaTimes />
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -44,15 +116,23 @@ function NewInterventionModal({ onClose, onSubmit }) {
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label htmlFor="equipment">Équipement</label>
-              <input
-                type="text"
-                id="equipment"
-                name="equipment"
-                placeholder="Nom de l'équipement"
-                value={formData.equipment}
-                onChange={handleChange}
-                required
-              />
+              <div className="select-container">
+                <select
+                  id="equipment"
+                  name="equipment"
+                  value={formData.equipment}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Sélectionner un équipement</option>
+                  {equipments.map((equipment) => (
+                    <option key={equipment._id} value={equipment._id}>
+                      {equipment.reference} - {equipment.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="select-arrow">▼</span>
+              </div>
             </div>
 
             <div className="form-row">
@@ -62,6 +142,7 @@ function NewInterventionModal({ onClose, onSubmit }) {
                   <select id="type" name="type" value={formData.type} onChange={handleChange}>
                     <option value="Préventive">Préventive</option>
                     <option value="Curative">Curative</option>
+                    <option value="Corrective">Corrective</option>
                   </select>
                   <span className="select-arrow">▼</span>
                 </div>
@@ -84,19 +165,35 @@ function NewInterventionModal({ onClose, onSubmit }) {
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="technician">Technicien</label>
-                <input
-                  type="text"
-                  id="technician"
-                  name="technician"
-                  placeholder="Nom du technicien"
-                  value={formData.technician}
-                  onChange={handleChange}
-                />
+                <div className="select-container">
+                  <select
+                    id="technician"
+                    name="technician"
+                    value={formData.technician}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Sélectionner un technicien</option>
+                    {technicians.map((technician) => (
+                      <option key={technician._id} value={technician._id}>
+                        {technician.firstName} {technician.lastName}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="select-arrow">▼</span>
+                </div>
               </div>
 
               <div className="form-group">
                 <label htmlFor="date">Date</label>
-                <input type="date" id="date" name="date" value={formData.date} onChange={handleChange} />
+                <input 
+                  type="date" 
+                  id="date" 
+                  name="date" 
+                  value={formData.date} 
+                  onChange={handleChange}
+                  required 
+                />
               </div>
             </div>
 
@@ -108,6 +205,7 @@ function NewInterventionModal({ onClose, onSubmit }) {
                 value={formData.description}
                 onChange={handleChange}
                 rows={4}
+                required
               ></textarea>
             </div>
 
@@ -120,6 +218,7 @@ function NewInterventionModal({ onClose, onSubmit }) {
                 placeholder="Localisation de l'équipement"
                 value={formData.location}
                 onChange={handleChange}
+                required
               />
             </div>
 

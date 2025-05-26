@@ -1,11 +1,9 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import { useAuth } from "../../contexts/AuthContext"
 import GlobalSearch from "../Search/GlobalSearch"
 import "./Header.css"
 
 function Header({ title, onToggleSidebar }) {
-  const { currentUser, logout } = useAuth()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
 
@@ -17,10 +15,6 @@ function Header({ title, onToggleSidebar }) {
   const toggleNotifications = () => {
     setShowNotifications(!showNotifications)
     if (showUserMenu) setShowUserMenu(false)
-  }
-
-  const handleLogout = () => {
-    logout()
   }
 
   // Notifications simulées
@@ -51,9 +45,6 @@ function Header({ title, onToggleSidebar }) {
   return (
     <header className="header">
       <div className="header-left">
-        <button className="sidebar-toggle" onClick={onToggleSidebar}>
-          <span className="toggle-icon"></span>
-        </button>
         <h1 className="page-title">{title}</h1>
       </div>
 
@@ -96,52 +87,6 @@ function Header({ title, onToggleSidebar }) {
                   Voir toutes les notifications
                 </Link>
               </div>
-            </div>
-          )}
-        </div>
-
-        <div className="user-menu-container">
-          <button className="user-menu-button" onClick={toggleUserMenu}>
-            <div className="user-avatar">{currentUser?.name?.charAt(0) || "U"}</div>
-          </button>
-
-          {showUserMenu && (
-            <div className="user-dropdown">
-              <div className="user-info">
-                <div className="user-avatar dropdown-avatar">{currentUser?.name?.charAt(0) || "U"}</div>
-                <div className="user-details">
-                  <h3 className="user-name">{currentUser?.name || "Utilisateur"}</h3>
-                  <p className="user-role">{currentUser?.role || "Rôle non défini"}</p>
-                </div>
-              </div>
-              <div className="dropdown-divider"></div>
-              <ul className="dropdown-menu">
-                <li>
-                  <Link to="/profile" className="dropdown-item">
-                    <span className="item-icon profile-icon"></span>
-                    Mon profil
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/settings" className="dropdown-item">
-                    <span className="item-icon settings-icon"></span>
-                    Paramètres
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/documentation" className="dropdown-item">
-                    <span className="item-icon help-icon"></span>
-                    Aide et documentation
-                  </Link>
-                </li>
-                <li className="dropdown-divider"></li>
-                <li>
-                  <button className="dropdown-item logout-item" onClick={handleLogout}>
-                    <span className="item-icon logout-icon"></span>
-                    Déconnexion
-                  </button>
-                </li>
-              </ul>
             </div>
           )}
         </div>

@@ -185,15 +185,18 @@ const interventionController = {
         return res.status(400).json({ message: 'Delay justification is required' });
       }
 
+      // Ajouter updatedAt pour suivre les mises à jour
       const intervention = await Intervention.findByIdAndUpdate(
         id,
-        { ...updates, status, delayJustification },
+        { ...updates, status, delayJustification, updatedAt: Date.now() },
         { new: true }
-      );
+      ).populate('equipment');
 
       if (!intervention) return res.status(404).json({ message: 'Intervention not found' });
+      console.log('Intervention mise à jour:', intervention);
       res.json(intervention);
     } catch (err) {
+      console.error('Erreur lors de la mise à jour de l\'intervention:', err);
       res.status(400).json({ message: err.message });
     }
   },

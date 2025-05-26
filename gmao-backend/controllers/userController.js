@@ -301,20 +301,130 @@ const userController = {
     try {
       const inactivityThreshold = new Date();
       inactivityThreshold.setDate(inactivityThreshold.getDate() - 30); // 30 jours d'inactivité
+      
+      const inactiveUsers = await User.find({
+        lastActivity: { $lt: inactivityThreshold },
+        status: 'Actif'
+      });
+      
+      for (const user of inactiveUsers) {
+        user.status = 'Inactif';
+        await user.save();
+        console.log(`Utilisateur ${user.email} marqué comme inactif après 30 jours d'inactivité`);
+      }
+      
+      return inactiveUsers.length;
+    } catch (error) {
+      console.error('Erreur lors de la vérification des utilisateurs inactifs:', error);
+      return 0;
+    }
+  },
 
-      await User.updateMany(
-        {
-          lastActivity: { $lt: inactivityThreshold },
-          status: 'Actif'
-        },
-        {
-          status: 'Inactif'
-        }
-      );
+  // Récupérer l'utilisateur actuel
+  getCurrentUser: async (req, res, next) => {
+    try {
+      const user = await User.findById(req.user.id).select('-password');
+      if (!user) {
+        return res.status(404).json({ message: 'Utilisateur introuvable' });
+      }
+      res.json(user);
+    } catch (error) {
+      next(error);
+    }
+  },
 
-      console.log('Inactive users status updated');
-    } catch (err) {
-      console.error('Error checking inactive users:', err);
+  // Mettre à jour le profil de l'utilisateur actuel
+  updateCurrentUser: async (req, res, next) => {
+    try {
+      const { firstName, lastName, email, phone, department } = req.body;
+      const updateData = {};
+      
+      if (firstName) updateData.firstName = firstName;
+      if (lastName) updateData.lastName = lastName;
+      if (email) updateData.email = email;
+      if (phone) updateData.phone = phone;
+      if (department) updateData.department = department;
+      
+      const user = await User.findByIdAndUpdate(
+        req.user.id,
+        updateData,
+        { new: true, runValidators: true }
+      ).select('-password');
+      
+      if (!user) {
+        return res.status(404).json({ message: 'Utilisateur introuvable' });
+      }
+      
+      res.json({
+        message: 'Profil mis à jour avec succès',
+        user
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // Administrateur change le mot de passe d'un utilisateur
+  adminChangeUserPassword: async (req, res, next) => {
+    try {
+      const userId = req.params.userId;
+      const { newPassword } = req.body;
+      
+      // Vérifier que l'utilisateur existe
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'Utilisateur introuvable' });
+      }
+      
+      // Vérifier que l'utilisateur qui fait la demande est un administrateur
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Accès refusé. Seuls les administrateurs peuvent modifier les mots de passe des utilisateurs.' });
+      }
+      
+      // Hasher le nouveau mot de passe
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(newPassword, salt);
+      await user.save();
+      
+      res.json({ message: `Mot de passe mis à jour pour l'utilisateur ${user.email}` });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // Attribuer un rôle à un utilisateur
+  assignRole: async (req, res, next) => {
+    try {
+      const userId = req.params.userId;
+      const { role } = req.body;
+      
+      // Vérifier que le rôle est valide
+      if (!['admin', 'planificateur', 'demandeur', 'technicien'].includes(role)) {
+        return res.status(400).json({ message: 'Rôle invalide' });
+      }
+      
+      // Vérifier que l'utilisateur qui fait la demande est un administrateur
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Accès refusé. Seuls les administrateurs peuvent attribuer des rôles.' });
+      }
+      
+      // Mettre à jour le rôle de l'utilisateur
+      const user = await User.findByIdAndUpdate(
+        userId, 
+        { role }, 
+        { new: true }
+      ).select('-password');
+      
+      if (!user) {
+        return res.status(404).json({ message: 'Utilisateur introuvable' });
+      }
+      
+      res.json({ 
+        message: `Rôle mis à jour vers ${role}`, 
+        user 
+      });
+    } catch (error) {
+      next(error);
     }
   },
 };

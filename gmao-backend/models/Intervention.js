@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const interventionSchema = new mongoose.Schema({
   reference: { type: String, required: true, unique: true },
-  equipment: { type: String, required: true },
+  equipment: {type: mongoose.Schema.Types.ObjectId, ref: 'Equipment', required: true},
   type: { type: String, enum: ['Préventive', 'Curative', 'Corrective'], required: true },
   priority: { type: String, enum: ['Basse', 'Normale', 'Haute', 'Critique'], required: true },
   status: { type: String, enum: ['Planifiée', 'En cours', 'Terminée', 'Reportée'], default: 'Planifiée' },

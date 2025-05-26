@@ -11,7 +11,7 @@ import { interventionAPI } from "../../services/api"
 
 const InterventionManagementPage = () => {
   const { sidebarOpen, toggleSidebar } = useSidebar()
-  const [viewMode, setViewMode] = useState("list") // "list" or "calendar"
+  const [viewMode, setViewMode] = useState("list")
   const [showNewModal, setShowNewModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
@@ -24,132 +24,62 @@ const InterventionManagementPage = () => {
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  
-  // État pour les interventions
-  const [allInterventions, setAllInterventions] = useState([])
+  const [interventions, setInterventions] = useState([])
 
   // Chargement initial des données
   useEffect(() => {
     const fetchInterventions = async () => {
       try {
-        setLoading(true);
-        const response = await interventionAPI.getAllInterventions();
-        
+        setLoading(true)
+        const response = await interventionAPI.getAllInterventions()
         if (response && response.data) {
-          setAllInterventions(response.data);
-        } else {
-          // Données fictives comme fallback en cas d'API non disponible
-          const mockInterventions = [
-    { 
-      id: "INT-2024-001", 
-      equipment: "Pompe P-101", 
-      type: "Curative", 
-      priority: "Haute",
-      status: "En cours",
-      date: "2024-05-15",
-      description: "Réparation de la pompe suite à une fuite constatée lors de la dernière maintenance.",
-      location: "Bâtiment A - Salle des machines",
-      technician: { initials: "J", name: "Jean Dupont", color: "#4263EB" }
-    },
-    { 
-      id: "INT-2024-002", 
-      equipment: "Compresseur C-203", 
-      type: "Préventive", 
-      priority: "Moyenne",
-      status: "Planifiée",
-      date: "2024-05-20",
-      description: "Maintenance préventive du compresseur selon le plan annuel.",
-      location: "Bâtiment B - Sous-sol",
-      technician: { initials: "M", name: "Marie Martin", color: "#3788D8" }
-    },
-    { 
-      id: "INT-2024-003", 
-      equipment: "Moteur M-405", 
-      type: "Curative", 
-      priority: "Basse",
-      status: "Terminée",
-      date: "2024-05-10",
-      description: "Remplacement des roulements et vérification de l'alignement.",
-      location: "Bâtiment A - Ligne de production 2",
-      technician: { initials: "P", name: "Pierre Durant", color: "#F783AC" }
-    },
-    { 
-      id: "INT-2024-004", 
-      equipment: "Ventilateur V-102", 
-      type: "Préventive", 
-      priority: "Critique",
-      status: "En retard",
-      date: "2024-05-05",
-      description: "Nettoyage des pales et vérification du système de contrôle.",
-      location: "Bâtiment C - Toiture",
-      technician: { initials: "S", name: "Sophie Bernard", color: "#74C0FC" }
-    },
-    { 
-      id: "INT-2024-005", 
-      equipment: "Filtre F-301", 
-      type: "Curative", 
-      priority: "Haute",
-      status: "En cours",
-      date: "2024-05-18",
-      description: "Remplacement du filtre suite à une obstruction détectée.",
-      location: "Bâtiment B - Salle de traitement",
-      technician: { initials: "L", name: "Lucas Petit", color: "#9775FA" }
-    }
-          ];
-          setAllInterventions(mockInterventions);
+          setInterventions(response.data)
         }
       } catch (error) {
-        console.error("Erreur lors du chargement des interventions:", error);
-        setError("Impossible de charger les interventions");
+        console.error("Erreur lors du chargement des interventions:", error)
+        setError("Impossible de charger les interventions")
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchInterventions();
-  }, []);
+    fetchInterventions()
+  }, [])
 
-  // État pour les données filtrées
-  const [interventions, setInterventions] = useState([])
-
-  // Appliquer les filtres quand ils changent
+  // Appliquer les filtres
   useEffect(() => {
-    let filteredData = allInterventions
+    let filteredData = interventions
 
-    // Appliquer la recherche
     if (searchTerm) {
       const lowercaseTerm = searchTerm.toLowerCase()
       filteredData = filteredData.filter(
         (item) => 
-          item.id.toLowerCase().includes(lowercaseTerm) || 
+          item.reference.toLowerCase().includes(lowercaseTerm) || 
           item.equipment.toLowerCase().includes(lowercaseTerm) ||
           item.technician.name.toLowerCase().includes(lowercaseTerm)
       )
     }
 
-    // Appliquer le filtre de type
     if (filters.type !== "all") {
       filteredData = filteredData.filter(item => item.type === filters.type)
     }
 
-    // Appliquer le filtre de statut
     if (filters.status !== "all") {
       filteredData = filteredData.filter(item => item.status === filters.status)
     }
 
-    // Appliquer le filtre de priorité
     if (filters.priority !== "all") {
       filteredData = filteredData.filter(item => item.priority === filters.priority)
     }
 
     setInterventions(filteredData)
-  }, [searchTerm, filters, allInterventions])
+  }, [searchTerm, filters])
 
   const getPriorityClass = (priority) => {
     switch(priority) {
       case "Critique": return "intv-priority-critical"
       case "Haute": return "intv-priority-high"
-      case "Moyenne": return "intv-priority-medium"
+      case "Normale": return "intv-priority-medium"
       case "Basse": return "intv-priority-low"
       default: return ""
     }
@@ -160,7 +90,7 @@ const InterventionManagementPage = () => {
       case "En cours": return "intv-status-in-progress"
       case "Planifiée": return "intv-status-planned"
       case "Terminée": return "intv-status-completed"
-      case "En retard": return "intv-status-late"
+      case "Reportée": return "intv-status-late"
       default: return ""
     }
   }
@@ -169,77 +99,52 @@ const InterventionManagementPage = () => {
     switch(type) {
       case "Curative": return "intv-type-curative"
       case "Préventive": return "intv-type-preventive"
+      case "Corrective": return "intv-type-corrective"
       default: return ""
     }
   }
 
   const handleNewIntervention = async (data) => {
     try {
-      // Créer l'objet intervention avec les données du formulaire
       const interventionData = {
-      equipment: data.equipment,
-      type: data.type,
-      priority: data.priority,
-      status: "Planifiée",
-      date: data.date,
-      description: data.description,
-      location: data.location,
-      technician: { 
-        initials: data.technician.slice(0, 1).toUpperCase(), 
-        name: data.technician,
-        color: "#4263EB" 
+        equipment: data.equipment,
+        type: data.type,
+        priority: data.priority,
+        date: data.date,
+        description: data.description,
+        location: data.location,
+        technician: data.technician
       }
-      };
-    
-      // Appel à l'API pour créer l'intervention
-      const response = await interventionAPI.createIntervention(interventionData);
+
+      const response = await interventionAPI.createIntervention(interventionData)
       
       if (response && response.data) {
-        // Ajouter l'intervention créée à la liste
-        setAllInterventions([...allInterventions, response.data]);
-      } else {
-        // Fallback si l'API échoue
-        const newIntervention = {
-          id: `INT-2024-${String(allInterventions.length + 1).padStart(3, '0')}`,
-          ...interventionData
-        };
-        setAllInterventions([...allInterventions, newIntervention]);
+        setInterventions([...interventions, response.data])
+        setShowNewModal(false)
       }
-    
-    // Fermer le modal
-      setShowNewModal(false);
     } catch (error) {
-      console.error("Erreur lors de la création de l'intervention:", error);
-      alert("Une erreur est survenue lors de la création de l'intervention");
+      console.error("Erreur lors de la création de l'intervention:", error)
+      alert("Une erreur est survenue lors de la création de l'intervention")
     }
   }
 
   const handleEditIntervention = async (updatedIntervention) => {
     try {
-      // Appel à l'API pour mettre à jour l'intervention
       const response = await interventionAPI.updateIntervention(
-        updatedIntervention._id || updatedIntervention.id, 
+        updatedIntervention._id,
         updatedIntervention
-      );
+      )
       
       if (response && response.data) {
-        // Mettre à jour la liste avec l'intervention modifiée
-        const updatedInterventions = allInterventions.map(item => 
-          item.id === response.data.id ? response.data : item
-        );
-        setAllInterventions(updatedInterventions);
-      } else {
-        // Fallback si l'API échoue
-    const updatedInterventions = allInterventions.map(item => 
-      item.id === updatedIntervention.id ? updatedIntervention : item
-        );
-        setAllInterventions(updatedInterventions);
+        const updatedInterventions = interventions.map(item => 
+          item._id === response.data._id ? response.data : item
+        )
+        setInterventions(updatedInterventions)
+        setShowEditModal(false)
       }
-      
-      setShowEditModal(false);
     } catch (error) {
-      console.error("Erreur lors de la mise à jour de l'intervention:", error);
-      alert("Une erreur est survenue lors de la mise à jour de l'intervention");
+      console.error("Erreur lors de la mise à jour de l'intervention:", error)
+      alert("Une erreur est survenue lors de la mise à jour de l'intervention")
     }
   }
 
@@ -310,6 +215,7 @@ const InterventionManagementPage = () => {
                   <option value="all">Tous les types</option>
                   <option value="Curative">Curative</option>
                   <option value="Préventive">Préventive</option>
+                  <option value="Corrective">Corrective</option>
                 </select>
               </div>
               <div className="intv-filter-dropdown">
@@ -322,7 +228,7 @@ const InterventionManagementPage = () => {
                   <option value="En cours">En cours</option>
                   <option value="Planifiée">Planifiée</option>
                   <option value="Terminée">Terminée</option>
-                  <option value="En retard">En retard</option>
+                  <option value="Reportée">Reportée</option>
                 </select>
               </div>
               <div className="intv-filter-dropdown">
@@ -333,7 +239,7 @@ const InterventionManagementPage = () => {
                 >
                   <option value="all">Toutes les priorités</option>
                   <option value="Basse">Basse</option>
-                  <option value="Moyenne">Moyenne</option>
+                  <option value="Normale">Normale</option>
                   <option value="Haute">Haute</option>
                   <option value="Critique">Critique</option>
                 </select>
@@ -363,8 +269,8 @@ const InterventionManagementPage = () => {
                 <tbody>
                   {interventions.map((intervention) => (
                     <tr key={intervention._id}>
-                      <td>{intervention.id}</td>
-                      <td>{intervention.equipment}</td>
+                      <td>{intervention.reference}</td>
+                      <td>{intervention.equipment?.reference || 'Équipement non assigné'}</td>
                       <td>
                         <span className={`badge ${getTypeClass(intervention.type)}`}>
                           {intervention.type}
@@ -380,16 +286,12 @@ const InterventionManagementPage = () => {
                           {intervention.status}
                         </span>
                       </td>
-                      <td>{intervention.date}</td>
+                      <td>{new Date(intervention.date).toLocaleDateString()}</td>
                       <td>
                         <div className="technician-info">
-                          <span 
-                            className="technician-avatar" 
-                            style={{ backgroundColor: intervention.technician.color }}
-                          >
-                            {intervention.technician.initials}
+                          <span className="technician-name">
+                            {intervention.technician?.name || 'Non assigné'}
                           </span>
-                          <span className="technician-name">{intervention.technician.name}</span>
                         </div>
                       </td>
                       <td>
@@ -417,7 +319,6 @@ const InterventionManagementPage = () => {
             </div>
           ) : (
             <div className="intv-calendar-view">
-              {/* Implémentation future du calendrier */}
               <p className="intv-calendar-placeholder">Vue calendrier en développement</p>
             </div>
           )}

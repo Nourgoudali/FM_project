@@ -12,18 +12,21 @@ function EditInterventionModal({ intervention, onClose, onSubmit }) {
     status: "En cours",
     technician: "",
     description: "",
+    location: ""
   })
 
   // Initialiser le formulaire avec les données de l'intervention
   useEffect(() => {
     if (intervention) {
+      console.log('Données d\'intervention reçues:', intervention);
       setFormData({
-        equipment: intervention.equipment || "",
+        equipment: intervention.equipment?.reference || "",
         type: intervention.type || "Préventive",
         priority: intervention.priority || "Normale",
         status: intervention.status || "En cours",
         technician: intervention.technician?.name || "",
         description: intervention.description || "",
+        location: intervention.location || ""
       })
     }
   }, [intervention])
@@ -39,9 +42,12 @@ function EditInterventionModal({ intervention, onClose, onSubmit }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     if (onSubmit) {
+      // Préserver l'ID de l'équipement original
       onSubmit({
         ...intervention,
         ...formData,
+        // Conserver l'équipement original (ObjectId) au lieu de la référence
+        equipment: intervention.equipment?._id || intervention.equipment,
         technician: {
           ...intervention.technician,
           name: formData.technician,
@@ -71,6 +77,8 @@ function EditInterventionModal({ intervention, onClose, onSubmit }) {
                 name="equipment"
                 value={formData.equipment}
                 onChange={handleChange}
+                disabled
+                title="La référence d'équipement ne peut pas être modifiée"
                 required
               />
             </div>

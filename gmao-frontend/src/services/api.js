@@ -158,8 +158,16 @@ export const userAPI = {
   register: (userData) => API.post('/users/register', userData),
   // Récupérer le profil utilisateur
   getProfile: () => API.get('/users/profile'),
+  // Récupérer l'utilisateur actuel
+  getCurrentUser: () => API.get('/users/me'),
+  // Mettre à jour le profil de l'utilisateur actuel
+  updateCurrentUser: (userData) => API.put('/users/me', userData),
   // Changer le mot de passe
   changePassword: (passwordData) => API.post('/users/change-password', passwordData),
+  // Changer le mot de passe d'un utilisateur (admin uniquement)
+  adminChangeUserPassword: (userId, passwordData) => API.post(`/users/${userId}/password`, passwordData),
+  // Attribuer un rôle à un utilisateur (admin uniquement)
+  assignRole: (userId, roleData) => API.post(`/users/${userId}/role`, roleData),
   // Récupérer tous les utilisateurs (pour administration)
   getAllUsers: () => API.get('/users'),
   // Récupérer un utilisateur par ID
@@ -234,7 +242,26 @@ export const equipmentAPI = {
     });
   },
   // Mettre à jour un équipement
-  updateEquipment: async (id, equipmentData) => API.put(`/equipment/${id}`, equipmentData),
+  updateEquipment: async (id, equipmentData) => {
+    // Create FormData object
+    const formData = new FormData();
+    
+    // Add all fields to FormData
+    Object.keys(equipmentData).forEach(key => {
+      if (key === 'image' && equipmentData[key]) {
+        formData.append(key, equipmentData[key]);
+      } else if (equipmentData[key] !== undefined) {
+        formData.append(key, String(equipmentData[key]));
+      }
+    });
+
+    return API.put(`/equipment/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).token : ''}`
+      }
+    });
+  },
   // Supprimer un équipement
   deleteEquipment: async (id) => API.delete(`/equipment/${id}`),
   // Récupérer les équipements avec leurs données de maintenance prédictive
@@ -302,15 +329,15 @@ export const sensorAPI = {
 // API pour les indicateurs de performance (KPI)
 export const kpiAPI = {
   // Générer des KPIs
-  generateKPI: () => API.post('/api/kpi/generate'),
+  generateKPI: () => API.post('generate'),
   // Obtenir les derniers KPIs
-  getLatestKPI: () => API.get('/api/kpi/latest'),
+  getLatestKPI: () => API.get('/latest'),
   // Obtenir les KPIs pour un équipement spécifique
-  getEquipmentKPI: (id) => API.get(`/api/kpi/equipment/${id}`),
+  getEquipmentKPI: (id) => API.get(`/equipment/${id}`),
   // Obtenir les KPIs de fiabilité
-  getReliabilityKPI: () => API.get('/api/kpi/reliability'),
+  getReliabilityKPI: () => API.get('/reliability'),
   // Obtenir les KPIs de maintenance
-  getMaintenanceKPI: () => API.get('/api/kpi/maintenance'),
+  getMaintenanceKPI: () => API.get('/maintenance'),
 };
 
 // API pour les journaux d'activité (logs)

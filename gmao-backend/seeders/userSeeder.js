@@ -31,7 +31,7 @@ const users = [
     lastName: 'technician',
     email: 'tech@gmao.com',
     password: 'Tech123!',
-    role: 'technician',
+    role: 'technicien',
     department: 'Production',
     phone: '01 23 45 67 91',
   },
@@ -48,10 +48,7 @@ const users = [
 
 const seedUsers = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(process.env.MONGO_URI);
     console.log('✅ Connexion MongoDB établie');
 
     await User.deleteMany();

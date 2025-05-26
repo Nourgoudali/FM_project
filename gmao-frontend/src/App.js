@@ -11,7 +11,6 @@ import EquipmentManagementPage from "./pages/EquipmentManagement/EquipmentManage
 import StockManagementPage from "./pages/StockManagement/StockManagementPage"
 import DocumentationPage from "./pages/Documentation/DocumentationPage"
 import PredictiveMaintenancePage from "./pages/PredictiveMaintenance/PredictiveMaintenancePage"
-import SettingsPage from "./pages/Settings/SettingsPage"
 import ProfilePage from "./pages/Profile/ProfilePage"
 import NotFoundPage from "./pages/NotFound/NotFoundPage"
 import HomePage from "./pages/Home/HomePage"
@@ -23,17 +22,31 @@ import NotificationSystem from "./components/Notifications/NotificationSystem"
 import { AuthProvider, useAuth } from "./contexts/AuthContext"
 import { SidebarProvider } from "./contexts/SidebarContext"
 
-// Composant pour les routes protégées
+// Composant pour les routes protégées (utilisateurs authentifiés uniquement)
 const ProtectedRoute = ({ children }) => {
-    const { isAuthenticated, loading, user } = useAuth();
-
+    const { isAuthenticated, loading } = useAuth();
 
     if (loading) {
-        return <div>Chargement...</div>;
+        return <div className="loading-container">Chargement...</div>;
     }
 
     if (!isAuthenticated) {
         return <Navigate to="/login" replace />;
+    }
+
+    return children;
+};
+
+// Composant pour les routes publiques (redirection des utilisateurs authentifiés)
+const PublicRoute = ({ children }) => {
+    const { isAuthenticated, loading } = useAuth();
+
+    if (loading) {
+        return <div className="loading-container">Chargement...</div>;
+    }
+
+    if (isAuthenticated) {
+        return <Navigate to="/dashboard" replace />;
     }
 
     return children;
@@ -48,9 +61,9 @@ function App() {
                     v7_startTransition: true 
                 }}>
                     <Routes>
-                        {/* Routes publiques */}
-                        <Route path="/" element={<HomePage />} />
-                        <Route path="/login" element={<LoginPage />} />
+                        {/* Routes publiques - redirigent vers le tableau de bord si déjà authentifié */}
+                        <Route path="/" element={<PublicRoute><HomePage /></PublicRoute>} />
+                        <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
 
                         {/* Routes protégées */}
                         <Route
@@ -106,14 +119,6 @@ function App() {
                             element={
                                 <ProtectedRoute>
                                     <PredictiveMaintenancePage />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="/settings"
-                            element={
-                                <ProtectedRoute>
-                                    <SettingsPage />
                                 </ProtectedRoute>
                             }
                         />

@@ -198,7 +198,7 @@ const DashboardPage = () => {
                     {recentInterventions.map((intervention) => (
                       <tr key={intervention._id || intervention.id || `intervention-${intervention.reference}`.toLowerCase().replace(/\s+/g, '-')}>
                         <td>{intervention.reference || intervention.id}</td>
-                        <td>{intervention.equipment}</td>
+                        <td>{intervention.equipment ? (typeof intervention.equipment === 'object' ? intervention.equipment.name || intervention.equipment.reference || 'Équipement sans nom' : intervention.equipment) : 'Équipement supprimé'}</td>
                         <td>
                           <span className={`badge ${getTypeClass(intervention.type)}`}>{intervention.type}</span>
                         </td>
@@ -210,8 +210,8 @@ const DashboardPage = () => {
                         <td>
                           <span className={`badge ${getStatusClass(intervention.status)}`}>{intervention.status}</span>
                         </td>
-                        <td>{intervention.date}</td>
-                        <td>{intervention.technician?.name || intervention.technician}</td>
+                        <td>{intervention.date ? new Date(intervention.date).toLocaleDateString() : '-'}</td>
+                        <td>{intervention.technician ? (typeof intervention.technician === 'object' ? intervention.technician.name || intervention.technician.firstName + ' ' + intervention.technician.lastName || 'Technicien sans nom' : intervention.technician) : '-'}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -5,52 +5,31 @@ import Sidebar from "../../components/Sidebar/Sidebar"
 import Header from "../../components/Header/Header"
 import Modal from "../../components/Modal/Modal"
 import { AddEquipmentForm } from "../../components/Equipment/AddEquipmentForm"
+import ViewEquipmentModal from "../../components/Equipment/ViewEquipmentModal"
+import EditEquipmentModal from "../../components/Equipment/EditEquipmentModal"
 import "./EquipmentManagementPage.css"
 import { useSidebar } from "../../contexts/SidebarContext"
 import { equipmentAPI } from "../../services/api"
-import { FaHistory, FaEdit, FaTrash } from "react-icons/fa"
+import { FaHistory, FaEdit, FaTrash, FaEye } from "react-icons/fa"
 
 const EquipmentManagementPage = () => {
   const { sidebarOpen, toggleSidebar } = useSidebar()
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState("all")
-  const [view, setView] = useState("grid") // 'grid' ou 'list'
   const [equipments, setEquipments] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [errorMessage, setErrorMessage] = useState(null);
 
-  // Nouveaux états pour les modaux
-  const [showHistoryModal, setShowHistoryModal] = useState(false)
+  // États pour les modaux
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showViewModal, setShowViewModal] = useState(false)
   const [selectedEquipment, setSelectedEquipment] = useState(null)
 
   useEffect(() => {
-    const fetchEquipments = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        setErrorMessage(null);
-        
-        // Utilisation de l'API pour récupérer les équipements
-        const response = await equipmentAPI.getAllEquipments();
-        
-        if (response.data) {
-          setEquipments(response.data);
-        } else {
-          throw new Error('Invalid response from server');
-        }
-      } catch (error) {
-        console.error('Erreur lors de la récupération des équipements:', error);
-        setError('Erreur lors de la récupération des équipements. Veuillez réessayer.');
-        setErrorMessage('Erreur lors de la récupération des équipements. Veuillez réessayer.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
+    // Appel de la fonction fetchEquipments au chargement du composant
     fetchEquipments();
   }, [])
 
@@ -101,22 +80,44 @@ const EquipmentManagementPage = () => {
     try {
       // Only update state if we have new equipment
       if (newEquipment) {
-        setEquipments(prevEquipments => [...prevEquipments, newEquipment]);
-        setErrorMessage(null);
+        // Fermer le modal d'abord
         setShowAddModal(false);
+        setErrorMessage(null);
+        
+        // Rafraîchir la liste complète des équipements depuis le serveur
+        await fetchEquipments();
       }
     } catch (error) {
       console.error("Erreur lors de la mise à jour de l'état:", error);
       setErrorMessage("Une erreur est survenue lors de la mise à jour de l'état.");
     }
   }
+  
+  // Fonction pour rafraîchir la liste des équipements
+  const fetchEquipments = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setErrorMessage(null);
+      
+      // Utilisation de l'API pour récupérer les équipements
+      const response = await equipmentAPI.getAllEquipments();
+      
+      if (response.data) {
+        setEquipments(response.data);
+      } else {
+        throw new Error('Invalid response from server');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la récupération des équipements:', error);
+      setError('Erreur lors de la récupération des équipements. Veuillez réessayer.');
+      setErrorMessage('Erreur lors de la récupération des équipements. Veuillez réessayer.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Handlers pour les modaux
-  const handleOpenHistoryModal = (equipment) => {
-    setSelectedEquipment(equipment)
-    setShowHistoryModal(true)
-  }
-  
   const handleOpenEditModal = (equipment) => {
     setSelectedEquipment({ ...equipment, id: equipment._id })
     setShowEditModal(true)
@@ -126,11 +127,16 @@ const EquipmentManagementPage = () => {
     setSelectedEquipment(equipment)
     setShowDeleteModal(true)
   }
+
+  const handleOpenViewModal = (equipment) => {
+    setSelectedEquipment(equipment)
+    setShowViewModal(true)
+  }
   
   const handleCloseModals = () => {
-    setShowHistoryModal(false)
     setShowEditModal(false)
     setShowDeleteModal(false)
+    setShowViewModal(false)
     setSelectedEquipment(null)
   }
 
@@ -145,13 +151,14 @@ const EquipmentManagementPage = () => {
 
       const response = await equipmentAPI.updateEquipment(equipmentId, updatedEquipment);
       if (response.data) {
-        // Refresh the entire list to ensure consistency
-        const updatedEquipments = await equipmentAPI.getAllEquipments();
-        setEquipments(updatedEquipments.data);
+        // Fermer d'abord les modaux
+        handleCloseModals();
+        
+        // Rafraîchir la liste complète des équipements
+        await fetchEquipments();
       } else {
         throw new Error('Invalid response from server');
       }
-      handleCloseModals();
     } catch (error) {
       console.error("Erreur lors de la mise à jour de l'équipement:", error);
       alert("Une erreur est survenue lors de la mise à jour de l'équipement");
@@ -172,14 +179,11 @@ const EquipmentManagementPage = () => {
         const response = await equipmentAPI.deleteEquipment(equipmentId);
         
         if (response.status === 200) {
-          // Mettre à jour la liste des équipements en filtrant celui qui a été supprimé
-          setEquipments(prevEquipments => 
-            prevEquipments.filter(eq => {
-              const currentId = eq._id || eq.id;
-              return currentId !== equipmentId;
-            })
-          );
+          // Fermer d'abord les modaux
           handleCloseModals();
+          
+          // Rafraîchir la liste complète des équipements
+          await fetchEquipments();
         } else {
           throw new Error('Échec de la suppression de l\'équipement');
         }
@@ -225,21 +229,6 @@ const EquipmentManagementPage = () => {
                 <span className="emp-select-icon"></span>
               </div>
 
-              <div className="emp-view-toggle">
-                <button
-                  className={`emp-view-btn ${view === "grid" ? "active" : ""}`}
-                  onClick={() => setView("grid")}
-                >
-                  <span className="emp-view-icon emp-grid-icon"></span>
-                </button>
-                <button
-                  className={`emp-view-btn ${view === "list" ? "active" : ""}`}
-                  onClick={() => setView("list")}
-                >
-                  <span className="emp-view-icon emp-list-icon"></span>
-                </button>
-              </div>
-
               <button className="emp-btn emp-btn-primary emp-add-btn" onClick={() => setShowAddModal(true)}>
                 <span className="emp-btn-icon emp-add-icon"></span>
                 Ajouter un équipement
@@ -253,143 +242,77 @@ const EquipmentManagementPage = () => {
             </div>
           )}
 
-          {/* Grid View */}
-          {view === "grid" && (
-            <div className="emp-equipment-grid">
-              {loading ? (
-                <div className="emp-loading-indicator">Chargement des équipements...</div>
-              ) : error ? (
-                <div className="emp-error-message">{error}</div>
-              ) : filteredEquipments.length === 0 ? (
-                <div className="emp-no-results">Aucun équipement trouvé</div>
-              ) : (
-                filteredEquipments.map((equipment) => (
-                  <div key={equipment._id} className="emp-equipment-card">
-                    <div className="emp-equipment-header">
-                      <div className="emp-equipment-image">
-                        <img src={equipment.image || "/placeholder.svg?height=100&width=100"} alt={equipment.name} />
-                      </div>
-                      <div className="emp-equipment-actions">
-                         <button
-                           className="emp-action-btn emp-history-btn"
-                           onClick={() => handleOpenHistoryModal(equipment)}
-                           title="Historique"
-                         >
-                           <FaHistory className="emp-action-icon" />
-                         </button>
-                         <button
-                           className="emp-action-btn emp-edit-btn"
-                           onClick={() => handleOpenEditModal(equipment)}
-                           title="Modifier"
-                         >
-                           <FaEdit className="emp-action-icon" />
-                         </button>
-                         <button
-                           className="emp-action-btn emp-delete-btn"
-                           onClick={() => handleOpenDeleteModal(equipment)}
-                           title="Supprimer"
-                         >
-                           <FaTrash className="emp-action-icon" />
-                         </button>
-                      </div>
-                    </div>
-
-                    <div className="emp-equipment-content">
-                      <h3 className="emp-equipment-name">{equipment.name}</h3>
-                      <p className="emp-equipment-reference">Référence: {equipment.reference}</p>
-                      
-                      <div className="emp-equipment-details">
-                        <div className="emp-detail-item">
-                          <span className="emp-detail-label">Catégorie:</span>
-                          <span className="emp-detail-value">{equipment.category}</span>
+          {/* Liste des équipements */}
+          <div className="emp-equipment-table-container">
+            {loading ? (
+              <div className="emp-loading-indicator">Chargement des équipements...</div>
+            ) : error ? (
+              <div className="emp-error-message">{error}</div>
+            ) : filteredEquipments.length === 0 ? (
+              <div className="emp-no-results">Aucun équipement trouvé</div>
+            ) : (
+              <table className="emp-equipment-table">
+                <thead>
+                  <tr>
+                    <th>Référence</th>
+                    <th>Nom</th>
+                    <th>Catégorie</th>
+                    <th>Localisation</th>
+                    <th>Statut</th>
+                    <th>Marque</th>
+                    <th>Modèle</th>
+                    <th>Numéro de série</th>
+                    <th>Date d'achat</th>
+                    <th>Date de fin de garantie</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredEquipments.map((equipment) => (
+                    <tr key={equipment._id}>
+                      <td>{equipment.reference || '-'}</td>
+                      <td>{equipment.name || '-'}</td>
+                      <td>{equipment.category || '-'}</td>
+                      <td>{equipment.location || '-'}</td>
+                      <td>{equipment.status || '-'}</td>
+                      <td>{equipment.brand || '-'}</td>
+                      <td>{equipment.model || '-'}</td>
+                      <td>{equipment.serialNumber || '-'}</td>
+                      <td>{equipment.purchaseDate ? new Date(equipment.purchaseDate).toLocaleDateString() : '-'}</td>
+                      <td>{equipment.warrantyEnd ? new Date(equipment.warrantyEnd).toLocaleDateString() : '-'}</td>
+                      <td>{equipment.description || '-'}</td>
+                      <td>
+                        <div className="emp-btn-group">
+                          <button
+                            className="emp-btn emp-btn-sm emp-btn-info"
+                            onClick={() => handleOpenViewModal(equipment)}
+                            title="Voir les détails"
+                          >
+                            <FaEye />
+                          </button>
+                          <button
+                            className="emp-btn emp-btn-sm emp-btn-primary"
+                            onClick={() => handleOpenEditModal(equipment)}
+                            title="Modifier l'équipement"
+                          >
+                            <FaEdit />
+                          </button>
+                          <button
+                            className="emp-btn emp-btn-sm emp-btn-danger"
+                            onClick={() => handleOpenDeleteModal(equipment)}
+                            title="Supprimer l'équipement"
+                          >
+                            <FaTrash />
+                          </button>
                         </div>
-                        <div className="emp-detail-item">
-                          <span className="emp-detail-label">Emplacement:</span>
-                          <span className="emp-detail-value">{equipment.location}</span>
-                        </div>
-                        <div className="emp-detail-item">
-                          <span className="emp-detail-label">Marque:</span>
-                          <span className="emp-detail-value">{equipment.brand}</span>
-                        </div>
-                      </div>
-
-                      <div className="emp-equipment-status">
-                        <div className="emp-status-badge">
-                          <span className={`emp-status-indicator ${getStatusColor(equipment.status)}`}></span>
-                          <span className="emp-status-text">{equipment.status}</span>
-                        </div>
-                        <div className="emp-availability">
-                          <div className="emp-availability-bar">
-                            <div
-                              className={`emp-availability-fill ${getAvailabilityColor(equipment.availability)}`}
-                              style={{ width: `${equipment.availability}%` }}
-                            ></div>
-                          </div>
-                          <span className="emp-availability-text">{equipment.availability}% disponible</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-
-          {/* List View */}
-          {view === "list" && (
-            <div className="emp-equipment-table-container">
-              {loading ? (
-                <div className="emp-loading-indicator">Chargement des équipements...</div>
-              ) : error ? (
-                <div className="emp-error-message">{error}</div>
-              ) : filteredEquipments.length === 0 ? (
-                <div className="emp-no-results">Aucun équipement trouvé</div>
-              ) : (
-                <table className="emp-equipment-table">
-                  <thead>
-                    <tr>
-                      <th>Référence</th>
-                      <th>Nom</th>
-                      <th>Catégorie</th>
-                      <th>Localisation</th>
-                      <th>Statut</th>
-                      <th>Disponibilité</th>
-                      <th>Actions</th>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {filteredEquipments.map((equipment) => (
-                      <tr key={equipment._id}>
-                        <td>{equipment.reference || '-'}</td>
-                        <td>{equipment.name || '-'}</td>
-                        <td>{equipment.category || '-'}</td>
-                        <td>{equipment.location || '-'}</td>
-                        <td>{equipment.status || '-'}</td>
-                        <td>
-                          <div className="btn-group">
-                            <button
-                              className="btn btn-sm btn-primary"
-                              onClick={() => handleOpenEditModal(equipment)}
-                              title="Modifier l'équipement"
-                            >
-                              <FaEdit /> Modifier
-                            </button>
-                            <button
-                              className="btn btn-sm btn-danger"
-                              onClick={() => handleOpenDeleteModal(equipment)}
-                              title="Supprimer l'équipement"
-                            >
-                              <FaTrash /> Supprimer
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          )}
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </main>
       </div>
 
@@ -402,37 +325,22 @@ const EquipmentManagementPage = () => {
       >
         <AddEquipmentForm onClose={() => setShowAddModal(false)} onEquipmentAdded={handleAddEquipment} />
       </Modal>
-      {/* Modal Historique */}
-      <Modal
-        isOpen={showHistoryModal}
-        onClose={handleCloseModals}
-        title={`Historique de l'équipement : ${selectedEquipment?.name || ""}`}
-        size="medium"
-      >
-        {/* Historique fictif */}
-        <ul>
-          <li>01/06/2024 - Intervention préventive</li>
-          <li>15/05/2024 - Panne réparée</li>
-          <li>10/04/2024 - Maintenance annuelle</li>
-        </ul>
-        <button className="emp-btn emp-btn-outline" onClick={handleCloseModals}>Fermer</button>
-      </Modal>
-      {/* Modal Edition */}
-      <Modal
-        isOpen={showEditModal}
-        onClose={handleCloseModals}
-        title={`Modifier l'équipement : ${selectedEquipment?.name || ""}`}
-        size="large"
-      >
-        {selectedEquipment && (
-          <AddEquipmentForm
-            onClose={handleCloseModals}
-            onEquipmentAdded={handleEditEquipment}
-            initialData={selectedEquipment}
-            isEdit
-          />
-        )}
-      </Modal>
+      {/* Modal Edition - Utilise le nouveau composant EditEquipmentModal */}
+      {showEditModal && selectedEquipment && (
+        <EditEquipmentModal
+          equipment={selectedEquipment}
+          onClose={handleCloseModals}
+          onSubmit={handleEditEquipment}
+        />
+      )}
+
+      {/* Modal Visualisation - Nouveau composant pour voir les détails */}
+      {showViewModal && selectedEquipment && (
+        <ViewEquipmentModal
+          equipment={selectedEquipment}
+          onClose={handleCloseModals}
+        />
+      )}
       {/* Modal Suppression */}
       <Modal
         isOpen={showDeleteModal}

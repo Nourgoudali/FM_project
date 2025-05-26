@@ -2,10 +2,21 @@ const Equipment = require('../models/Equipment');
 
 const equipmentController = {
   create: async (req, res) => {
-    const { name, category, location, status, brand, model, serialNumber, purchaseDate, warrantyEnd, comment, description, image } = req.body;
-
     try {
-      // Create equipment with required fields
+      // Extraire les données du corps de la requête
+      const { name, category, location, status, brand, model, serialNumber, purchaseDate, warrantyEnd, comment, description } = req.body;
+      
+      // Gérer l'image si elle est présente dans la requête
+      let imagePath = null;
+      if (req.files && req.files.length > 0) {
+        // Trouver le fichier image dans les fichiers téléchargés
+        const imageFile = req.files.find(file => file.fieldname === 'image');
+        if (imageFile) {
+          imagePath = `/uploads/${imageFile.filename}`;
+        }
+      }
+      
+      // Créer l'équipement avec les champs requis
       const equipment = new Equipment({ 
         name, 
         category, 
@@ -18,7 +29,7 @@ const equipmentController = {
         warrantyEnd,
         comment,
         description,
-        image
+        image: imagePath
       });
 
       // Save will trigger the pre-save hook that generates the reference
@@ -51,7 +62,7 @@ const equipmentController = {
 
   update: async (req, res) => {
     const { id } = req.params;
-    const updates = req.body;
+    const updates = { ...req.body };
     
     // Ensure reference is not being updated
     if (updates.reference) {
@@ -59,10 +70,20 @@ const equipmentController = {
     }
 
     try {
+      // Gérer l'image si elle est présente dans la requête
+      if (req.files && req.files.length > 0) {
+        // Trouver le fichier image dans les fichiers téléchargés
+        const imageFile = req.files.find(file => file.fieldname === 'image');
+        if (imageFile) {
+          updates.image = `/uploads/${imageFile.filename}`;
+        }
+      }
+
       const equipment = await Equipment.findByIdAndUpdate(id, updates, { new: true });
       if (!equipment) return res.status(404).json({ message: 'Equipment not found' });
       res.json(equipment);
     } catch (err) {
+      console.error('Erreur lors de la mise à jour de l\'\u00e9quipement:', err);
       res.status(400).json({ message: err.message });
     }
   },

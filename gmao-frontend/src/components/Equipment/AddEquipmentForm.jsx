@@ -21,7 +21,8 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [imageFile, setImageFile] = useState(null)
-  const [imagePreview, setImagePreview] = useState(initialData?.image || null)
+  const [imagePreview, setImagePreview] = useState(initialData?.image && typeof initialData.image === 'string' ? 
+    `http://localhost:5000${initialData.image}` : null)
 
   useEffect(() => {
     if (initialData) {
@@ -37,7 +38,8 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
         status: initialData.status || "En service",
         description: initialData.description || "",
       })
-      setImagePreview(initialData.image || null)
+      setImagePreview(initialData.image && typeof initialData.image === 'string' ? 
+        `http://localhost:5000${initialData.image}` : null)
     }
   }, [initialData])
 
