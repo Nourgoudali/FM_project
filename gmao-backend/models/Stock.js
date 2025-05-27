@@ -1,19 +1,16 @@
 const mongoose = require('mongoose');
 
 const stockSchema = new mongoose.Schema({
-  reference: { type: String, required: true, unique: true },
+  reference: { type: String, unique: true }, // Retiré required car généré automatiquement
   name: { type: String, required: true },
-  equipment: { type: mongoose.Schema.Types.ObjectId, ref: 'Equipment' },
-  quantity: { type: Number, required: true, min: 0 },
-  minThreshold: { type: Number, required: true, min: 0 },
-  supplier: { type: String },
-  leadTime: { type: Number }, // In days
-  movements: [{
-    type: { type: String, enum: ['entry', 'exit'], required: true },
-    quantity: { type: Number, required: true },
-    date: { type: Date, default: Date.now },
-    comment: { type: String },
-  }],
+  catégorie: { type: String, required: true },
+  prixUnitaire: { type: Number, required: true },
+  prixEuro: { type: Number, default: 0 }, // Ajout du champ pour le prix en euros
+  stockActuel: { type: Number, required: true },
+  stockMin: { type: Number, required: true },
+  stockMax: { type: Number, required: true },
+  stockSecurite: { type: Number, required: true },
+  fournisseur:{type: mongoose.Schema.Types.ObjectId, ref: 'Fournisseur', required:true}, // Corrigé 'reference' en 'ref'
   createdAt: { type: Date, default: Date.now },
 });
 

@@ -157,33 +157,6 @@ const SupplierManagementPage = () => {
     setShowDeleteModal(true);
   }
 
-  // Exporter les données au format CSV
-  const handleExportCSV = () => {
-    const headers = ["Nom d'entreprise", "Contact (Nom)", "Téléphone", "Email", "Adresse"];
-    const data = filteredSuppliers.map(supplier => [
-      supplier.nomEntreprise,
-      `${supplier.prenom} ${supplier.nom}`,
-      supplier.telephone,
-      supplier.email,
-      supplier.adresse
-    ]);
-    
-    const csvContent = [
-      headers.join(','),
-      ...data.map(row => row.join(','))
-    ].join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'fournisseurs.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-
   return (
     <div className="admin-layout">
       <Sidebar />

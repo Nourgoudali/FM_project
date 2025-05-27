@@ -47,31 +47,31 @@ function Sidebar({ isOpen }) {
   }
 
   return (
-    <div className={`admin-container ${sidebarOpen ? "" : "admin-collapsed"}`}>
-      <button className="admin-toggle-button" onClick={toggleSidebar}>
+    <div className={`sidebar-container ${sidebarOpen ? "" : "sidebar-collapsed"}`}>
+      <button className="sidebar-toggle-button" onClick={toggleSidebar}>
         {sidebarOpen ? <FaChevronLeft /> : <FaBars />}
       </button>
       
-      <nav className="admin-sidebar">
-        <div className="admin-content">
+      <nav className="sidebar-sidebar">
+        <div className="sidebar-content">
           {sidebarOpen && (
-            <div className="admin-logo-container">
+            <div className="sidebar-logo-container">
               <Link to="/dashboard" className="sidebar-logo">
                 <img src={logoFM || "/placeholder.svg"} alt="FM Logo" className="logo-image" />
-                <h1 className="admin-logo">GMAO</h1>
+                <h1 className="sidebar-logo-text">GMAO</h1>
               </Link>
             </div>
           )}
 
-          <ul className="admin-nav-list">
+          <ul className="sidebar-nav-list">
             {menuItems.map((item, index) =>
               item.divider ? (
                 <li key={`divider-${index}`} className="nav-divider"></li>
               ) : (
                 <li key={`nav-${item.path.toLowerCase().replace(/\//g, '-')}` } className="nav-item">
-                  <Link to={item.path} className={`admin-nav-link ${location.pathname === item.path ? "active" : ""}`}>
-                    <span className="admin-nav-icon">{item.icon}</span>
-                    {sidebarOpen && <span className="admin-nav-text">{item.name}</span>}
+                  <Link to={item.path} className={`sidebar-nav-link ${location.pathname === item.path ? "active" : ""}`}>
+                    <span className="sidebar-nav-icon">{item.icon}</span>
+                    {sidebarOpen && <span className="sidebar-nav-text">{item.name}</span>}
                   </Link>
                 </li>
               ),
@@ -79,12 +79,12 @@ function Sidebar({ isOpen }) {
           </ul>
         </div>
 
-        <div className="admin-logout-container">
-          <button className="admin-logout-button" onClick={handleLogout}>
-            <span className="admin-logout-icon">
+        <div className="sidebar-logout-container">
+          <button className="sidebar-logout-button" onClick={handleLogout}>
+            <span className="sidebar-logout-icon">
               <FaSignOutAlt />
             </span>
-            {sidebarOpen && <span className="admin-logout-text">Se Déconnecter</span>}
+            {sidebarOpen && <span className="sidebar-logout-text">Se Déconnecter</span>}
           </button>
         </div>
       </nav>

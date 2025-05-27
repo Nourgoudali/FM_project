@@ -1,14 +1,13 @@
-"use client"
-
 import { useState, useEffect } from "react"
-import { FaPlus, FaEdit, FaTrash, FaSearch, FaFileExport, FaFilter, FaSort } from "react-icons/fa"
+import { FaPlus, FaEdit, FaTrash, FaFileExport, FaFilter, FaTimes } from "react-icons/fa"
 import Sidebar from "../../components/Sidebar/Sidebar"
 import Header from "../../components/Header/Header"
 import "./StockManagementPage.css"
-import Modal from "../../components/Modal/Modal"
 import AddStockItemForm from "../../components/Stock/AddStockItemForm"
+import EditStockItemForm from "../../components/Stock/EditStockItemForm"
+import DeleteStockConfirm from "../../components/Stock/DeleteStockConfirm"
 import { useSidebar } from "../../contexts/SidebarContext"
-import { stockAPI } from "../../services/api"
+import { stockAPI, fournisseurAPI } from "../../services/api"
 
 const StockManagementPage = () => {
   const { sidebarOpen, toggleSidebar } = useSidebar()
@@ -16,9 +15,9 @@ const StockManagementPage = () => {
   const [filteredItems, setFilteredItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [showEditForm, setShowEditForm] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [currentItem, setCurrentItem] = useState(null)
   const [sortConfig, setSortConfig] = useState({ key: "name", direction: "ascending" })
   const [filters, setFilters] = useState({
@@ -35,81 +34,8 @@ const StockManagementPage = () => {
       setLoading(true);
       try {
         const response = await stockAPI.getAllStocks();
-        if (response.data) {
-          setStockItems(response.data);
-          setFilteredItems(response.data);
-        } else {
-          // Données fictives comme fallback en cas d'API non disponible
-      const mockStockItems = [
-        {
-          id: 1,
-          name: "Roulement à billes",
-          reference: "RB-2023-001",
-          category: "Mécanique",
-          quantity: 45,
-          minQuantity: 10,
-          location: "Étagère A-12",
-          unitPrice: 25.5,
-          supplier: "MécaPro Industries",
-          lastRestockDate: "2023-04-15",
-          status: "En stock",
-        },
-        {
-          id: 2,
-          name: "Huile hydraulique",
-          reference: "HH-2023-002",
-          category: "Fluides",
-          quantity: 8,
-          minQuantity: 5,
-          location: "Armoire F-03",
-          unitPrice: 45.75,
-          supplier: "LubriTech",
-          lastRestockDate: "2023-05-20",
-          status: "En stock",
-        },
-        {
-          id: 3,
-          name: "Filtre à air",
-          reference: "FA-2023-003",
-          category: "Filtration",
-          quantity: 3,
-          minQuantity: 5,
-          location: "Étagère B-07",
-          unitPrice: 18.9,
-          supplier: "AirClean Systems",
-          lastRestockDate: "2023-03-10",
-          status: "Stock faible",
-        },
-        {
-          id: 4,
-          name: "Moteur électrique 1.5kW",
-          reference: "ME-2023-004",
-          category: "Électrique",
-          quantity: 2,
-          minQuantity: 1,
-          location: "Zone D-15",
-          unitPrice: 320.0,
-          supplier: "ElectroPower",
-          lastRestockDate: "2023-06-05",
-          status: "En stock",
-        },
-        {
-          id: 5,
-          name: "Courroie de transmission",
-          reference: "CT-2023-005",
-          category: "Transmission",
-          quantity: 0,
-          minQuantity: 3,
-          location: "Étagère C-09",
-          unitPrice: 35.25,
-          supplier: "TransmiTech",
-          lastRestockDate: "2023-02-18",
-          status: "Rupture de stock",
-        },
-          ];
-          setStockItems(mockStockItems);
-          setFilteredItems(mockStockItems);
-        }
+        setStockItems(response.data);
+        setFilteredItems(response.data);
       } catch (error) {
         console.error("Erreur lors du chargement des articles de stock:", error);
       } finally {
@@ -130,25 +56,33 @@ const StockManagementPage = () => {
         (item) =>
           item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           item.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.supplier.toLowerCase().includes(searchTerm.toLowerCase()),
+          (item.fournisseur && item.fournisseur.nomEntreprise && 
+           item.fournisseur.nomEntreprise.toLowerCase().includes(searchTerm.toLowerCase())),
       )
     }
 
     // Appliquer les filtres
     if (filters.category !== "all") {
-      result = result.filter((item) => item.category === filters.category)
+      result = result.filter((item) => item.catégorie === filters.category)
     }
 
     if (filters.status !== "all") {
-      result = result.filter((item) => item.status === filters.status)
+      // Déterminer le statut en fonction du stock actuel et du stock minimum
+      if (filters.status === "En stock") {
+        result = result.filter((item) => item.stockActuel > item.stockMin)
+      } else if (filters.status === "Stock faible") {
+        result = result.filter((item) => item.stockActuel <= item.stockMin && item.stockActuel > 0)
+      } else if (filters.status === "Rupture de stock") {
+        result = result.filter((item) => item.stockActuel === 0)
+      }
     }
 
     if (filters.minQuantity !== "") {
-      result = result.filter((item) => item.quantity >= Number.parseInt(filters.minQuantity))
+      result = result.filter((item) => item.stockActuel >= Number.parseInt(filters.minQuantity))
     }
 
     if (filters.maxQuantity !== "") {
-      result = result.filter((item) => item.quantity <= Number.parseInt(filters.maxQuantity))
+      result = result.filter((item) => item.stockActuel <= Number.parseInt(filters.maxQuantity))
     }
 
     setFilteredItems(result)
@@ -175,16 +109,22 @@ const StockManagementPage = () => {
     setFilteredItems(sortedItems)
   }
 
-  // Gérer l'ouverture du modal d'édition
-  const handleOpenEditModal = (item) => {
+  // Gérer l'ouverture du formulaire d'édition
+  const handleOpenEditForm = (item) => {
     setCurrentItem(item)
-    setShowEditModal(true)
+    setShowEditForm(true)
+    // Masquer les autres formulaires
+    setShowAddForm(false)
+    setShowDeleteConfirm(false)
   }
 
-  // Gérer l'ouverture du modal de suppression
-  const handleOpenDeleteModal = (item) => {
+  // Gérer l'ouverture de la confirmation de suppression
+  const handleOpenDeleteConfirm = (item) => {
     setCurrentItem(item)
-    setShowDeleteModal(true)
+    setShowDeleteConfirm(true)
+    // Masquer les autres formulaires
+    setShowAddForm(false)
+    setShowEditForm(false)
   }
 
   // Gérer l'ajout d'un nouvel élément
@@ -193,12 +133,26 @@ const StockManagementPage = () => {
       const response = await stockAPI.createStock(newItem);
       if (response.data) {
         setStockItems([...stockItems, response.data]);
-        setShowAddModal(false);
+        setShowAddForm(false);
+        
+        // Rafraîchir les données depuis l'API
+        await refreshStockData();
       } else {
         // Fallback si pas de réponse valide
-        const tempItem = { ...newItem, id: stockItems.length + 1 };
+        const tempItem = { 
+          ...newItem, 
+          _id: `temp-${stockItems.length + 1}`,
+          reference: `ST-${String(stockItems.length + 1).padStart(3, '0')}`,
+          fournisseur: {
+            _id: newItem.fournisseur,
+            nomEntreprise: "Fournisseur temporaire"
+          }
+        };
         setStockItems([...stockItems, tempItem]);
-        setShowAddModal(false);
+        setShowAddForm(false);
+        
+        // Rafraîchir les données depuis l'API
+        await refreshStockData();
       }
     } catch (error) {
       console.error("Erreur lors de l'ajout de l'article:", error);
@@ -206,28 +160,58 @@ const StockManagementPage = () => {
     }
   }
 
-  // Gérer la modification d'un élément
+  // Rafraîchir les données depuis l'API
+  const refreshStockData = async () => {
+    setLoading(true);
+    try {
+      const response = await stockAPI.getAllStocks();
+      setStockItems(response.data);
+      setFilteredItems(response.data);
+    } catch (error) {
+      console.error("Erreur lors du rafraîchissement des données:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Gérer la mise à jour d'un élément
   const handleEditItem = async (updatedItem) => {
     try {
-      // Ensure we have an ID before making the request
-      if (!updatedItem._id) {
-        throw new Error('ID de l\'article non défini');
-      }
-
       const response = await stockAPI.updateStock(updatedItem._id, updatedItem);
       if (response.data) {
-        const updatedItems = stockItems.map((item) => 
-          item._id === updatedItem._id ? response.data : item
+        // Mettre à jour l'élément dans l'état local
+        setStockItems(
+          stockItems.map((item) =>
+            item._id === updatedItem._id ? response.data : item
+          )
         );
-        setStockItems(updatedItems);
-        setShowEditModal(false);
+        setShowEditForm(false);
+        
+        // Rafraîchir les données depuis l'API pour s'assurer que tout est à jour
+        await refreshStockData();
       } else {
         // Fallback si pas de réponse valide
-        const updatedItems = stockItems.map((item) => 
-          item._id === updatedItem._id ? updatedItem : item
+        // Préserver l'objet fournisseur complet
+        const fournisseurObj = stockItems.find(item => 
+          item._id === updatedItem._id
+        )?.fournisseur || { _id: updatedItem.fournisseur, nomEntreprise: "Fournisseur temporaire" };
+        
+        const updatedItemWithFournisseur = {
+          ...updatedItem,
+          fournisseur: updatedItem.fournisseur !== fournisseurObj._id ? 
+            { _id: updatedItem.fournisseur, nomEntreprise: "Fournisseur mis à jour" } : 
+            fournisseurObj
+        };
+        
+        setStockItems(
+          stockItems.map((item) =>
+            item._id === updatedItem._id ? updatedItemWithFournisseur : item
+          )
         );
-        setStockItems(updatedItems);
-        setShowEditModal(false);
+        setShowEditForm(false);
+        
+        // Rafraîchir les données depuis l'API
+        await refreshStockData();
       }
     } catch (error) {
       console.error("Erreur lors de la modification de l'article:", error);
@@ -239,7 +223,7 @@ const StockManagementPage = () => {
   const handleDeleteItem = async () => {
     if (!currentItem || !currentItem._id) {
       alert("Article non valide");
-      setShowDeleteModal(false);
+      setShowDeleteConfirm(false);
       setCurrentItem(null);
       return;
     }
@@ -248,16 +232,19 @@ const StockManagementPage = () => {
       await stockAPI.deleteStock(currentItem._id);
       const updatedItems = stockItems.filter((item) => item._id !== currentItem._id);
       setStockItems(updatedItems);
-      setShowDeleteModal(false);
+      setShowDeleteConfirm(false);
       setCurrentItem(null);
+      
+      // Rafraîchir les données depuis l'API
+      await refreshStockData();
     } catch (error) {
       console.error("Erreur lors de la suppression de l'article:", error);
-      alert(error.response?.data?.message || "Une erreur est survenue lors de la suppression de l'article");
+      alert("Une erreur est survenue lors de la suppression de l'article");
     }
   }
 
   // Obtenir les catégories uniques pour le filtre
-  const categories = ["all", ...new Set(stockItems.map((item) => item.category))]
+  const categories = ["all", ...new Set(stockItems.map((item) => item.catégorie))]
   const statuses = ["all", "En stock", "Stock faible", "Rupture de stock"]
 
   return (
@@ -282,13 +269,16 @@ const StockManagementPage = () => {
               <button className="filter-button" onClick={() => setShowFilters(!showFilters)}>
                 <FaFilter /> Filtres
               </button>
-
-              <button className="export-button">
-                <FaFileExport /> Exporter
-              </button>
-              
-              <button className="add-button" onClick={() => setShowAddModal(true)}>
-                <FaPlus /> Ajouter une pièce
+              <button
+                className="add-button"
+                onClick={() => {
+                  setShowAddForm(true);
+                  setShowEditForm(false);
+                  setShowDeleteConfirm(false);
+                }}
+                aria-label="Ajouter un article"
+              >
+                <FaPlus /> Ajouter un article
               </button>
             </div>
           </div>
@@ -352,100 +342,146 @@ const StockManagementPage = () => {
           )}
 
           {loading ? (
-            <div className="loading-indicator">Chargement des pièces...</div>
+            <div className="loading-indicator">Chargement des articles...</div>
           ) : (
             <div className="stock-table-container">
-              <table className="stock-table">
-                <thead>
-                  <tr>
-                    <th onClick={() => requestSort("reference")}>
-                      Référence <FaSort className="sort-icon" />
-                    </th>
-                    <th onClick={() => requestSort("name")}>
-                      Nom <FaSort className="sort-icon" />
-                    </th>
-                    <th onClick={() => requestSort("category")}>
-                      Catégorie <FaSort className="sort-icon" />
-                    </th>
-                    <th onClick={() => requestSort("quantity")}>
-                      Quantité <FaSort className="sort-icon" />
-                    </th>
-                    <th onClick={() => requestSort("location")}>
-                      Emplacement <FaSort className="sort-icon" />
-                    </th>
-                    <th onClick={() => requestSort("supplier")}>
-                      Fournisseur <FaSort className="sort-icon" />
-                    </th>
-                    <th onClick={() => requestSort("leadTime")}>
-                      Délai de livraison <FaSort className="sort-icon" />
-                    </th>
-                    <th onClick={() => requestSort("equipment")}>
-                      Équipement <FaSort className="sort-icon" />
-                    </th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredItems.map((item) => (
-                    <tr key={item._id || item.id || `item-${item.reference.toLowerCase().replace(/\s+/g, '-')}`}>
-                      <td>{item.name}</td>
-                      <td>{item.reference}</td>
-                      <td>{item.category}</td>
-                      <td>{item.quantity}</td>
-                      <td>{item.location}</td>
-                      <td>{item.supplier}</td>
-                      <td>{item.leadTime} jours</td>
-                      <td>{item.equipment ? item.equipment.name : ''}</td>
-                      <td className="actions-cell">
-                        <button className="action-btn edit" onClick={() => handleOpenEditModal(item)}>
-                          <FaEdit />
-                        </button>
-                        <button className="action-btn delete" onClick={() => handleOpenDeleteModal(item)}>
-                          <FaTrash />
-                        </button>
-                      </td>
+              <div className="table-container">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th onClick={() => requestSort("reference")}>
+                        Référence {sortConfig.key === "reference" && (
+                          <span>{sortConfig.direction === "ascending" ? "↑" : "↓"}</span>
+                        )}
+                      </th>
+                      <th onClick={() => requestSort("name")}>
+                        Nom du produit {sortConfig.key === "name" && (
+                          <span>{sortConfig.direction === "ascending" ? "↑" : "↓"}</span>
+                        )}
+                      </th>
+                      <th onClick={() => requestSort("catégorie")}>
+                        Catégorie {sortConfig.key === "catégorie" && (
+                          <span>{sortConfig.direction === "ascending" ? "↑" : "↓"}</span>
+                        )}
+                      </th>
+                      <th onClick={() => requestSort("prixUnitaire")}>
+                        Prix unitaire (DH) {sortConfig.key === "prixUnitaire" && (
+                          <span>{sortConfig.direction === "ascending" ? "↑" : "↓"}</span>
+                        )}
+                      </th>
+                      <th onClick={() => requestSort("stockActuel")}>
+                        Stock actuel {sortConfig.key === "stockActuel" && (
+                          <span>{sortConfig.direction === "ascending" ? "↑" : "↓"}</span>
+                        )}
+                      </th>
+                      <th onClick={() => requestSort("stockMin")}>
+                        Stock min {sortConfig.key === "stockMin" && (
+                          <span>{sortConfig.direction === "ascending" ? "↑" : "↓"}</span>
+                        )}
+                      </th>
+                      <th onClick={() => requestSort("stockMax")}>
+                        Stock max {sortConfig.key === "stockMax" && (
+                          <span>{sortConfig.direction === "ascending" ? "↑" : "↓"}</span>
+                        )}
+                      </th>
+                      <th onClick={() => requestSort("stockSecurite")}>
+                        Stock sécurité (S.S) {sortConfig.key === "stockSecurite" && (
+                          <span>{sortConfig.direction === "ascending" ? "↑" : "↓"}</span>
+                        )}
+                      </th>
+                      <th>
+                        Fournisseur
+                      </th>
+                      <th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {filteredItems.map((item) => {
+                      // Déterminer le statut du stock
+                      let status = "En stock";
+                      let statusClass = "status-in-stock";
+                      
+                      if (item.stockActuel === 0) {
+                        status = "Rupture de stock";
+                        statusClass = "status-out-of-stock";
+                      } else if (item.stockActuel <= item.stockMin) {
+                        status = "Stock faible";
+                        statusClass = "status-low-stock";
+                      }
+                      
+                      return (
+                        <tr key={item._id}>
+                          <td>{item.reference}</td>
+                          <td>{item.name}</td>
+                          <td>{item.catégorie}</td>
+                          <td>{item.prixUnitaire} DH</td>
+                          <td>{item.stockActuel}</td>
+                          <td>{item.stockMin}</td>
+                          <td>{item.stockMax}</td>
+                          <td>{item.stockSecurite}</td>
+                          <td>{item.fournisseur ? item.fournisseur.nomEntreprise : "Non spécifié"} - {item.fournisseur ? item.fournisseur.nom + ' ' + item.fournisseur.prenom : "Non spécifié"}</td>
+                          <td className="actions-cell">
+                            <button
+                              className="action-btn edit"
+                              onClick={() => handleOpenEditForm(item)}
+                              aria-label="Modifier"
+                              title="Modifier"
+                            >
+                              <FaEdit />
+                            </button>
+                            <button
+                              className="action-btn delete"
+                              onClick={() => handleOpenDeleteConfirm(item)}
+                              aria-label="Supprimer"
+                              title="Supprimer"
+                            >
+                              <FaTrash />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </main>
       </div>
 
-      {/* Modal d'ajout d'article */}
-      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Ajouter un article">
-          <AddStockItemForm onSubmit={handleAddItem} onCancel={() => setShowAddModal(false)} />
-        </Modal>
-
-      {/* Modal d'édition d'article */}
-      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Modifier l'article">
-        {currentItem && (
-          <AddStockItemForm
-            item={currentItem}
-            onSubmit={handleEditItem}
-            onCancel={() => setShowEditModal(false)}
-            isEdit
-          />
-        )}
-      </Modal>
-
-      {/* Modal de confirmation de suppression */}
-      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Confirmer la suppression" size="small">
-        <div className="delete-confirmation">
-          <p>Êtes-vous sûr de vouloir supprimer l'article <strong>{currentItem?.name}</strong> ?</p>
-          <p>Cette action est irréversible.</p>
-          
-          <div className="modal-actions">
-            <button className="btn btn-outline" onClick={() => setShowDeleteModal(false)}>
-              Annuler
-            </button>
-            <button className="btn btn-danger" onClick={handleDeleteItem}>
-              Supprimer
-            </button>
+      {/* Formulaires intégrés avec composants séparés */}
+      {showAddForm && (
+        <div className="stock-form-overlay">
+          <div className="stock-form-container">
+            <div className="stock-form-header">
+              <h2>Ajouter un article</h2>
+              <button className="close-button" onClick={() => setShowAddForm(false)}>
+                <FaTimes />
+              </button>
+            </div>
+            <AddStockItemForm 
+              onSubmit={handleAddItem} 
+              onCancel={() => setShowAddForm(false)} 
+            />
           </div>
         </div>
-        </Modal>
+      )}
+
+      {/* Composant d'édition */}
+      <EditStockItemForm 
+        item={currentItem}
+        onSubmit={handleEditItem}
+        onCancel={() => setShowEditForm(false)}
+        isVisible={showEditForm && currentItem}
+      />
+
+      {/* Composant de confirmation de suppression */}
+      <DeleteStockConfirm 
+        item={currentItem}
+        onConfirm={handleDeleteItem}
+        onCancel={() => setShowDeleteConfirm(false)}
+        isVisible={showDeleteConfirm}
+      />
     </div>
   )
 }

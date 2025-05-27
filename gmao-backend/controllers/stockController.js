@@ -1,20 +1,42 @@
 const Stock = require('../models/Stock');
+const mongoose = require('mongoose');
 
 const stockController = {
   create: async (req, res) => {
-    const { name, equipment, quantity, minThreshold, supplier, leadTime } = req.body;
+    const { name, catégorie, prixUnitaire, stockActuel, stockMin, stockMax, stockSecurite, fournisseur, prixEuro } = req.body;
     try {
-      const stock = new Stock({ name, equipment, quantity, minThreshold, supplier, leadTime });
+      // Vérifier si fournisseur est un ObjectId valide
+      if (!mongoose.Types.ObjectId.isValid(fournisseur)) {
+        return res.status(400).json({ message: "ID de fournisseur invalide" });
+      }
+      
+      // La référence sera générée automatiquement par le hook pre-save
+      const stock = new Stock({
+        name,
+        catégorie,
+        prixUnitaire,
+        stockActuel,
+        stockMin,
+        stockMax,
+        stockSecurite,
+        fournisseur,
+        prixEuro: prixEuro || 0
+      });
+      
       await stock.save();
-      res.status(201).json(stock);
+      
+      // Récupérer le stock avec les informations du fournisseur pour le retourner
+      const populatedStock = await Stock.findById(stock._id).populate('fournisseur');
+      res.status(201).json(populatedStock);
     } catch (err) {
+      console.error("Erreur lors de l'ajout de l'article:", err);
       res.status(400).json({ message: err.message });
     }
   },
 
   getAll: async (req, res) => {
     try {
-      const stocks = await Stock.find().populate('equipment');
+      const stocks = await Stock.find().populate('fournisseur');
       res.json(stocks);
     } catch (err) {
       res.status(500).json({ message: err.message });
@@ -24,7 +46,7 @@ const stockController = {
   getById: async (req, res) => {
     const { id } = req.params;
     try {
-      const stock = await Stock.findById(id).populate('equipment');
+      const stock = await Stock.findById(id).populate('fournisseur');
       if (!stock) return res.status(404).json({ message: 'Stock not found' });
       res.json(stock);
     } catch (err) {
@@ -61,9 +83,17 @@ const stockController = {
     try {
       const stock = await Stock.findById(id);
       if (!stock) return res.status(404).json({ message: 'Stock not found' });
-      stock.movements.push({ type, quantity, comment });
-      stock.quantity = type === 'entry' ? stock.quantity + quantity : stock.quantity - quantity;
-      if (stock.quantity < 0) return res.status(400).json({ message: 'Insufficient stock' });
+      
+      // Mise à jour du stock actuel en fonction du type de mouvement
+      if (type === 'entry') {
+        stock.stockActuel += quantity;
+      } else if (type === 'exit') {
+        if (stock.stockActuel < quantity) {
+          return res.status(400).json({ message: 'Stock insuffisant' });
+        }
+        stock.stockActuel -= quantity;
+      }
+      
       await stock.save();
       res.json(stock);
     } catch (err) {
@@ -73,7 +103,8 @@ const stockController = {
 
   getLowStock: async (req, res) => {
     try {
-      const lowStocks = await Stock.find({ quantity: { $lte: mongoose.Types.Long.fromString('$minThreshold') } });
+      // Trouver les articles dont le stock actuel est inférieur ou égal au stock minimum
+      const lowStocks = await Stock.find({ $expr: { $lte: ["$stockActuel", "$stockMin"] } }).populate('fournisseur');
       res.json(lowStocks);
     } catch (err) {
       res.status(500).json({ message: err.message });

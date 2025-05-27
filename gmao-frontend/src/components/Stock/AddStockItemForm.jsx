@@ -1,18 +1,20 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import "./AddStockItemForm.css"
-import { equipmentAPI } from "../../services/api"
+import { equipmentAPI, fournisseurAPI } from "../../services/api"
 
 function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
   // Initialize form data with empty values
   const emptyFormData = {
     name: "",
-    equipment: "",
-    quantity: 0,
-    minThreshold: 0,
-    supplier: "",
-    leadTime: 0,
+    reference: "", // Ajout du champ reference même s'il sera généré automatiquement côté serveur
+    catégorie: "",
+    prixUnitaire: 0,
+    stockActuel: 0,
+    stockMin: 0,
+    stockMax: 0,
+    stockSecurite: 0,
+    fournisseur: "",
+    prixEuro: 0 // Ajout du champ pour le prix en euros
   };
 
   // Ensure form data is always initialized with empty values
@@ -26,11 +28,15 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
   const initialData = item && isEdit 
     ? {
         name: item.name || "",
-        equipment: item.equipment ? item.equipment._id : "",
-        quantity: item.quantity || 0,
-        minThreshold: item.minThreshold || 0,
-        supplier: item.supplier || "",
-        leadTime: item.leadTime || 0,
+        reference: item.reference || "", // Ajout du champ reference
+        catégorie: item.catégorie || "",
+        prixUnitaire: item.prixUnitaire || 0,
+        stockActuel: item.stockActuel || 0,
+        stockMin: item.stockMin || 0,
+        stockMax: item.stockMax || 0,
+        stockSecurite: item.stockSecurite || 0,
+        fournisseur: item.fournisseur ? item.fournisseur._id : "",
+        prixEuro: item.prixEuro || 0 // Ajout du champ pour le prix en euros
       }
     : emptyFormData
 
@@ -41,30 +47,32 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
     if (item && isEdit) {
       const newData = {
         name: item.name || "",
-        equipment: item.equipment ? item.equipment._id : "",
-        quantity: item.quantity || 0,
-        minThreshold: item.minThreshold || 0,
-        supplier: item.supplier || "",
-        leadTime: item.leadTime || 0,
+        catégorie: item.catégorie || "",
+        prixUnitaire: item.prixUnitaire || 0,
+        stockActuel: item.stockActuel || 0,
+        stockMin: item.stockMin || 0,
+        stockMax: item.stockMax || 0,
+        stockSecurite: item.stockSecurite || 0,
+        fournisseur: item.fournisseur ? item.fournisseur._id : "",
       }
       setFormData(newData)
     }
   }, [item, isEdit])
-  const [equipmentList, setEquipmentList] = useState([])
+  const [fournisseurList, setFournisseurList] = useState([])
 
-  // Fetch equipment list for dropdown
+  // Fetch fournisseur list for dropdown
   useEffect(() => {
-    const fetchEquipment = async () => {
+    const fetchFournisseurs = async () => {
       try {
-        const response = await equipmentAPI.getAllEquipments();
+        const response = await fournisseurAPI.getAllFournisseurs();
         if (response.data) {
-          setEquipmentList(response.data);
+          setFournisseurList(response.data);
         }
       } catch (error) {
-        console.error("Error fetching equipment list:", error);
+        console.error("Erreur lors de la récupération des fournisseurs:", error);
       }
     };
-    fetchEquipment();
+    fetchFournisseurs();
   }, []);
 
   const [apiLoading, setApiLoading] = useState(false)
@@ -77,21 +85,40 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
     if (item && isEdit) {
       setFormData({
         name: item.name || "",
-        equipment: item.equipment ? item.equipment._id : "",
-        quantity: item.quantity || 0,
-        minThreshold: item.minThreshold || 0,
-        supplier: item.supplier || "",
-        leadTime: item.leadTime || 0,
+        reference: item.reference || "", // Ajout du champ reference
+        catégorie: item.catégorie || "",
+        prixUnitaire: item.prixUnitaire || 0,
+        stockActuel: item.stockActuel || 0,
+        stockMin: item.stockMin || 0,
+        stockMax: item.stockMax || 0,
+        stockSecurite: item.stockSecurite || 0,
+        fournisseur: item.fournisseur ? item.fournisseur._id : "",
+        prixEuro: item.prixEuro || 0 // Ajout du champ pour le prix en euros
       })
     }
   }, [item, isEdit])
 
   const handleChange = (e) => {
-    const { name, value, type } = e.target
-    setFormData({
-      ...formData,
-      [name]: type === "number" ? Number(value) : value,
-    })
+    const { name, value } = e.target
+    
+    // Vérifier si le champ est un champ numérique
+    const numericFields = ['prixUnitaire', 'stockActuel', 'stockMin', 'stockMax', 'stockSecurite', 'prixEuro']
+    
+    if (numericFields.includes(name)) {
+      // Pour les champs numériques, n'accepter que les chiffres
+      if (value === '' || /^\d*\.?\d*$/.test(value)) {
+        setFormData({
+          ...formData,
+          [name]: value === '' ? 0 : Number(value),
+        })
+      }
+    } else {
+      // Pour les autres champs, accepter toutes les valeurs
+      setFormData({
+        ...formData,
+        [name]: value,
+      })
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -109,7 +136,13 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
         ...formData,
       }
       
-      onSubmit(itemToSubmit)
+      // Soumettre les données
+      await onSubmit(itemToSubmit)
+      
+      // Réinitialiser le formulaire si ce n'est pas en mode édition
+      if (!isEdit) {
+        setFormData(emptyFormData);
+      }
     } catch (err) {
       setApiError("Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.")
     } finally {
@@ -119,14 +152,12 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
 
   return (
     <form onSubmit={handleSubmit} className="stock-form">
-      {apiError && <div className="form-error">{apiError}</div>}
+      {apiError && <div className="stock-form__error">{apiError}</div>}
 
-      <div className="form-section">
-        <h3 className="form-section-title">Informations générales</h3>
-        
-        <div className="form-row">
-          <div className="form-group full-width">
-            <label htmlFor="name">Nom *</label>
+      <div className="stock-form__section">        
+        <div className="stock-form__row">
+          <div className="stock-form__group">
+            <label htmlFor="name">Nom du produit *</label>
             <input
               type="text"
               id="name"
@@ -136,127 +167,126 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
               required
             />
           </div>
-        </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="equipment">Équipement *</label>
+          <div className="stock-form__group">
+            <label htmlFor="fournisseur">Fournisseur *</label>
             <select
-              id="equipment"
-              name="equipment"
-              value={formData.equipment || ''}
+              id="fournisseur"
+              name="fournisseur"
+              value={formData.fournisseur || ''}
               onChange={handleChange}
               required
               disabled={apiLoading}
             >
-              <option value="">Sélectionnez un équipement</option>
-              {equipmentList.map((equipment) => (
-                <option key={equipment._id} value={equipment._id}>
-                  {equipment.reference} - {equipment.name}
+              <option value="">Sélectionnez un fournisseur</option>
+              {fournisseurList.map((fournisseur) => (
+                <option key={fournisseur._id} value={fournisseur._id}>
+                  {fournisseur.nomEntreprise} - {fournisseur.nom + ' ' + fournisseur.prenom}
                 </option>
               ))}
             </select>
-            {apiError && <div className="form-error">{apiError}</div>}
+          </div>
+        </div>
+
+        <div className="stock-form__row">
+          <div className="stock-form__group">
+            <label htmlFor="catégorie">Catégorie *</label>
+            <select
+              id="catégorie"
+              name="catégorie"
+              value={formData.catégorie || ''}
+              onChange={handleChange}
+              required
+              disabled={apiLoading}
+            >
+              <option value="">Sélectionnez une catégorie</option>
+              <option value="Fournitures">Fournitures</option>
+              <option value="Matériel">Matériel</option>
+              <option value="Papier">Papier</option>
+              <option value="Électronique">Électronique</option>
+              <option value="Autre">Autre</option>
+            </select>
           </div>
           
-          <div className="form-group">
-            <label htmlFor="minThreshold">Seuil minimum *</label>
-            <input
-              type="number"
-              id="minThreshold"
-              name="minThreshold"
-              value={formData.minThreshold}
-              onChange={handleChange}
-              required
-            />
-          </div>
-        </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="leadTime">Délai de livraison (en jours) *</label>
-            <input
-              type="number"
-              id="leadTime"
-              name="leadTime"
-              value={formData.leadTime}
-              onChange={handleChange}
-              required
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="form-section">
-        <h3 className="form-section-title">Information de stock</h3>
-        
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="quantity">Quantité *</label>
-            <input
-              type="number"
-              id="quantity"
-              name="quantity"
-              value={formData.quantity}
-              onChange={handleChange}
-              required
-              min="0"
-            />
-          </div>
-        </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="supplier">Fournisseur</label>
+          <div className="stock-form__group">
+            <label htmlFor="prixUnitaire">Prix unitaire (DH) *</label>
             <input
               type="text"
-              id="supplier"
-              name="supplier"
-              value={formData.supplier}
+              id="prixUnitaire"
+              name="prixUnitaire"
+              value={formData.prixUnitaire}
               onChange={handleChange}
+              pattern="^\d*\.?\d*$"
+              title="Veuillez entrer un nombre valide"
+              required
             />
           </div>
         </div>
-      </div>
-
-      <div className="form-section">
-        <h3 className="form-section-title">Prix et dates</h3>
-        
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="unitPrice">Prix unitaire (€) *</label>
+        <div className="stock-form__row">
+          <div className="stock-form__group">
+            <label htmlFor="stockActuel">Stock actuel *</label>
             <input
-              type="number"
-              id="unitPrice"
-              name="unitPrice"
-              value={formData.unitPrice}
+              type="text"
+              id="stockActuel"
+              name="stockActuel"
+              value={formData.stockActuel}
               onChange={handleChange}
-              min="0"
-              step="0.01"
+              pattern="^\d*$"
+              title="Veuillez entrer un nombre entier valide"
               required
             />
           </div>
           
-          <div className="form-group">
-            <label htmlFor="lastRestockDate">Dernière date de réapprovisionnement</label>
+          <div className="stock-form__group">
+            <label htmlFor="stockMin">Stock minimum *</label>
             <input
-              type="date"
-              id="lastRestockDate"
-              name="lastRestockDate"
-              value={formData.lastRestockDate}
+              type="text"
+              id="stockMin"
+              name="stockMin"
+              value={formData.stockMin}
               onChange={handleChange}
+              pattern="^\d*$"
+              title="Veuillez entrer un nombre entier valide"
+              required
+            />
+          </div>
+        
+        <div className="stock-form__row">
+          <div className="stock-form__group">
+            <label htmlFor="stockMax">Stock maximum *</label>
+            <input
+              type="text"
+              id="stockMax"
+              name="stockMax"
+              value={formData.stockMax}
+              onChange={handleChange}
+              pattern="^\d*$"
+              title="Veuillez entrer un nombre entier valide"
+              required
+            />
+          </div>
+          <div className="stock-form__group">
+            <label htmlFor="stockSecurite">Stock sécuritaire *</label>
+            <input
+              type="text"
+              id="stockSecurite"
+              name="stockSecurite"
+              value={formData.stockSecurite}
+              onChange={handleChange}
+              pattern="^\d*$"
+              title="Veuillez entrer un nombre entier valide"
+              required
             />
           </div>
         </div>
-      </div>
-
-      <div className="form-actions">
-        <button type="button" className="btn btn-outline" onClick={onCancel}>
+      </div>  
+      <div className="stock-form__actions stock-form__actions--main">
+        <button type="button" className="stock-form__btn stock-form__btn--outline" onClick={onCancel}>
           Annuler
         </button>
-        <button type="submit" className="btn btn-primary" disabled={loading}>
+        <button type="submit" className="stock-form__btn stock-form__btn--primary" disabled={apiLoading}>
           {loading ? "Enregistrement..." : isEdit ? "Enregistrer les modifications" : "Ajouter l'article"}
         </button>
+      </div>
       </div>
     </form>
   )
