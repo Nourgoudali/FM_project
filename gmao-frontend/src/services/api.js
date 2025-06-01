@@ -3,7 +3,11 @@ import axios from 'axios';
 // Configuration de base d'axios
 const API = axios.create({
   baseURL: 'http://localhost:5000/api',
-  timeout: 10000 // 10 second timeout
+  timeout: 10000, // 10 second timeout
+  withCredentials: true, // Permet d'envoyer les cookies avec les requêtes cross-origin
+  headers: {
+    'Content-Type': 'application/json'
+  }
 });
 
 // Ajouter un intercepteur pour les requêtes
@@ -113,39 +117,50 @@ API.interceptors.response.use(
   async error => {
     const originalRequest = error.config;
     
-    // Si l'erreur est 401 et qu'on a un refresh token
-    if (error.response.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      
-      try {
-        const userData = localStorage.getItem('user');
-        if (userData) {
-          const user = JSON.parse(userData);
-          if (user.refreshToken) {
-            // Appel à l'endpoint de refresh token
-            const response = await API.post('/auth/refresh', {
-              refreshToken: user.refreshToken
-            });
-            
-            // Mettre à jour le token dans localStorage
-            const updatedUser = { ...user, token: response.data.token };
-            localStorage.setItem('user', JSON.stringify(updatedUser));
-            
-            // Réessayer la requête avec le nouveau token
-            originalRequest.headers.Authorization = `Bearer ${response.data.token}`;
-            return API(originalRequest);
+    // Vérifier si error.response existe
+    if (error.response) {
+      // Si l'erreur est 401 et qu'on a un refresh token
+      if (error.response.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+        
+        try {
+          const userData = localStorage.getItem('user');
+          if (userData) {
+            const user = JSON.parse(userData);
+            if (user.refreshToken) {
+              // Appel à l'endpoint de refresh token
+              const response = await API.post('/auth/refresh', {
+                refreshToken: user.refreshToken
+              });
+              
+              // Mettre à jour le token dans localStorage
+              const updatedUser = { ...user, token: response.data.token };
+              localStorage.setItem('user', JSON.stringify(updatedUser));
+              
+              // Réessayer la requête avec le nouveau token
+              originalRequest.headers.Authorization = `Bearer ${response.data.token}`;
+              return API(originalRequest);
+            }
           }
+        } catch (refreshError) {
+          // Si le refresh échoue, déconnecter l'utilisateur
+          localStorage.removeItem('user');
+          // Commenter cette ligne pour éviter les redirections non désirées
+          // window.location.href = '/login';
+          return Promise.reject(refreshError);
         }
-      } catch (refreshError) {
-        // Si le refresh échoue, déconnecter l'utilisateur
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
       }
     }
     
-    // Pour les autres erreurs, on affiche le message
-    console.error('Erreur API:', error.message);
+    // Pour les erreurs réseau (pas de réponse du serveur)
+    if (error.message && error.message.includes('Network Error')) {
+      console.error('Erreur réseau: Impossible de se connecter au serveur.');
+      // Vous pouvez ajouter ici une notification à l'utilisateur
+    } else {
+      // Pour les autres erreurs, on affiche le message
+      console.error('Erreur API:', error.message);
+    }
+    
     return Promise.reject(error);
   }
 );
@@ -286,6 +301,8 @@ export const planningAPI = {
 export const stockAPI = {
   // Récupérer tous les stocks
   getAllStocks: () => API.get('/stock'),
+  // Récupérer les traitements pour inventaire
+  getTraitementsPourInventaire: () => API.get('/inventaires/traitements-pour-inventaire'),
   // Récupérer un stock par ID
   getStockById: (id) => API.get(`/stock/${id}`),
   // Créer un nouveau stock
@@ -329,15 +346,15 @@ export const sensorAPI = {
 // API pour les indicateurs de performance (KPI)
 export const kpiAPI = {
   // Générer des KPIs
-  generateKPI: () => API.post('generate'),
+  generateKPI: () => API.post('/kpi/generate'),
   // Obtenir les derniers KPIs
-  getLatestKPI: () => API.get('/latest'),
+  getLatestKPI: () => API.get('/kpi/latest'),
   // Obtenir les KPIs pour un équipement spécifique
-  getEquipmentKPI: (id) => API.get(`/equipment/${id}`),
+  getEquipmentKPI: (id) => API.get(`/kpi/equipment/${id}`),
   // Obtenir les KPIs de fiabilité
-  getReliabilityKPI: () => API.get('/reliability'),
+  getReliabilityKPI: () => API.get('/kpi/reliability'),
   // Obtenir les KPIs de maintenance
-  getMaintenanceKPI: () => API.get('/maintenance'),
+  getMaintenanceKPI: () => API.get('/kpi/maintenance'),
 };
 
 // API pour les journaux d'activité (logs)
@@ -398,18 +415,57 @@ export const documentAPI = {
 export const fournisseurAPI = {
   // Récupérer tous les fournisseurs
   getAllFournisseurs: () => API.get('/fournisseurs'),
-  
   // Récupérer un fournisseur par ID
   getFournisseurById: (id) => API.get(`/fournisseurs/${id}`),
-  
   // Créer un nouveau fournisseur
   createFournisseur: (fournisseurData) => API.post('/fournisseurs', fournisseurData),
-  
   // Mettre à jour un fournisseur
   updateFournisseur: (id, fournisseurData) => API.put(`/fournisseurs/${id}`, fournisseurData),
-  
   // Supprimer un fournisseur
   deleteFournisseur: (id) => API.delete(`/fournisseurs/${id}`),
+};
+
+// API pour les commandes
+export const commandeAPI = {
+  // Récupérer toutes les commandes
+  getAllCommandes: () => API.get('/commandes'),
+  // Récupérer une commande par ID
+  getCommandeById: (id) => API.get(`/commandes/${id}`),
+  // Créer une nouvelle commande
+  createCommande: (commandeData) => API.post('/commandes', commandeData),
+  // Mettre à jour une commande
+  updateCommande: (id, commandeData) => API.put(`/commandes/${id}`, commandeData),
+  // Supprimer une commande
+  deleteCommande: (id) => API.delete(`/commandes/${id}`),
+};
+
+// API pour les traitements de commande
+export const traitementAPI = {
+  // Récupérer tous les traitements
+  getAllTraitements: () => API.get('/traitements'),
+  // Récupérer un traitement par ID
+  getTraitementById: (id) => API.get(`/traitements/${id}`),
+  // Récupérer les traitements par commande
+  getTraitementsByCommande: (commandeId) => API.get(`/traitements/commande/${commandeId}`),
+  // Créer un nouveau traitement
+  createTraitement: (traitementData) => API.post('/traitements', traitementData),
+  // Mettre à jour un traitement
+  updateTraitement: (id, traitementData) => API.put(`/traitements/${id}`, traitementData),
+  // Supprimer un traitement
+  deleteTraitement: (id) => API.delete(`/traitements/${id}`),
+};
+
+// API pour les inventaires
+export const inventaireAPI = {
+  createInventaire: (data) => API.post('/inventaires', data),
+  getAllInventaires: () => API.get('/inventaires'),
+  getInventaireById: (id) => API.get(`/inventaires/${id}`),
+  getInventairesByProduit: (produitId) => API.get(`/inventaires/produit/${produitId}`),
+  getInventairesByLieuStockage: (lieu) => API.get(`/inventaires/lieu/${lieu}`),
+  getInventairesAvecEcart: () => API.get('/inventaires/ecarts'),
+  getRaisonsEcart: () => API.get('/inventaires/raisons-ecart'),
+  updateInventaire: (id, data) => API.put(`/inventaires/${id}`, data),
+  deleteInventaire: (id) => API.delete(`/inventaires/${id}`),
 };
 
 export default {
@@ -425,4 +481,7 @@ export default {
   logAPI,
   configurationAPI,
   documentAPI,
-}; 
+  commandeAPI,
+  traitementAPI,
+  inventaireAPI,
+};

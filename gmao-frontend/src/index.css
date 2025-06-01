@@ -27,7 +27,7 @@
 body {
   background-color: var(--background-color);
   color: var(--text-color);
-  line-height: 1.5;
+
 }
 
 a {
@@ -41,7 +41,6 @@ button {
 
 .container {
   width: 100%;
-  max-width: 1200px;
   margin: 0 auto;
   padding: 0 1rem;
 }

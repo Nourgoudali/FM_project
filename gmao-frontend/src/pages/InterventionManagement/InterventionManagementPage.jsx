@@ -166,34 +166,7 @@ const InterventionManagementPage = () => {
         <Header title="Gestion des Interventions" onToggleSidebar={toggleSidebar} />
         
         <main className="intv-main">
-          <div className="intv-header">
-            <div className="intv-title-section">
-              <h1>Gestion des Interventions</h1>
-              <p className="intv-subtitle">Suivi des interventions curatives et préventives</p>
-            </div>
-            <div className="intv-controls">
-              <div className="intv-view-toggle">
-                <button 
-                  className={`intv-toggle-btn ${viewMode === "list" ? "active" : ""}`}
-                  onClick={() => setViewMode("list")}
-                >
-                  <FaList /> Liste
-                </button>
-                <button 
-                  className={`intv-toggle-btn ${viewMode === "calendar" ? "active" : ""}`}
-                  onClick={() => setViewMode("calendar")}
-                >
-                  <FaCalendarAlt /> Calendrier
-                </button>
-              </div>
-              <button 
-                className="intv-new-btn"
-                onClick={() => setShowNewModal(true)}
-              >
-                <span>+</span> Nouvelle Intervention
-              </button>
-            </div>
-          </div>
+          <div className="intv-header"></div>
           
           <div className="intv-filters">
             <div className="intv-search-container">
@@ -244,6 +217,12 @@ const InterventionManagementPage = () => {
                   <option value="Critique">Critique</option>
                 </select>
               </div>
+              <button 
+                className="intv-new-btn"
+                onClick={() => setShowNewModal(true)}
+              >
+                <span>+</span> Nouvelle Intervention
+              </button>
             </div>
           </div>
           

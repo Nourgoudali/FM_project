@@ -1,6 +1,5 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import GlobalSearch from "../Search/GlobalSearch"
 import "./Header.css"
 
 function Header({ title, onToggleSidebar }) {
@@ -47,11 +46,6 @@ function Header({ title, onToggleSidebar }) {
       <div className="header-left">
         <h1 className="page-title">{title}</h1>
       </div>
-
-      <div className="header-center">
-        <GlobalSearch />
-      </div>
-
       <div className="header-right">
         <div className="notifications-container">
           <button className="notifications-button" onClick={toggleNotifications}>

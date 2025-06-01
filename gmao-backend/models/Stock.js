@@ -10,6 +10,7 @@ const stockSchema = new mongoose.Schema({
   stockMin: { type: Number, required: true },
   stockMax: { type: Number, required: true },
   stockSecurite: { type: Number, required: true },
+  lieuStockage: { type: String, required: true, trim: true },
   fournisseur:{type: mongoose.Schema.Types.ObjectId, ref: 'Fournisseur', required:true}, // Corrigé 'reference' en 'ref'
   createdAt: { type: Date, default: Date.now },
 });
@@ -24,7 +25,7 @@ stockSchema.pre('save', async function (next) {
       
       let nextNumber;
       if (latestStock) {
-        const match = latestStock.reference.match(/ST-(\d+)/);
+        const match = latestStock.reference.match(/PRD-(\d+)/);
         if (match) {
           nextNumber = parseInt(match[1], 10) + 1;
         } else {
@@ -34,7 +35,7 @@ stockSchema.pre('save', async function (next) {
         nextNumber = 1;
       }
       
-      this.reference = `ST-${String(nextNumber).padStart(3, '0')}`;
+      this.reference = `PRD-${String(nextNumber).padStart(3, '0')}`;
       next();
     } catch (err) {
       console.error('Error generating stock reference:', err);

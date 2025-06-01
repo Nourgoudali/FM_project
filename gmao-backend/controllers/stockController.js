@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 
 const stockController = {
   create: async (req, res) => {
-    const { name, catégorie, prixUnitaire, stockActuel, stockMin, stockMax, stockSecurite, fournisseur, prixEuro } = req.body;
+    const { name, catégorie, prixUnitaire, stockActuel, stockMin, stockMax, stockSecurite, fournisseur, prixEuro, lieuStockage } = req.body;
     try {
       // Vérifier si fournisseur est un ObjectId valide
       if (!mongoose.Types.ObjectId.isValid(fournisseur)) {
@@ -20,6 +20,7 @@ const stockController = {
         stockMax,
         stockSecurite,
         fournisseur,
+        lieuStockage,
         prixEuro: prixEuro || 0
       });
       

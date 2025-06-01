@@ -28,11 +28,11 @@ const StockManagementPage = () => {
   })
   const [showFilters, setShowFilters] = useState(false)
 
-  // Chargement des données depuis l'API
+  // Charger les données du stock depuis l'API
   useEffect(() => {
     const fetchStockItems = async () => {
-      setLoading(true);
       try {
+        setLoading(true);
         const response = await stockAPI.getAllStocks();
         setStockItems(response.data);
         setFilteredItems(response.data);
@@ -364,6 +364,11 @@ const StockManagementPage = () => {
                           <span>{sortConfig.direction === "ascending" ? "↑" : "↓"}</span>
                         )}
                       </th>
+                      <th onClick={() => requestSort("lieuStockage")}>
+                        Lieu de stockage {sortConfig.key === "lieuStockage" && (
+                          <span>{sortConfig.direction === "ascending" ? "↑" : "↓"}</span>
+                        )}
+                      </th>
                       <th onClick={() => requestSort("prixUnitaire")}>
                         Prix unitaire (DH) {sortConfig.key === "prixUnitaire" && (
                           <span>{sortConfig.direction === "ascending" ? "↑" : "↓"}</span>
@@ -389,9 +394,6 @@ const StockManagementPage = () => {
                           <span>{sortConfig.direction === "ascending" ? "↑" : "↓"}</span>
                         )}
                       </th>
-                      <th>
-                        Fournisseur
-                      </th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -414,12 +416,12 @@ const StockManagementPage = () => {
                           <td>{item.reference}</td>
                           <td>{item.name}</td>
                           <td>{item.catégorie}</td>
+                          <td>{item.lieuStockage || 'Non spécifié'}</td>
                           <td>{item.prixUnitaire} DH</td>
                           <td>{item.stockActuel}</td>
                           <td>{item.stockMin}</td>
                           <td>{item.stockMax}</td>
                           <td>{item.stockSecurite}</td>
-                          <td>{item.fournisseur ? item.fournisseur.nomEntreprise : "Non spécifié"} - {item.fournisseur ? item.fournisseur.nom + ' ' + item.fournisseur.prenom : "Non spécifié"}</td>
                           <td className="actions-cell">
                             <button
                               className="action-btn edit"

@@ -167,7 +167,7 @@ function HomePage() {
           </div>
 
           <div className="hp-footer-bottom">
-            <p className="hp-copyright">2024 GMAO Équipements Critiques. Tous droits réservés.</p>
+            <p className="hp-copyright">{new Date().getFullYear()} GMAO Équipements Critiques. Tous droits réservés.</p>
           </div>
         </div>
       </footer>

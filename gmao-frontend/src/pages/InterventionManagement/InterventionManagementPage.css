@@ -13,7 +13,6 @@
 .intv-main {
   flex: 1;
   padding: 20px;
-  background-color: #f9fafb;
   overflow-y: auto;
 }
 
@@ -82,6 +81,9 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
+  height: 40px;
+  margin-left: 10px;
+  white-space: nowrap;
 }
 
 .intv-new-btn:hover {
@@ -92,10 +94,11 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 20px;
+  align-items: center;
 }
 
 .intv-search-container {
-  width: 30%;
+  width: 300px;
 }
 
 .intv-search {

@@ -11,7 +11,8 @@ const interventionSchema = new mongoose.Schema({
     name: { type: String, required: true },
     color: { type: String, required: true }
   },
-  date: { type: Date, required: true },
+  startDate: { type: Date, required: true }, // Date de début obligatoire
+  endDate: { type: Date }, // Date de fin facultative
   description: { type: String },
   location: { type: String },
   createdAt: { type: Date, default: Date.now },
@@ -20,8 +21,9 @@ const interventionSchema = new mongoose.Schema({
   strictPopulate: false
 });
 
-// Hook pour générer automatiquement une référence unique
+// Hook pour générer automatiquement une référence unique et déterminer le statut
 interventionSchema.pre('save', async function (next) {
+  // Génération de référence automatique pour les nouvelles interventions
   if (this.isNew && !this.reference) {
     try {
       const latestIntervention = await mongoose.model('Intervention')
@@ -34,20 +36,38 @@ interventionSchema.pre('save', async function (next) {
         const match = latestIntervention.reference.match(/INT-(\d+)/);
         if (match) {
           nextNumber = parseInt(match[1], 10) + 1;
+        } else {
+          nextNumber = 1;
         }
       } else {
         nextNumber = 1;
       }
       
       this.reference = `INT-${String(nextNumber).padStart(3, '0')}`;
-      next();
     } catch (err) {
       console.error('Error generating intervention reference:', err);
-      next(err);
+      return next(err);
     }
-  } else {
-    next();
   }
-});
+  
+  // Détermination automatique du statut en fonction des dates
+  const now = new Date();
+  
+  // Si la date de fin est définie, l'intervention est terminée
+  if (this.endDate) {
+    this.status = 'Terminée';
+  } 
+  // Si la date de début est dans le futur, l'intervention est planifiée
+  else if (this.startDate > now) {
+    this.status = 'Planifiée';
+  } 
+  // Si la date de début est passée ou aujourd'hui et pas de date de fin, l'intervention est en cours
+  else {
+    this.status = 'En cours';
+  }
+  
+  next();
+}
+);
 
 module.exports = mongoose.model('Intervention', interventionSchema);

@@ -459,27 +459,6 @@ function PredictiveMaintenancePage() {
                     <span className="select-icon"></span>
                   </div>
                 </div>
-
-                <div className="time-range-tabs">
-                  <button
-                    className={`tab-btn ${timeRange === "week" ? "active" : ""}`}
-                    onClick={() => handleTimeRangeChange("week")}
-                  >
-                    Semaine
-                  </button>
-                  <button
-                    className={`tab-btn ${timeRange === "month" ? "active" : ""}`}
-                    onClick={() => handleTimeRangeChange("month")}
-                  >
-                    Mois
-                  </button>
-                  <button
-                    className={`tab-btn ${timeRange === "year" ? "active" : ""}`}
-                    onClick={() => handleTimeRangeChange("year")}
-                  >
-                    Année
-                  </button>
-                </div>
               </div>
 
               {/* Indicateurs */}

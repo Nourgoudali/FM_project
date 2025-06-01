@@ -1,0 +1,278 @@
+.commande-management-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.commande-management-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.commande-management-main {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+  background-color: var(--background-color);
+}
+
+.commande-controls {
+  margin-bottom: 1.5rem;
+}
+
+.commande-search-filter-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.commande-search-container {
+  display: flex;
+  align-items: center;
+  width: 50%;
+}
+
+.commande-search-input {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+
+.commande-filter-button {
+  background-color: #f8f9fa;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  margin-left: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.filter-button:hover {
+  background-color: #e2e8f0;
+}
+
+.commande-action-buttons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.commande-export-button,
+.commande-add-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.commande-export-button {
+  background-color: #f8f9fa;
+  border: 1px solid #e2e8f0;
+  color: #4a5568;
+}
+
+.commande-export-button:hover {
+  background-color: #e2e8f0;
+}
+
+.commande-add-button {
+  background-color: #4299e1;
+  border: none;
+  color: white;
+}
+
+.commande-add-button:hover {
+  background-color: #3182ce;
+}
+
+.commande-filters-container {
+  background-color: #f8f9fa;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.commande-filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.filters-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.commande-close-filters-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #718096;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-filters-button:hover {
+  color: #4a5568;
+}
+
+.commande-filters-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.commande-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.filter-group select,
+.filter-group input {
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+
+.commande-filter-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.commande-reset-filters-button {
+  background-color: #e2e8f0;
+  border: none;
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.reset-filters-button:hover {
+  background-color: #cbd5e0;
+}
+
+.commande-table-container {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.commande-table-wrapper {
+  overflow-x: auto;
+}
+
+.commande-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.commande-table th,
+.commande-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.commande-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #4a5568;
+  cursor: pointer;
+  user-select: none;
+}
+
+.commande-table th:hover {
+  background-color: #e2e8f0;
+}
+
+.sort-indicator {
+  margin-left: 0.25rem;
+}
+
+.commande-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.actions-cell, .cmd-actions-cell {
+  padding: 0.5rem !important;
+}
+
+.action-buttons-container, .cmd-action-buttons-container {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-start;
+}
+
+.view-button, .cmd-view-button,
+.edit-button, .cmd-edit-button,
+.delete-button, .cmd-delete-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+}
+
+.view-button, .cmd-view-button {
+  color: #38a169;
+}
+
+.view-button:hover, .cmd-view-button:hover {
+  background-color: rgba(56, 161, 105, 0.1);
+}
+
+.edit-button, .cmd-edit-button {
+  color: #4299e1;
+}
+
+.edit-button:hover, .cmd-edit-button:hover {
+  background-color: rgba(66, 153, 225, 0.1);
+}
+
+.delete-button, .cmd-delete-button {
+  color: #e53e3e;
+}
+
+.delete-button:hover, .cmd-delete-button:hover {
+  background-color: rgba(229, 62, 62, 0.1);
+}
+
+.commande-loading,
+.commande-no-data {
+  text-align: center;
+  padding: 2rem;
+  color: #718096;
+}

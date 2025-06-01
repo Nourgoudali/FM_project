@@ -46,9 +46,29 @@ const kpiController = {
   getLatest: async (req, res) => {
     try {
       const kpi = await KPI.findOne().sort({ createdAt: -1 });
-      if (!kpi) return res.status(404).json({ message: 'No KPI data found' });
+      if (!kpi) {
+        // Renvoyer un objet KPI par défaut au lieu d'une erreur 404
+        const defaultKPI = {
+          date: new Date(),
+          interventionStats: {
+            pending: 0,
+            inProgress: 0,
+            completed: 0,
+            delayed: 0,
+          },
+          equipmentStats: {
+            operational: 0,
+            maintenance: 0,
+            outOfService: 0,
+            averageUptime: 0,
+          },
+          createdAt: new Date()
+        };
+        return res.json(defaultKPI);
+      }
       res.json(kpi);
     } catch (err) {
+      console.error('Erreur lors de la récupération des KPIs:', err);
       res.status(500).json({ message: err.message });
     }
   },

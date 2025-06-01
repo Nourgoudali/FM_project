@@ -8,12 +8,13 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
     name: "",
     reference: "", // Ajout du champ reference même s'il sera généré automatiquement côté serveur
     catégorie: "",
-    prixUnitaire: 0,
-    stockActuel: 0,
-    stockMin: 0,
-    stockMax: 0,
-    stockSecurite: 0,
+    prixUnitaire: "",
+    stockActuel: "",
+    stockMin: "",
+    stockMax: "",
+    stockSecurite: "",
     fournisseur: "",
+    lieuStockage: "", // Ajout du champ lieuStockage
     prixEuro: 0 // Ajout du champ pour le prix en euros
   };
 
@@ -30,15 +31,28 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
         name: item.name || "",
         reference: item.reference || "", // Ajout du champ reference
         catégorie: item.catégorie || "",
-        prixUnitaire: item.prixUnitaire || 0,
-        stockActuel: item.stockActuel || 0,
-        stockMin: item.stockMin || 0,
-        stockMax: item.stockMax || 0,
-        stockSecurite: item.stockSecurite || 0,
+        prixUnitaire: item.prixUnitaire || "",
+        stockActuel: item.stockActuel || "",
+        stockMin: item.stockMin || "",
+        stockMax: item.stockMax || "",
+        stockSecurite: item.stockSecurite || "",
         fournisseur: item.fournisseur ? item.fournisseur._id : "",
+        lieuStockage: item.lieuStockage || "", // Ajout du champ lieuStockage
         prixEuro: item.prixEuro || 0 // Ajout du champ pour le prix en euros
       }
-    : emptyFormData
+    : {
+        name: "",
+        reference: "", 
+        catégorie: "",
+        prixUnitaire: "",
+        stockActuel: "",
+        stockMin: "",
+        stockMax: "",
+        stockSecurite: "",
+        fournisseur: "",
+        lieuStockage: "", 
+        prixEuro: 0 
+      }
 
   const [formData, setFormData] = useState(initialData)
 
@@ -48,12 +62,13 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
       const newData = {
         name: item.name || "",
         catégorie: item.catégorie || "",
-        prixUnitaire: item.prixUnitaire || 0,
-        stockActuel: item.stockActuel || 0,
-        stockMin: item.stockMin || 0,
-        stockMax: item.stockMax || 0,
-        stockSecurite: item.stockSecurite || 0,
+        prixUnitaire: item.prixUnitaire || "",
+        stockActuel: item.stockActuel || "",
+        stockMin: item.stockMin || "",
+        stockMax: item.stockMax || "",
+        stockSecurite: item.stockSecurite || "",
         fournisseur: item.fournisseur ? item.fournisseur._id : "",
+        lieuStockage: item.lieuStockage || "", // Ajout du champ lieuStockage
       }
       setFormData(newData)
     }
@@ -87,12 +102,13 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
         name: item.name || "",
         reference: item.reference || "", // Ajout du champ reference
         catégorie: item.catégorie || "",
-        prixUnitaire: item.prixUnitaire || 0,
-        stockActuel: item.stockActuel || 0,
-        stockMin: item.stockMin || 0,
-        stockMax: item.stockMax || 0,
-        stockSecurite: item.stockSecurite || 0,
+        prixUnitaire: item.prixUnitaire || "",
+        stockActuel: item.stockActuel || "",
+        stockMin: item.stockMin || "",
+        stockMax: item.stockMax || "",
+        stockSecurite: item.stockSecurite || "",
         fournisseur: item.fournisseur ? item.fournisseur._id : "",
+        lieuStockage: item.lieuStockage || "", // Ajout du champ lieuStockage
         prixEuro: item.prixEuro || 0 // Ajout du champ pour le prix en euros
       })
     }
@@ -186,6 +202,20 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
             </select>
           </div>
         </div>
+        <div className="stock-form__row">
+          <div className="stock-form__group">
+            <label htmlFor="lieuStockage">Lieu de stockage *</label>
+            <input
+              type="text"
+              id="lieuStockage"
+              name="lieuStockage"
+              value={formData.lieuStockage}
+              onChange={handleChange}
+              required
+              placeholder="Ex: Magasin principal, Étagère A3, etc."
+            />
+          </div>
+        </div>
 
         <div className="stock-form__row">
           <div className="stock-form__group">
@@ -218,6 +248,7 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
               pattern="^\d*\.?\d*$"
               title="Veuillez entrer un nombre valide"
               required
+              placeholder="0"
             />
           </div>
         </div>
@@ -233,6 +264,7 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
               pattern="^\d*$"
               title="Veuillez entrer un nombre entier valide"
               required
+              placeholder="0"
             />
           </div>
           
@@ -247,6 +279,7 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
               pattern="^\d*$"
               title="Veuillez entrer un nombre entier valide"
               required
+              placeholder="0"
             />
           </div>
         
@@ -262,6 +295,7 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
               pattern="^\d*$"
               title="Veuillez entrer un nombre entier valide"
               required
+              placeholder="0"
             />
           </div>
           <div className="stock-form__group">
@@ -275,6 +309,7 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
               pattern="^\d*$"
               title="Veuillez entrer un nombre entier valide"
               required
+              placeholder="0"
             />
           </div>
         </div>

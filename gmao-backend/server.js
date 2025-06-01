@@ -15,6 +15,9 @@ const sensorRoutes = require('./routes/sensorRoutes');
 const logRoutes = require('./routes/logRoutes');
 const configurationRoutes = require('./routes/configurationRoutes');
 const fournisseurRoutes = require('./routes/fournisseursRoutes');
+const commandeRoutes = require('./routes/commandeRoutes');
+const traitementRoutes = require('./routes/traitementRoutes');
+const inventaireRoutes = require('./routes/inventaireRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -22,15 +25,34 @@ dotenv.config();
 // Initialize Express app
 const app = express();
 
-// ✅ Correct CORS configuration
+// Configuration CORS mise à jour
 app.use(cors({
   origin: ['http://localhost:3001', 'http://localhost:3000'], // List your frontend URLs here
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Origin', 'Access-Control-Allow-Methods', 'Access-Control-Allow-Headers'],
+  exposedHeaders: ['Access-Control-Allow-Origin', 'Access-Control-Allow-Methods', 'Access-Control-Allow-Headers'],
   credentials: true
 }));
 
 app.use(express.json());
+
+// Parse URL-encoded bodies
+app.use(express.urlencoded({ extended: true }));
+
+// Middleware pour gérer les requêtes OPTIONS et les en-têtes CORS
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Gérer les requêtes OPTIONS (préflight)
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  next();
+});
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -66,6 +88,9 @@ app.use('/api/sensors', sensorRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/configurations', configurationRoutes);
 app.use('/api/fournisseurs', fournisseurRoutes);
+app.use('/api/commandes', commandeRoutes);
+app.use('/api/traitements', traitementRoutes);
+app.use('/api/inventaires', inventaireRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

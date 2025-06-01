@@ -72,16 +72,25 @@ export const AuthProvider = ({ children }) => {
             }
             return response.data;
         } catch (err) {
-            console.error('Erreur de connexion:', err.response?.status, err.response?.data);
-            
-            // Récupérer le message d'erreur du backend ou utiliser un message par défaut
-            const errorMessage = err.response?.data?.message || 'Problème de connexion au serveur. Veuillez réessayer.';
-            setError(errorMessage);
-            
-            // Pour que l'erreur soit plus facilement capturée par le composant LoginPage
-            const error = new Error(errorMessage);
-            error.status = err.response?.status;
-            throw error;
+            // Gérer différents types d'erreurs
+            if (err.message && err.message.includes('Network Error')) {
+                console.error('Erreur réseau lors de la connexion:', err.message);
+                setError('Impossible de se connecter au serveur. Vérifiez votre connexion internet ou réessayez plus tard.');
+                throw new Error('Impossible de se connecter au serveur. Vérifiez votre connexion internet ou réessayez plus tard.');
+            } else if (err.response) {
+                // Erreur avec réponse du serveur
+                console.error('Erreur de connexion:', err.response.status, err.response.data);
+                const errorMessage = err.response.data?.message || 'Identifiants incorrects ou problème de serveur.';
+                setError(errorMessage);
+                const error = new Error(errorMessage);
+                error.status = err.response.status;
+                throw error;
+            } else {
+                // Autres erreurs
+                console.error('Erreur inconnue lors de la connexion:', err);
+                setError('Une erreur s\'est produite. Veuillez réessayer.');
+                throw new Error('Une erreur s\'est produite. Veuillez réessayer.');
+            }
         } finally {
             setLoading(false);
         }

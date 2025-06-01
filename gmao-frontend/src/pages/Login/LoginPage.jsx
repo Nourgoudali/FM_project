@@ -1,14 +1,14 @@
-"use client"
-
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../../contexts/AuthContext"
 import "./LoginPage.css"
 import logoFM from "../../assets/images/logo-fm.png"
+import {FaEye, FaEyeSlash} from "react-icons/fa"
 
 function LoginPage() {
   const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
@@ -60,7 +60,6 @@ function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
-                <i className="icon-mail"></i>
               </div>
             </div>
 
@@ -71,14 +70,19 @@ function LoginPage() {
               <div className="input-with-icon">
                 <input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   className="form-control"
                   placeholder="Entrez votre mot de passe"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
-                <i className="icon-lock"></i>
+                <button
+                type="button"
+                className="show-password"
+                onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? <FaEyeSlash /> : <FaEye/>}
+                </button>
               </div>
             </div>
             <button type="submit" className="btn btn-login" disabled={loading}>

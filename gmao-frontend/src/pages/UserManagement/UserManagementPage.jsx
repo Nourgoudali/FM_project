@@ -275,10 +275,6 @@ const UserManagementPage = () => {
                 <FaFilter /> Filtres
               </button>
 
-              <button className="export-button">
-                <FaFileExport /> Exporter
-              </button>
-              
               <button className="add-button" onClick={() => setShowAddModal(true)}>
                 <FaPlus /> Ajouter un utilisateur
               </button>
