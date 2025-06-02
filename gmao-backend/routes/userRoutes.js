@@ -12,6 +12,9 @@ router.get('/profile', verifyToken, (req, res) => {
     res.json({ user: req.user });
 });
 
+// Route pour la déconnexion et mise à jour de lastLogin
+router.post('/logout', verifyToken, userController.logout);
+
 // Route pour récupérer l'utilisateur actuel
 router.get('/me', verifyToken, userController.getCurrentUser);
 
@@ -26,7 +29,6 @@ router.get('/', verifyToken, checkRole('admin'), userController.getAllUsers);
 router.get('/:id', verifyToken, checkRole('admin'), userController.getUserById);
 router.put('/:id', verifyToken, checkRole('admin'), userController.updateUser);
 router.delete('/:id', verifyToken, checkRole('admin'), userController.deleteUser);
-router.patch('/:id/status', verifyToken, checkRole('admin'), userController.changeUserStatus);
 
 // Route pour attribuer un rôle à un utilisateur (admin uniquement)
 router.post('/:userId/role', verifyToken, checkRole('admin'), userController.assignRole);

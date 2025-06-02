@@ -11,6 +11,7 @@ import "./EquipmentManagementPage.css"
 import { useSidebar } from "../../contexts/SidebarContext"
 import { equipmentAPI } from "../../services/api"
 import { FaHistory, FaEdit, FaTrash, FaEye } from "react-icons/fa"
+import toast from "react-hot-toast"
 
 const EquipmentManagementPage = () => {
   const { sidebarOpen, toggleSidebar } = useSidebar()
@@ -18,9 +19,7 @@ const EquipmentManagementPage = () => {
   const [filterStatus, setFilterStatus] = useState("all")
   const [equipments, setEquipments] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   const [showAddModal, setShowAddModal] = useState(false)
-  const [errorMessage, setErrorMessage] = useState(null);
 
   // États pour les modaux
   const [showEditModal, setShowEditModal] = useState(false)
@@ -72,8 +71,7 @@ const EquipmentManagementPage = () => {
   const handleAddEquipment = async (newEquipment, error = null) => {
     // If there's an error, show it and return
     if (error) {
-      console.error("Erreur lors de l'ajout de l'équipement:", error);
-      setErrorMessage(error);
+      toast.error(error);
       return;
     }
 
@@ -82,14 +80,13 @@ const EquipmentManagementPage = () => {
       if (newEquipment) {
         // Fermer le modal d'abord
         setShowAddModal(false);
-        setErrorMessage(null);
+        toast.success("Équipement ajouté avec succès");
         
         // Rafraîchir la liste complète des équipements depuis le serveur
         await fetchEquipments();
       }
     } catch (error) {
-      console.error("Erreur lors de la mise à jour de l'état:", error);
-      setErrorMessage("Une erreur est survenue lors de la mise à jour de l'état.");
+      toast.error("Une erreur est survenue lors de la mise à jour de l'état");
     }
   }
   
@@ -97,8 +94,6 @@ const EquipmentManagementPage = () => {
   const fetchEquipments = async () => {
     try {
       setLoading(true);
-      setError(null);
-      setErrorMessage(null);
       
       // Utilisation de l'API pour récupérer les équipements
       const response = await equipmentAPI.getAllEquipments();
@@ -109,9 +104,7 @@ const EquipmentManagementPage = () => {
         throw new Error('Invalid response from server');
       }
     } catch (error) {
-      console.error('Erreur lors de la récupération des équipements:', error);
-      setError('Erreur lors de la récupération des équipements. Veuillez réessayer.');
-      setErrorMessage('Erreur lors de la récupération des équipements. Veuillez réessayer.');
+      toast.error('Erreur lors de la récupération des équipements. Veuillez réessayer.');
     } finally {
       setLoading(false);
     }
@@ -153,6 +146,7 @@ const EquipmentManagementPage = () => {
       if (response.data) {
         // Fermer d'abord les modaux
         handleCloseModals();
+        toast.success("Équipement mis à jour avec succès");
         
         // Rafraîchir la liste complète des équipements
         await fetchEquipments();
@@ -160,8 +154,7 @@ const EquipmentManagementPage = () => {
         throw new Error('Invalid response from server');
       }
     } catch (error) {
-      console.error("Erreur lors de la mise à jour de l'équipement:", error);
-      alert("Une erreur est survenue lors de la mise à jour de l'équipement");
+      toast.error("Une erreur est survenue lors de la mise à jour de l'équipement");
     }
   }
 
@@ -175,12 +168,13 @@ const EquipmentManagementPage = () => {
           throw new Error('ID d\'équipement non valide');
         }
         
-        console.log('Suppression de l\'équipement avec ID:', equipmentId);
+        // Suppression de l'équipement avec l'ID spécifié
         const response = await equipmentAPI.deleteEquipment(equipmentId);
         
         if (response.status === 200) {
           // Fermer d'abord les modaux
           handleCloseModals();
+          toast.success("Équipement supprimé avec succès");
           
           // Rafraîchir la liste complète des équipements
           await fetchEquipments();
@@ -188,8 +182,7 @@ const EquipmentManagementPage = () => {
           throw new Error('Échec de la suppression de l\'équipement');
         }
       } catch (error) {
-        console.error("Erreur lors de la suppression de l'équipement:", error);
-        alert("Une erreur est survenue lors de la suppression de l'équipement: " + error.message);
+        toast.error("Une erreur est survenue lors de la suppression de l'équipement");
       }
     }
   }
@@ -236,18 +229,12 @@ const EquipmentManagementPage = () => {
             </div>
           </div>
 
-          {errorMessage && (
-            <div className="error-message">
-              {errorMessage}
-            </div>
-          )}
+          {/* Les messages d'erreur sont maintenant affichés avec des toasts */}
 
           {/* Liste des équipements */}
           <div className="emp-equipment-table-container">
             {loading ? (
               <div className="emp-loading-indicator">Chargement des équipements...</div>
-            ) : error ? (
-              <div className="emp-error-message">{error}</div>
             ) : filteredEquipments.length === 0 ? (
               <div className="emp-no-results">Aucun équipement trouvé</div>
             ) : (

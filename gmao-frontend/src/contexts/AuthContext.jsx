@@ -1,5 +1,3 @@
-"use client"
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { userAPI } from '../services/api';
 
@@ -96,11 +94,21 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const logout = () => {
+    const logout = async () => {
         try {
             console.log('AuthContext: Déconnexion en cours');
+            
+            if (user && user.token) {
+                try {
+                    await userAPI.logout();
+                    console.log('LastLogin mis à jour avec succès');
+                } catch (apiErr) {
+                    console.error('Erreur lors de la mise à jour de lastLogin:', apiErr);
+                    // Continuer la déconnexion même en cas d'erreur API
+                }
+            }
+            
             localStorage.removeItem('user');
-            window.location.href = '/';
             setUser(null);
         } catch (err) {
             console.error('Erreur pendant la déconnexion:', err.message);
@@ -121,9 +129,21 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // Déterminer l'ID utilisateur en fonction de la structure de l'objet user
+    // La structure peut varier selon la réponse de l'API
+    const userId = user?.user?._id || user?._id;
+    
+    console.log('AuthContext - Structure utilisateur détectée:', {
+        'user complet': user,
+        'user._id': user?._id,
+        'user.user._id': user?.user?._id,
+        'userId déterminé': userId
+    });
+    
     const value = {
         user,
         currentUser: user?.user,
+        userId, // Exposer directement l'ID utilisateur
         loading,
         error,
         login,

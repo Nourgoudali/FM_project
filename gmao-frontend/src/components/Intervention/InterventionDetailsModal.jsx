@@ -76,8 +76,26 @@ function InterventionDetailsModal({ intervention, onClose }) {
                 <FaCalendarAlt />
               </div>
               <div className="detail-content">
-                <span className="detail-label">Date prévue</span>
-                <span className="detail-value">{intervention.date || "Non spécifiée"}</span>
+                <span className="detail-label">Date de début</span>
+                <span className="detail-value">
+                  {intervention.startDate 
+                    ? new Date(intervention.startDate).toLocaleDateString() 
+                    : "Non spécifiée"}
+                </span>
+              </div>
+            </div>
+            
+            <div className="detail-item">
+              <div className="detail-icon">
+                <FaCalendarAlt />
+              </div>
+              <div className="detail-content">
+                <span className="detail-label">Date de fin</span>
+                <span className="detail-value">
+                  {intervention.endDate 
+                    ? new Date(intervention.endDate).toLocaleDateString() 
+                    : "Non spécifiée"}
+                </span>
               </div>
             </div>
 

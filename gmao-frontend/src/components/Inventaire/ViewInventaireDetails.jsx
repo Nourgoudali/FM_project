@@ -58,41 +58,76 @@ const ViewInventaireDetails = ({ inventaireId, onClose }) => {
         ) : inventaire ? (
           <div className="inventaire-details">
             <div className="inventaire-details-section">
-              <h3>Informations produit</h3>
+              <h3>Informations générales</h3>
               <div className="inventaire-details-row">
                 <div className="inventaire-details-label">Référence:</div>
-                <div className="inventaire-details-value">{inventaire.traitement?.produits?.[inventaire.produitIndex]?.produit?.reference || 'N/A'}</div>
+                <div className="inventaire-details-value">{inventaire.reference || 'N/A'}</div>
               </div>
               <div className="inventaire-details-row">
-                <div className="inventaire-details-label">Nom du produit:</div>
-                <div className="inventaire-details-value">{inventaire.traitement?.produits?.[inventaire.produitIndex]?.produit?.name || 'N/A'}</div>
+                <div className="inventaire-details-label">Date d'inventaire:</div>
+                <div className="inventaire-details-value">{formatDate(inventaire.dateInventaire)}</div>
               </div>
               <div className="inventaire-details-row">
-                <div className="inventaire-details-label">Lieu de stockage:</div>
-                <div className="inventaire-details-value">{inventaire.traitement?.produits?.[inventaire.produitIndex]?.produit?.lieuStockage || 'N/A'}</div>
+                <div className="inventaire-details-label">Réalisé par:</div>
+                <div className="inventaire-details-value">
+                  {inventaire.utilisateur ? (
+                    `${inventaire.utilisateur.firstName || ''} ${inventaire.utilisateur.lastName || ''}`.trim() || 'Utilisateur inconnu'
+                  ) : (
+                    'Non assigné'
+                  )}
+                </div>
+              </div>
+              <div className="inventaire-details-row">
+                <div className="inventaire-details-label">Statut:</div>
+                <div className="inventaire-details-value">{inventaire.statut || 'En cours'}</div>
               </div>
             </div>
 
             <div className="inventaire-details-section">
-              <h3>Informations d'inventaire</h3>
-              <div className="inventaire-details-row">
-                <div className="inventaire-details-label">Stock théorique:</div>
-                <div className="inventaire-details-value">{inventaire.stockTheorique}</div>
-              </div>
-              <div className="inventaire-details-row">
-                <div className="inventaire-details-label">Stock réel compté:</div>
-                <div className="inventaire-details-value">{inventaire.quantite}</div>
-              </div>
-              <div className="inventaire-details-row">
-                <div className="inventaire-details-label">Écart:</div>
-                <div className={`inventaire-details-value inventaire-ecart ${inventaire.ecart < 0 ? 'negative' : inventaire.ecart > 0 ? 'positive' : ''}`}>
-                  {inventaire.ecart}
+              <h3>Produits inventoriés ({inventaire.produits?.length || 0})</h3>
+              {inventaire.produits && inventaire.produits.length > 0 ? (
+                <div className="inventaire-produits-liste">
+                  {inventaire.produits.map((produitItem, index) => (
+                    <div key={index} className="inventaire-produit-card">
+                      <div className="inventaire-produit-header">
+                        <h4>Produit {index + 1}</h4>
+                        <span className={`inventaire-ecart-badge ${produitItem.ecart < 0 ? 'negative' : produitItem.ecart > 0 ? 'positive' : 'neutral'}`}>
+                          Écart: {produitItem.ecart}
+                        </span>
+                      </div>
+                      
+                      <div className="inventaire-produit-details">
+                        <div className="inventaire-details-row">
+                          <div className="inventaire-details-label">Référence:</div>
+                          <div className="inventaire-details-value">{produitItem.produit?.reference || 'N/A'}</div>
+                        </div>
+                        <div className="inventaire-details-row">
+                          <div className="inventaire-details-label">Nom:</div>
+                          <div className="inventaire-details-value">{produitItem.produit?.name || produitItem.produit?.nom || 'N/A'}</div>
+                        </div>
+                        <div className="inventaire-details-row">
+                          <div className="inventaire-details-label">Lieu de stockage:</div>
+                          <div className="inventaire-details-value">{produitItem.produit?.lieuStockage || 'N/A'}</div>
+                        </div>
+                        <div className="inventaire-details-row">
+                          <div className="inventaire-details-label">Stock théorique:</div>
+                          <div className="inventaire-details-value">{produitItem.stockTheorique}</div>
+                        </div>
+                        <div className="inventaire-details-row">
+                          <div className="inventaire-details-label">Stock réel compté:</div>
+                          <div className="inventaire-details-value">{produitItem.quantiteComptee}</div>
+                        </div>
+                        <div className="inventaire-details-row">
+                          <div className="inventaire-details-label">Raison de l'écart:</div>
+                          <div className="inventaire-details-value">{produitItem.raisonEcart}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-              <div className="inventaire-details-row">
-                <div className="inventaire-details-label">Raison de l'écart:</div>
-                <div className="inventaire-details-value">{inventaire.raisonEcart}</div>
-              </div>
+              ) : (
+                <div className="inventaire-no-produits">Aucun produit dans cet inventaire</div>
+              )}
             </div>
 
             <div className="inventaire-details-section">

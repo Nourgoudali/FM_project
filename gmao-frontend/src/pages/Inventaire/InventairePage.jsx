@@ -6,10 +6,12 @@ import ViewInventaireDetails from '../../components/Inventaire/ViewInventaireDet
 import Sidebar from "../../components/Sidebar/Sidebar";
 import Header from "../../components/Header/Header";
 import { useSidebar } from "../../contexts/SidebarContext";
+import { useAuth } from "../../contexts/AuthContext";
 import './InventairePage.css';
 
 const InventairePage = () => {
   const { sidebarOpen } = useSidebar();
+  const { user } = useAuth();
   const [inventaires, setInventaires] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -123,15 +125,27 @@ const InventairePage = () => {
   const getFilteredInventaires = () => {
     return sortedInventaires.filter(inventaire => {
       // Filtrer par terme de recherche
-      const searchMatch = searchTerm === '' || 
+      if (searchTerm === '') return true;
+      
+      // Vérifier si l'un des produits correspond au terme de recherche
+      if (inventaire.produits && inventaire.produits.length > 0) {
+        return inventaire.produits.some(produitItem => {
+          return (
+            produitItem.produit?.reference?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            produitItem.produit?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            produitItem.produit?.nom?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            produitItem.produit?.lieuStockage?.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+        });
+      }
+      
+      // Compatibilité avec l'ancien format
+      return (
+        inventaire.reference?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         inventaire.produit?.reference?.toLowerCase().includes(searchTerm.toLowerCase()) || 
         inventaire.produit?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        inventaire.produit?.lieuStockage?.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      // Filtrer par écart
-      const ecartMatch = filterEcart ? inventaire.ecart !== 0 : true;
-      
-      return searchMatch && ecartMatch;
+        inventaire.produit?.lieuStockage?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     });
   };
   
@@ -180,27 +194,27 @@ const InventairePage = () => {
           <table className="inventaire-table">
             <thead>
               <tr>
-                <th>
-                  Référence Produit
-                </th>
-                <th>
-                  Nom du Produit
-                </th>
-                <th>
-                  Lieu de Stockage
-                </th>
-                <th>
-                  Actions
-                </th>
-                </tr>
+                <th>Référence {sortConfig.key === 'reference' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}</th>
+                <th>Date {sortConfig.key === 'dateInventaire' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}</th>
+                <th>Fait par {sortConfig.key === 'utilisateur.firstName' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}</th>
+                <th>Actions</th>
+              </tr>
             </thead>
             <tbody>
               {filteredInventaires.length > 0 ? (
                 filteredInventaires.map((inventaire) => (
                   <tr key={inventaire._id}>
-                    <td>{inventaire.traitement?.produits?.[inventaire.produitIndex]?.produit?.reference || 'N/A'}</td>
-                    <td>{inventaire.traitement?.produits?.[inventaire.produitIndex]?.produit?.name || 'N/A'}</td>
-                    <td>{inventaire.traitement?.produits?.[inventaire.produitIndex]?.produit?.lieuStockage || 'N/A'}</td>
+                    <td>{inventaire.reference || 'N/A'}</td>
+                    <td>{formatDate(inventaire.dateInventaire)}</td>
+                    <td>
+                      {inventaire.utilisateur ? (
+                        <span title={`${inventaire.utilisateur.role || 'Rôle inconnu'} - ${inventaire.utilisateur.department || 'Département non assigné'}`}>
+                          {`${inventaire.utilisateur.firstName || ''} ${inventaire.utilisateur.lastName || ''}`.trim() || 'Utilisateur inconnu'}
+                        </span>
+                      ) : (
+                        'Non assigné'
+                      )}
+                    </td>
                     <td className="inventaire-actions">
                       <button 
                         className="inventaire-view-button"

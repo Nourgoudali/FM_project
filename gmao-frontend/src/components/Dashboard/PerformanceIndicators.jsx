@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react"
 import "./PerformanceIndicators.css"
 import { kpiAPI } from "../../services/api"
+import toast from "react-hot-toast"
 
 function PerformanceIndicators() {
   const [kpis, setKpis] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
 
   useEffect(() => {
     const fetchKPIs = async () => {
@@ -47,8 +47,7 @@ function PerformanceIndicators() {
           setKpis(transformedData);
         }
       } catch (err) {
-        console.error("Erreur lors de la récupération des KPIs:", err)
-        setError("Impossible de charger les indicateurs de performance")
+        toast.error("Impossible de charger les indicateurs de performance")
       } finally {
         setLoading(false)
       }
@@ -61,9 +60,7 @@ function PerformanceIndicators() {
     return <div className="performance-indicators loading">Chargement des indicateurs...</div>
   }
 
-  if (error) {
-    return <div className="performance-indicators error">{error}</div>
-  }
+  // Les erreurs sont maintenant affichées avec des toasts
 
   return (
     <div className="performance-indicators">

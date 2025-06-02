@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import "./AddUserForm.css"
 import { userAPI } from "../../services/api"
+import toast from "react-hot-toast"
 
 function AddUserForm({ user, onClose, onSubmit, isEdit }) {
   const [formData, setFormData] = useState(
@@ -17,7 +18,6 @@ function AddUserForm({ user, onClose, onSubmit, isEdit }) {
           phone: "",
           password: "",
           confirmPassword: "",
-          status: "Actif",
         }
   )
 
@@ -38,7 +38,7 @@ function AddUserForm({ user, onClose, onSubmit, isEdit }) {
         const departmentsResponse = await userAPI.getDepartments()
         setDepartments(departmentsResponse.data)
       } catch (error) {
-        console.error("Erreur lors de la récupération des données:", error)
+        toast.error("Erreur lors de la récupération des données")
       } finally {
         setIsLoading(false)
       }

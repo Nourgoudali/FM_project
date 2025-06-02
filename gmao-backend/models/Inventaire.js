@@ -1,85 +1,85 @@
 const mongoose = require('mongoose');
- inventaireSchema = new mongoose.Schema({
-  quantite: {
-    type: Number,
-    required: true,
-    default: 0
-  },
-  stockTheorique: {
-    type: Number,
-    required: true,
-    default: 0
-  },
-  ecart: {
-    type: Number,
-    default: function() {
-      return this.quantite - this.stockTheorique;
+const inventaireSchema = new mongoose.Schema({
+  produits: [{
+    produit: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Stock',
+      required: true
+    },
+    quantiteComptee: {
+      type: Number,
+      required: true
+    },
+    stockTheorique: {
+      type: Number,
+      required: true
+    },
+    ecart: {
+      type: Number,
+      default: function() {
+        return this.quantiteComptee - this.stockTheorique;
+      }
+    },
+    raisonEcart: {
+      type: String,
+      enum: ['Pertes', 'Casses', 'Vols', 'Erreurs de saisie', 'Autre', 'Aucun écart'],
+      default: 'Aucun écart'
     }
-  },
-  raisonEcart: {
-    type: String,
-    enum: ['Pertes',
-  'Casses',
-  'Vols',
-  'Erreurs de saisie',
-  'Autre',
-  'Aucun écart'],
-    default: 'Aucun écart'
-  },
+  }],
   dateInventaire: {
     type: Date,
     default: Date.now
   },
-  lieuStockage:{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Stock',
-    required: true
+  reference: {
+    type: String,
+    unique: true
   },
-  traitement:{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Traitement',
-    required: true
+  notes: {
+    type: String,
+    trim: true
   },
-  produitIndex: {
-    type: Number,
-    required: true,
-    min: 0
+
+  utilisateur: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   },
 }, {
   timestamps: true
 });
 
-// Méthode virtuelle pour obtenir le nom du produit via le traitement
-inventaireSchema.virtual('nomProduit').get(function() {
-  if (this.traitement && this.traitement.produits && this.produitIndex !== undefined) {
-    const produit = this.traitement.produits[this.produitIndex];
-    if (produit && produit.produit) {
-      return produit.produit.name || produit.produit.nom || null;
-    }
-  }
-  return null;
-});
 
-// Calcul automatique de l'écart avant la sauvegarde
-inventaireSchema.pre('save', function(next) {
-  this.ecart = this.quantite - this.stockTheorique;
-  
-  // Si l'écart est 0, mettre automatiquement la raison à 'Aucun écart'
-  if (this.ecart === 0 && this.raisonEcart !== 'Aucun écart') {
-    this.raisonEcart = 'Aucun écart';
-  }
-  // Si l'écart n'est pas 0 et que la raison est 'Aucun écart', la changer à 'Autre'
-  else if (this.ecart !== 0 && this.raisonEcart === 'Aucun écart') {
-    this.raisonEcart = 'Autre';
+
+// Middleware pre-save pour générer automatiquement une référence
+inventaireSchema.pre('save', async function(next) {
+  // Générer une référence automatique si elle n'existe pas
+  if (this.isNew && !this.reference) {
+    try {
+      const latestInventaire = await mongoose.model('Inventaire')
+        .findOne()
+        .sort({ createdAt: -1 })
+        .select('reference');
+      
+      let nextNumber;
+      if (latestInventaire) {
+        const match = latestInventaire.reference.match(/INV-(\d+)/);
+        if (match) {
+          nextNumber = parseInt(match[1], 10) + 1;
+        } else {
+          nextNumber = 1;
+        }
+      } else {
+        nextNumber = 1;
+      }
+      
+      this.reference = `INV-${String(nextNumber).padStart(3, '0')}`;
+    } catch (err) {
+      console.error('Erreur lors de la génération de la référence d\'inventaire:', err);
+      return next(err);
+    }
   }
   
   next();
 });
 
-// Assurez-vous que les virtuals sont inclus lors de la conversion en JSON
-inventaireSchema.set('toJSON', { virtuals: true });
-inventaireSchema.set('toObject', { virtuals: true });
 
-const Inventaire = mongoose.model('Inventaire', inventaireSchema);
-
-module.exports = Inventaire;
+module.exports = mongoose.model('Inventaire', inventaireSchema);

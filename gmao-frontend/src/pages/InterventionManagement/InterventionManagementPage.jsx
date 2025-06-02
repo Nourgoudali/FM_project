@@ -7,7 +7,8 @@ import InterventionDetailsModal from "../../components/Intervention/Intervention
 import "./InterventionManagementPage.css"
 import { FaEye, FaPen, FaCalendarAlt, FaList } from "react-icons/fa"
 import { useSidebar } from "../../contexts/SidebarContext"
-import { interventionAPI } from "../../services/api"
+import { interventionAPI, equipmentAPI } from "../../services/api"
+import toast from "react-hot-toast"
 
 const InterventionManagementPage = () => {
   const { sidebarOpen, toggleSidebar } = useSidebar()
@@ -23,27 +24,44 @@ const InterventionManagementPage = () => {
     priority: "all"
   })
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   const [interventions, setInterventions] = useState([])
 
-  // Chargement initial des données
+  // Charger les interventions et les équipements au chargement de la page
   useEffect(() => {
-    const fetchInterventions = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true)
-        const response = await interventionAPI.getAllInterventions()
-        if (response && response.data) {
-          setInterventions(response.data)
+        
+        // Récupérer toutes les interventions
+        const interventionsResponse = await interventionAPI.getAllInterventions()
+        
+        // Récupérer tous les équipements pour avoir les détails complets
+        const equipmentsResponse = await equipmentAPI.getAllEquipments()
+        const equipments = equipmentsResponse.data
+        
+        if (interventionsResponse && interventionsResponse.data) {
+          // Enrichir les données d'intervention avec les détails complets des équipements
+          const enrichedInterventions = interventionsResponse.data.map(intervention => {
+            // Si l'équipement est un ID, remplacer par l'objet équipement complet
+            if (intervention.equipment && typeof intervention.equipment === 'string') {
+              const matchingEquipment = equipments.find(eq => eq._id === intervention.equipment)
+              if (matchingEquipment) {
+                return { ...intervention, equipment: matchingEquipment }
+              }
+            }
+            return intervention
+          })
+          
+          setInterventions(enrichedInterventions)
         }
       } catch (error) {
-        console.error("Erreur lors du chargement des interventions:", error)
-        setError("Impossible de charger les interventions")
+        toast.error("Impossible de charger les données d'intervention")
       } finally {
         setLoading(false)
       }
     }
 
-    fetchInterventions()
+    fetchData()
   }, [])
 
   // Appliquer les filtres
@@ -55,8 +73,10 @@ const InterventionManagementPage = () => {
       filteredData = filteredData.filter(
         (item) => 
           item.reference.toLowerCase().includes(lowercaseTerm) || 
-          item.equipment.toLowerCase().includes(lowercaseTerm) ||
-          item.technician.name.toLowerCase().includes(lowercaseTerm)
+          (item.equipment?.reference?.toLowerCase().includes(lowercaseTerm) || 
+           item.equipment?.name?.toLowerCase().includes(lowercaseTerm) || 
+           (typeof item.equipment === 'string' && item.equipment.toLowerCase().includes(lowercaseTerm))) ||
+          item.technician?.name?.toLowerCase().includes(lowercaseTerm)
       )
     }
 
@@ -106,25 +126,28 @@ const InterventionManagementPage = () => {
 
   const handleNewIntervention = async (data) => {
     try {
+      // Préparation des données
       const interventionData = {
         equipment: data.equipment,
         type: data.type,
         priority: data.priority,
-        date: data.date,
+        startDate: data.startDate,
+        endDate: data.endDate,
         description: data.description,
         location: data.location,
         technician: data.technician
       }
-
+      
+      // Envoi des données au backend
       const response = await interventionAPI.createIntervention(interventionData)
       
       if (response && response.data) {
         setInterventions([...interventions, response.data])
         setShowNewModal(false)
+        toast.success("Intervention créée avec succès")
       }
     } catch (error) {
-      console.error("Erreur lors de la création de l'intervention:", error)
-      alert("Une erreur est survenue lors de la création de l'intervention")
+      toast.error("Une erreur est survenue lors de la création de l'intervention")
     }
   }
 
@@ -141,10 +164,10 @@ const InterventionManagementPage = () => {
         )
         setInterventions(updatedInterventions)
         setShowEditModal(false)
+        toast.success("Intervention mise à jour avec succès")
       }
     } catch (error) {
-      console.error("Erreur lors de la mise à jour de l'intervention:", error)
-      alert("Une erreur est survenue lors de la mise à jour de l'intervention")
+      toast.error("Une erreur est survenue lors de la mise à jour de l'intervention")
     }
   }
 
@@ -228,8 +251,6 @@ const InterventionManagementPage = () => {
           
           {loading ? (
             <div className="loading-indicator">Chargement des interventions...</div>
-          ) : error ? (
-            <div className="error-message">{error}</div>
           ) : viewMode === "list" ? (
             <div className="intv-table-container">
               <table className="intv-table">
@@ -240,7 +261,8 @@ const InterventionManagementPage = () => {
                     <th>Type</th>
                     <th>Priorité</th>
                     <th>Statut</th>
-                    <th>Date</th>
+                    <th>Date de début</th>
+                    <th>Date de fin</th>
                     <th>Technicien</th>
                     <th>Actions</th>
                   </tr>
@@ -249,7 +271,11 @@ const InterventionManagementPage = () => {
                   {interventions.map((intervention) => (
                     <tr key={intervention._id}>
                       <td>{intervention.reference}</td>
-                      <td>{intervention.equipment?.reference || 'Équipement non assigné'}</td>
+                      <td>
+                        {typeof intervention.equipment === 'object' 
+                          ? intervention.equipment?.reference || 'Équipement non assigné'
+                          : intervention.equipment || 'Équipement non assigné'}
+                      </td>
                       <td>
                         <span className={`badge ${getTypeClass(intervention.type)}`}>
                           {intervention.type}
@@ -265,7 +291,8 @@ const InterventionManagementPage = () => {
                           {intervention.status}
                         </span>
                       </td>
-                      <td>{new Date(intervention.date).toLocaleDateString()}</td>
+                      <td>{intervention.startDate ? new Date(intervention.startDate).toLocaleDateString() : 'Non spécifiée'}</td>
+                      <td>{intervention.endDate ? new Date(intervention.endDate).toLocaleDateString() : 'Non spécifiée'}</td>
                       <td>
                         <div className="technician-info">
                           <span className="technician-name">

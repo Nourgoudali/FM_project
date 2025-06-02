@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Inventaire = require('../models/Inventaire');
 const Stock = require('../models/Stock');
 const Commande = require('../models/Commande');
@@ -6,79 +7,106 @@ const Traitement = require('../models/Traitement');
 // Créer un nouvel inventaire
 exports.createInventaire = async (req, res) => {
   try {
-    const { traitementId, produitIndex, quantite, stockTheorique, raisonEcart } = req.body;
-
-    // Vérifier si le traitement existe
-    const traitement = await Traitement.findById(traitementId).populate('produits.produit');
-    if (!traitement) {
-      return res.status(404).json({ message: 'Traitement non trouvé' });
-    }
-
-    // Vérifier si l'index du produit est valide
-    if (produitIndex === undefined || produitIndex < 0 || produitIndex >= traitement.produits.length) {
-      return res.status(400).json({ message: 'Index de produit invalide' });
-    }
-
-    // Vérifier si ce produit a déjà été inventorié
-    const inventaireExistant = await Inventaire.findOne({
-      traitement: traitementId,
-      produitIndex: produitIndex
+    const { produits, notes, utilisateur } = req.body;
+    
+    // Afficher les informations de débogage détaillées
+    console.log('Données reçues pour création d\'inventaire:', { 
+      produits: produits?.length || 0, 
+      notes, 
+      utilisateurId: utilisateur,
+      utilisateurReq: req.user?._id,
+      headers: req.headers['authorization'] ? 'Token présent' : 'Token absent'
     });
 
-    if (inventaireExistant) {
-      return res.status(400).json({ message: 'Ce produit a déjà été inventorié pour ce traitement' });
+    // Vérifier si les produits sont fournis
+    if (!produits || !Array.isArray(produits) || produits.length === 0) {
+      return res.status(400).json({ message: 'Vous devez fournir au moins un produit pour l\'inventaire' });
     }
 
-    // Récupérer les informations du produit
-    const produitInfo = traitement.produits[produitIndex];
-    if (!produitInfo || !produitInfo.produit) {
-      return res.status(404).json({ message: 'Produit non trouvé dans le traitement' });
+    // Préparer les données des produits
+    const produitsInventaire = [];
+    const miseAJourStocks = [];
+
+    // Vérifier chaque produit et préparer les données
+    for (const item of produits) {
+      const { produitId, quantiteComptee, stockTheorique, raisonEcart } = item;
+
+      // Vérifier si le produit existe
+      const produit = await Stock.findById(produitId);
+      if (!produit) {
+        return res.status(404).json({ message: `Produit avec ID ${produitId} non trouvé` });
+      }
+
+      // Utiliser le stock actuel comme stock théorique si non fourni
+      const stockTheoriqueValue = stockTheorique !== undefined ? stockTheorique : produit.stockActuel;
+      
+      // Calculer l'écart
+      const ecartValue = quantiteComptee - stockTheoriqueValue;
+      
+      // Déterminer la raison d'écart par défaut si non fournie
+      let raisonEcartValue = raisonEcart;
+      if (!raisonEcartValue) {
+        raisonEcartValue = ecartValue === 0 ? 'Aucun écart' : 'Autre';
+      }
+
+      // Ajouter le produit à l'inventaire
+      produitsInventaire.push({
+        produit: produitId,
+        quantiteComptee,
+        stockTheorique: stockTheoriqueValue,
+        ecart: ecartValue,
+        raisonEcart: raisonEcartValue
+      });
+
+      // Préparer la mise à jour du stock
+      miseAJourStocks.push({
+        produitId,
+        ecart: ecartValue
+      });
     }
 
-    // Si stockTheorique n'est pas fourni, utiliser la quantité commandée du traitement
-    const stockTheoriqueValue = stockTheorique !== undefined ? stockTheorique : produitInfo.quantiteCommandee;
-    
-    // Calculer l'écart
-    const ecartValue = quantite - stockTheoriqueValue;
-    
-    // Déterminer la raison d'écart par défaut si non fournie
-    let raisonEcartValue = raisonEcart;
-    if (!raisonEcartValue) {
-      raisonEcartValue = ecartValue === 0 ? 'Aucun écart' : 'Autre';
+    // Vérifier si l'utilisateur est valide (doit être un ObjectId valide)
+    let userId = null;
+    if (utilisateur && mongoose.Types.ObjectId.isValid(utilisateur)) {
+      userId = utilisateur;
+      console.log('ID utilisateur valide fourni:', userId);
+    } else if (req.user && req.user._id) {
+      userId = req.user._id;
+      console.log('Utilisation de l\'ID utilisateur de la session:', userId);
+    } else {
+      console.warn('Aucun ID utilisateur valide n\'a été fourni ou trouvé dans la session');
     }
 
-    // Créer l'inventaire
+    // Créer l'inventaire avec l'utilisateur valide
     const inventaire = new Inventaire({
-      traitement: traitementId,
-      produitIndex: produitIndex,
-      quantite,
-      stockTheorique: stockTheoriqueValue,
-      ecart: ecartValue,
-      raisonEcart: raisonEcartValue
+      produits: produitsInventaire,
+      notes,
+      utilisateur: userId
+    });
+    
+    // Log détaillé pour débogage
+    console.log('Inventaire créé:', {
+      id: inventaire._id,
+      utilisateurId: inventaire.utilisateur,
+      produitsCount: inventaire.produits.length,
+      notes: inventaire.notes ? 'Présent' : 'Absent'
     });
 
     await inventaire.save();
 
-    // Mettre à jour le stock du produit
-    const produitId = produitInfo.produit._id;
-    
-    // Utiliser findByIdAndUpdate pour éviter les problèmes de validation
-    // Cette méthode met à jour uniquement le champ spécifié sans vérifier les autres champs requis
-    await Stock.findByIdAndUpdate(
-      produitId,
-      { $inc: { stockActuel: quantite } }, // Incrémenter le stock actuel avec la quantité comptée
-      { new: true } // Retourner le document mis à jour
-    );
+    // Mettre à jour le stock de chaque produit en fonction de l'écart
+    for (const update of miseAJourStocks) {
+      await Stock.findByIdAndUpdate(
+        update.produitId,
+        { $inc: { stockActuel: update.ecart } }, // Ajuster le stock en fonction de l'écart
+        { new: true }
+      );
+    }
 
-    // Récupérer l'inventaire avec les détails du traitement
+    // Récupérer l'inventaire complet avec les détails des produits
     const inventaireComplet = await Inventaire.findById(inventaire._id)
-      .populate({
-        path: 'traitement',
-        populate: {
-          path: 'produits.produit',
-          model: 'Stock'
-        }
-      });
+      .populate('produits.produit')
+      .populate('utilisateur');
 
     res.status(201).json(inventaireComplet);
   } catch (error) {
@@ -91,13 +119,8 @@ exports.createInventaire = async (req, res) => {
 exports.getAllInventaires = async (req, res) => {
   try {
     const inventaires = await Inventaire.find()
-      .populate({
-        path: 'traitement',
-        populate: {
-          path: 'produits.produit',
-          model: 'Stock'
-        }
-      })
+      .populate('produits.produit')
+      .populate('utilisateur')
       .sort({ dateInventaire: -1 });
 
     res.status(200).json(inventaires);
@@ -111,13 +134,8 @@ exports.getAllInventaires = async (req, res) => {
 exports.getInventaireById = async (req, res) => {
   try {
     const inventaire = await Inventaire.findById(req.params.id)
-      .populate({
-        path: 'traitement',
-        populate: {
-          path: 'produits.produit',
-          model: 'Stock'
-        }
-      });
+      .populate('produits.produit')
+      .populate('utilisateur');
 
     if (!inventaire) {
       return res.status(404).json({ message: 'Inventaire non trouvé' });
@@ -133,31 +151,90 @@ exports.getInventaireById = async (req, res) => {
 // Mettre à jour un inventaire
 exports.updateInventaire = async (req, res) => {
   try {
-    const { quantite, stockTheorique, raisonEcart } = req.body;
+    const { produits, notes } = req.body;
 
     const inventaire = await Inventaire.findById(req.params.id);
     if (!inventaire) {
       return res.status(404).json({ message: 'Inventaire non trouvé' });
     }
 
-    // Mettre à jour les champs
-    if (quantite !== undefined) inventaire.quantite = quantite;
-    if (stockTheorique !== undefined) inventaire.stockTheorique = stockTheorique;
-    if (raisonEcart !== undefined) inventaire.raisonEcart = raisonEcart;
-    
-    // L'écart sera recalculé automatiquement dans le middleware pre-save
+    // Mettre à jour les notes si fournies
+    if (notes !== undefined) {
+      inventaire.notes = notes;
+    }
+
+    // Mettre à jour les produits si fournis
+    if (produits && Array.isArray(produits) && produits.length > 0) {
+      // Stocker les anciennes valeurs pour pouvoir ajuster les stocks
+      const anciensProduits = [...inventaire.produits];
+      
+      // Mettre à jour les produits de l'inventaire
+      inventaire.produits = [];
+      
+      for (const item of produits) {
+        const { produitId, quantiteComptee, stockTheorique, raisonEcart, ecart } = item;
+        
+        // Vérifier si le produit existe
+        const produit = await Stock.findById(produitId);
+        if (!produit) {
+          return res.status(404).json({ message: `Produit avec ID ${produitId} non trouvé` });
+        }
+        
+        // Ajouter le produit à l'inventaire
+        inventaire.produits.push({
+          produit: produitId,
+          quantiteComptee,
+          stockTheorique,
+          ecart,
+          raisonEcart
+        });
+        
+        // Trouver l'ancien produit correspondant
+        const ancienProduit = anciensProduits.find(p => p.produit.toString() === produitId);
+        
+        // Calculer l'ajustement de stock nécessaire
+        if (ancienProduit) {
+          const ajustement = ecart - ancienProduit.ecart;
+          
+          // Mettre à jour le stock si nécessaire
+          if (ajustement !== 0) {
+            await Stock.findByIdAndUpdate(
+              produitId,
+              { $inc: { stockActuel: ajustement } },
+              { new: true }
+            );
+          }
+        } else {
+          // Nouveau produit ajouté à l'inventaire, mettre à jour le stock
+          await Stock.findByIdAndUpdate(
+            produitId,
+            { $inc: { stockActuel: ecart } },
+            { new: true }
+          );
+        }
+      }
+      
+      // Gérer les produits supprimés
+      for (const ancienProduit of anciensProduits) {
+        const produitExisteTjs = produits.some(p => p.produitId === ancienProduit.produit.toString());
+        
+        if (!produitExisteTjs) {
+          // Produit supprimé de l'inventaire, annuler l'ajustement de stock
+          await Stock.findByIdAndUpdate(
+            ancienProduit.produit,
+            { $inc: { stockActuel: -ancienProduit.ecart } },
+            { new: true }
+          );
+        }
+      }
+    }
 
     await inventaire.save();
 
-    // Récupérer l'inventaire mis à jour avec les détails du traitement
+    // Récupérer l'inventaire mis à jour avec les détails des produits
     const inventaireComplet = await Inventaire.findById(inventaire._id)
-      .populate({
-        path: 'traitement',
-        populate: {
-          path: 'produits.produit',
-          model: 'Stock'
-        }
-      });
+      .populate('produits.produit')
+      .populate('utilisateur');
 
     res.status(200).json(inventaireComplet);
   } catch (error) {
@@ -185,16 +262,12 @@ exports.deleteInventaire = async (req, res) => {
 // Récupérer les inventaires avec écart
 exports.getInventairesAvecEcart = async (req, res) => {
   try {
-    const inventaires = await Inventaire.find({ 
-      ecart: { $ne: 0 } 
+    // Rechercher les inventaires qui ont au moins un produit avec un écart non nul
+    const inventaires = await Inventaire.find({
+      'produits.ecart': { $ne: 0 }
     })
-      .populate({
-        path: 'traitement',
-        populate: {
-          path: 'produits.produit',
-          model: 'Stock'
-        }
-      })
+      .populate('produits.produit')
+      .populate('utilisateur')
       .sort({ dateInventaire: -1 });
 
     res.status(200).json(inventaires);
@@ -232,14 +305,18 @@ exports.getTraitementsPourInventaire = async (req, res) => {
       .populate('commande')
       .lean();
 
-    // Récupérer tous les inventaires existants pour filtrer les produits déjà inventoriés
+    // Récupérer tous les inventaires existants
     const inventaires = await Inventaire.find().lean();
     
-    // Créer un ensemble de paires traitementId-index pour suivre les produits déjà inventoriés
+    // Créer un ensemble des produits déjà inventoriés (par ID)
     const produitsInventories = new Set();
     inventaires.forEach(inv => {
-      if (inv.traitement) {
-        produitsInventories.add(`${inv.traitement.toString()}-${inv.produitIndex || 0}`);
+      if (inv.produits && inv.produits.length > 0) {
+        inv.produits.forEach(p => {
+          if (p.produit) {
+            produitsInventories.add(p.produit.toString());
+          }
+        });
       }
     });
 
@@ -248,16 +325,13 @@ exports.getTraitementsPourInventaire = async (req, res) => {
       .map(traitement => {
         // Filtrer les produits qui n'ont pas encore été inventoriés
         const produitsNonInventories = traitement.produits
-          .map((p, index) => ({ ...p, index }))
-          .filter((p, index) => !produitsInventories.has(`${traitement._id.toString()}-${index}`));
+          .filter(p => p.produit && !produitsInventories.has(p.produit._id.toString()));
         
         // Si tous les produits ont été inventoriés, ne pas inclure ce traitement
         if (produitsNonInventories.length === 0) {
           return null;
         }
         
-        // Si le traitement n'a qu'un seul produit, l'inclure normalement
-        // Si le traitement a plusieurs produits, l'inclure avec les produits non inventoriés
         return {
           _id: traitement._id,
           numeroBL: traitement.numeroBL,
@@ -267,7 +341,7 @@ exports.getTraitementsPourInventaire = async (req, res) => {
             produit: p.produit,
             quantiteCommandee: p.quantiteCommandee,
             quantiteRecue: p.quantiteRecue,
-            index: p.index // Conserver l'index original pour référence
+            stockActuel: p.produit ? p.produit.stockActuel : 0
           })),
           nombreTotalProduits: traitement.produits.length,
           nombreProduitsRestants: produitsNonInventories.length

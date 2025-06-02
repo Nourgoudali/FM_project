@@ -8,7 +8,8 @@ const interventionController = {
       equipment,
       type,
       priority,
-      date,
+      startDate,
+      endDate,
       description,
       location,
       technician
@@ -16,12 +17,12 @@ const interventionController = {
 
     try {
       // Validation des champs requis
-      if (!equipment || !type || !priority || !date || !technician) {
+      if (!equipment || !type || !priority || !startDate || !technician) {
         console.error('Validation failed:', {
           equipment: !equipment,
           type: !type,
           priority: !priority,
-          date: !date,
+          startDate: !startDate,
           technician: !technician
         });
         return res.status(400).json({ 
@@ -30,7 +31,7 @@ const interventionController = {
             equipment: !equipment ? 'L\'équipement est requis' : null,
             type: !type ? 'Le type est requis' : null,
             priority: !priority ? 'La priorité est requise' : null,
-            date: !date ? 'La date est requise' : null,
+            startDate: !startDate ? 'La date de début est requise' : null,
             technician: !technician ? 'Le technicien est requis' : null
           }
         });
@@ -66,15 +67,38 @@ const interventionController = {
         });
       }
 
-      // Validation de la date
-      const parsedDate = new Date(date);
-      if (isNaN(parsedDate.getTime())) {
+      // Validation de la date de début
+      const parsedStartDate = new Date(startDate);
+      if (isNaN(parsedStartDate.getTime())) {
         return res.status(400).json({ 
-          message: 'Date invalide',
+          message: 'Date de début invalide',
           errors: {
-            date: 'La date n\'est pas valide'
+            startDate: 'La date de début n\'est pas valide'
           }
         });
+      }
+      
+      // Validation de la date de fin si elle est fournie
+      if (endDate) {
+        const parsedEndDate = new Date(endDate);
+        if (isNaN(parsedEndDate.getTime())) {
+          return res.status(400).json({ 
+            message: 'Date de fin invalide',
+            errors: {
+              endDate: 'La date de fin n\'est pas valide'
+            }
+          });
+        }
+        
+        // Vérifier que la date de fin est après la date de début
+        if (parsedEndDate < parsedStartDate) {
+          return res.status(400).json({ 
+            message: 'Date de fin invalide',
+            errors: {
+              endDate: 'La date de fin doit être après la date de début'
+            }
+          });
+        }
       }
 
       // Create intervention object with required fields
@@ -83,7 +107,8 @@ const interventionController = {
         type,
         priority,
         technician,
-        date,
+        startDate,
+        endDate,
         description,
         location,
         status: 'Planifiée'

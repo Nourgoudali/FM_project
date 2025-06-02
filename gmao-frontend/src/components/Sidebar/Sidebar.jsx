@@ -56,14 +56,10 @@ function Sidebar({ isOpen }) {
   }
 
   const handleLogout = () => {
-    // Supprimer les informations d'authentification
     logout()
-    
-    // Rediriger vers la page de connexion
-    navigate('/login')
+    navigate('/')
   }
 
-  // Fonction pour gérer les clics sur les menus déroulants
   const handleDropdownClick = (name) => {
     setOpenDropdown(openDropdown === name ? null : name);
   };

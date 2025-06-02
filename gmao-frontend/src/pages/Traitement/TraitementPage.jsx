@@ -8,12 +8,12 @@ import AddTraitementForm from '../../components/Traitement/AddTraitementForm';
 import ViewTraitementDetails from '../../components/Traitement/ViewTraitementDetails';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './TraitementPage.css';
+import toast from 'react-hot-toast';
 
 const TraitementPage = () => {
   const { isCollapsed } = useSidebar();
   const [traitements, setTraitements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredTraitements, setFilteredTraitements] = useState([]);
   const [selectedTraitement, setSelectedTraitement] = useState(null);
@@ -33,8 +33,7 @@ const TraitementPage = () => {
       setFilteredTraitements(response.data);
       setLoading(false);
     } catch (error) {
-      console.error("Erreur lors de la récupération des traitements:", error);
-      setError("Impossible de charger la liste des traitements");
+      toast.error("Impossible de charger la liste des traitements");
       setLoading(false);
     }
   };
@@ -62,8 +61,7 @@ const TraitementPage = () => {
             navigate('/traitements', { replace: true });
           }
         } catch (error) {
-          console.error("Erreur lors de la récupération du traitement:", error);
-          setError("Impossible de charger les détails du traitement");
+          toast.error("Impossible de charger les détails du traitement");
         }
       };
       fetchTraitementDetails();
@@ -79,11 +77,10 @@ const TraitementPage = () => {
             setSelectedCommandeId(commandeParam);
             setShowAddModal(true);
           } else {
-            setError("La commande spécifiée n'existe pas");
+            toast.error("La commande spécifiée n'existe pas");
           }
         } catch (error) {
-          console.error("Erreur lors de la récupération de la commande:", error);
-          setError("Impossible de charger les détails de la commande");
+          toast.error("Impossible de charger les détails de la commande");
         } finally {
           // Nettoyer l'URL après avoir ouvert la modale
           navigate('/traitements', { replace: true });
@@ -100,7 +97,7 @@ const TraitementPage = () => {
         const response = await commandeAPI.getAllCommandes();
         setCommandes(response.data);
       } catch (error) {
-        console.error("Erreur lors de la récupération des commandes:", error);
+        toast.error("Impossible de charger la liste des commandes");
       }
     };
 
@@ -183,7 +180,7 @@ const TraitementPage = () => {
               </div>
             </div>
 
-            {error && <div className="traite-error-message">{error}</div>}
+            {/* Les messages d'erreur sont maintenant affichés avec des toasts */}
 
             {loading ? (
               <div className="traite-loading">Chargement des traitements...</div>

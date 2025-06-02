@@ -3,10 +3,10 @@ import { FaTimes, FaEdit, FaTrash } from "react-icons/fa";
 import { traitementAPI } from "../../services/api";
 import "../Commande/CommandeForm.css";
 import "./TraitementForm.css";
+import toast from "react-hot-toast";
 
 const ViewTraitementDetails = ({ traitement, onClose, onDeleteSuccess }) => {
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleDelete = async () => {
@@ -27,8 +27,7 @@ const ViewTraitementDetails = ({ traitement, onClose, onDeleteSuccess }) => {
         onDeleteSuccess();
       }
     } catch (error) {
-      console.error("Erreur lors de la suppression du traitement:", error);
-      setError("Impossible de supprimer le traitement");
+      toast.error("Impossible de supprimer le traitement");
       setLoading(false);
     }
   };
@@ -54,6 +53,7 @@ const ViewTraitementDetails = ({ traitement, onClose, onDeleteSuccess }) => {
 
       <div className="traite-details-content">
         <div className="traite-details-section">
+        {/* Les messages d'erreur sont maintenant affichés avec des toasts */}
           <div className="traite-info-grid">
             <div className="traite-info-item">
               <span className="traite-info-label">Numéro de commande:</span>

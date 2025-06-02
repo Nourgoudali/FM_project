@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import "./NewInterventionModal.css"
 import { FaTimes } from "react-icons/fa"
-import { equipmentAPI, userAPI } from "../../services/api"
+import { equipmentAPI, userAPI, interventionAPI } from "../../services/api"
 
 function NewInterventionModal({ onClose, onSubmit }) {
   const [formData, setFormData] = useState({
@@ -11,7 +11,8 @@ function NewInterventionModal({ onClose, onSubmit }) {
     type: "Préventive",
     priority: "Normale",
     technician: "",
-    date: "",
+    startDate: "",
+    endDate: "",
     description: "",
     location: "",
   })
@@ -26,10 +27,33 @@ function NewInterventionModal({ onClose, onSubmit }) {
     const fetchData = async () => {
       try {
         setLoading(true)
-        // Récupérer les équipements
+        
+        // Récupérer les interventions existantes
+        const interventionsResponse = await interventionAPI.getAllInterventions()
+        const activeInterventions = interventionsResponse?.data?.filter(
+          intervention => intervention.status === 'En cours' || intervention.status === 'Planifiée'
+        ) || []
+        
+        // Extraire les IDs des équipements avec des interventions actives
+        const equipmentsWithActiveInterventions = activeInterventions.map(intervention => {
+          // Gestion des deux formats possibles (objet ou ID)
+          return typeof intervention.equipment === 'object' 
+            ? intervention.equipment._id 
+            : intervention.equipment
+        })
+        
+        console.log('Équipements avec interventions actives:', equipmentsWithActiveInterventions.length)
+        
+        // Récupérer tous les équipements
         const equipmentsResponse = await equipmentAPI.getAllEquipments()
         if (equipmentsResponse?.data) {
-          setEquipments(equipmentsResponse.data)
+          // Filtrer pour ne garder que les équipements sans intervention active
+          const availableEquipments = equipmentsResponse.data.filter(
+            equipment => !equipmentsWithActiveInterventions.includes(equipment._id)
+          )
+          
+          console.log('Équipements disponibles:', availableEquipments.length, 'sur', equipmentsResponse.data.length)
+          setEquipments(availableEquipments)
         }
 
         // Récupérer les utilisateurs avec le rôle technicien
@@ -49,16 +73,50 @@ function NewInterventionModal({ onClose, onSubmit }) {
     fetchData()
   }, [])
 
+  // Initialiser la date de début à aujourd'hui
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0]
+    setFormData(prev => ({
+      ...prev,
+      startDate: today
+    }))
+  }, [])
+
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
+    
+    setFormData((prev) => {
+      const newData = {
+        ...prev,
+        [name]: value,
+      }
+      
+      // Mise à jour automatique de la localisation si un équipement est sélectionné
+      if (name === "equipment" && value) {
+        const selectedEquipment = equipments.find(eq => eq._id === value)
+        if (selectedEquipment) {
+          newData.location = selectedEquipment.location || ""
+        }
+      }
+      
+      return newData
+    })
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    
+    // Validation basique
+    if (!formData.equipment || !formData.technician || !formData.startDate) {
+      alert("Veuillez remplir tous les champs obligatoires")
+      return
+    }
+    
+    if (formData.endDate && new Date(formData.endDate) < new Date(formData.startDate)) {
+      alert("La date de fin doit être postérieure à la date de début")
+      return
+    }
+    
     if (onSubmit) {
       // Trouver l'équipement sélectionné
       const selectedEquipment = equipments.find(eq => eq._id === formData.equipment)
@@ -66,15 +124,22 @@ function NewInterventionModal({ onClose, onSubmit }) {
       const selectedTechnician = technicians.find(tech => tech._id === formData.technician)
 
       const interventionData = {
-        ...formData,
+        type: formData.type,
+        priority: formData.priority,
+        startDate: formData.startDate,
+        endDate: formData.endDate || null,
+        description: formData.description,
+        location: formData.location,
         equipment: selectedEquipment?._id,
         technician: selectedTechnician ? {
+          _id: selectedTechnician._id,
           initials: selectedTechnician.firstName.charAt(0) + selectedTechnician.lastName.charAt(0),
           name: `${selectedTechnician.firstName} ${selectedTechnician.lastName}`,
-          color: '#4263EB' // Couleur par défaut
+          color: selectedTechnician.color || '#4263EB' // Couleur par défaut si non définie
         } : null
       }
 
+      console.log("Données d'intervention envoyées:", interventionData)
       onSubmit(interventionData)
     }
     onClose()
@@ -185,14 +250,25 @@ function NewInterventionModal({ onClose, onSubmit }) {
               </div>
 
               <div className="form-group">
-                <label htmlFor="date">Date</label>
+                <label htmlFor="startDate">Date de début</label>
                 <input 
                   type="date" 
-                  id="date" 
-                  name="date" 
-                  value={formData.date} 
+                  id="startDate" 
+                  name="startDate" 
+                  value={formData.startDate} 
                   onChange={handleChange}
                   required 
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="endDate">Date de fin (optionnelle)</label>
+                <input 
+                  type="date" 
+                  id="endDate" 
+                  name="endDate" 
+                  value={formData.endDate} 
+                  onChange={handleChange}
                 />
               </div>
             </div>

@@ -21,7 +21,8 @@ exports.createTraitement = async (req, res) => {
       produits: produits.map(p => ({
         produit: p.produitId,
         quantiteCommandee: p.quantiteCommandee,
-        quantiteRecue: p.quantiteRecue
+        quantiteRecue: p.quantiteRecue,
+        raisonEcart: p.raisonEcart || 'Aucun écart'
       }))
     });
 
@@ -39,8 +40,17 @@ exports.createTraitement = async (req, res) => {
     for (const produit of produits) {
       const stockItem = await Stock.findById(produit.produitId);
       if (stockItem) {
+        // Mettre à jour la quantité totale
         stockItem.quantite += produit.quantiteRecue;
+        
+        // Mettre à jour le stock actuel
+        stockItem.stockActuel += produit.quantiteRecue;
+        
+        console.log(`Stock mis à jour pour ${stockItem.name}: +${produit.quantiteRecue} unités, nouveau stock actuel: ${stockItem.stockActuel}`);
+        
         await stockItem.save();
+      } else {
+        console.warn(`Produit non trouvé dans le stock: ${produit.produitId}`);
       }
     }
 
@@ -153,7 +163,8 @@ exports.updateTraitement = async (req, res) => {
       traitement.produits = produits.map(p => ({
         produit: p.produitId,
         quantiteCommandee: p.quantiteCommandee,
-        quantiteRecue: p.quantiteRecue
+        quantiteRecue: p.quantiteRecue,
+        raisonEcart: p.raisonEcart || 'Aucun écart'
       }));
       
       // Enregistrer les modifications
@@ -168,8 +179,17 @@ exports.updateTraitement = async (req, res) => {
         if (differenceQuantite !== 0) {
           const stockItem = await Stock.findById(nouveauProduit.produitId);
           if (stockItem) {
+            // Mettre à jour la quantité totale
             stockItem.quantite += differenceQuantite;
+            
+            // Mettre à jour le stock actuel
+            stockItem.stockActuel += differenceQuantite;
+            
+            console.log(`Stock mis à jour pour ${stockItem.name}: ${differenceQuantite > 0 ? '+' : ''}${differenceQuantite} unités, nouveau stock actuel: ${stockItem.stockActuel}`);
+            
             await stockItem.save();
+          } else {
+            console.warn(`Produit non trouvé dans le stock: ${nouveauProduit.produitId}`);
           }
         }
       }

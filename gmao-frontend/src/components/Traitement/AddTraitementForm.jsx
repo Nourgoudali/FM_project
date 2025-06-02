@@ -3,6 +3,7 @@ import { FaTimes, FaSave } from "react-icons/fa";
 import { commandeAPI, traitementAPI } from "../../services/api";
 import "../Commande/CommandeForm.css";
 import "./TraitementForm.css";
+import toast from "react-hot-toast";
 
 const AddTraitementForm = ({ commandeId, commandes, onClose, onAddSuccess }) => {
   const [loading, setLoading] = useState(true);
@@ -10,10 +11,11 @@ const AddTraitementForm = ({ commandeId, commandes, onClose, onAddSuccess }) => 
   const [numeroBL, setNumeroBL] = useState("");
   const [dateReception, setDateReception] = useState("");
   const [produits, setProduits] = useState([]);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [traitements, setTraitements] = useState([]);
   const [filteredCommandes, setFilteredCommandes] = useState([]);
+  
+  // Liste des raisons d'écart possibles
+  const raisonsEcart = ['Pertes', 'Casses', 'Vols', 'Erreurs de saisie', 'Autre', 'Aucun écart'];
 
   // État pour stocker la commande sélectionnée
   const [selectedCommandeId, setSelectedCommandeId] = useState(commandeId || "");
@@ -37,21 +39,21 @@ const AddTraitementForm = ({ commandeId, commandes, onClose, onAddSuccess }) => 
         setNumeroBL(response.data.numeroBL);
       }
       
-      // Initialiser les produits avec les quantités commandées
+      // Initialiser les produits avec les quantités commandées et la raison d'écart par défaut
       setProduits(
         response.data.produits.map(p => ({
           produitId: p.produit._id,
           nom: p.produit.name,
           reference: p.produit.reference,
           quantiteCommandee: p.quantiteSouhaitee,
-          quantiteRecue: ""
+          quantiteRecue: "",
+          raisonEcart: "Aucun écart" // Raison d'écart par défaut
         }))
       );
       
       setLoading(false);
     } catch (error) {
-      console.error("Erreur lors de la récupération de la commande:", error);
-      setError("Impossible de charger les détails de la commande");
+      toast.error("Erreur lors du chargement des détails de la commande. Veuillez réessayer.");
       setLoading(false);
     }
   };
@@ -85,7 +87,7 @@ const AddTraitementForm = ({ commandeId, commandes, onClose, onAddSuccess }) => 
         
         setFilteredCommandes(commandesNonTraitees);
       } catch (error) {
-        console.error("Erreur lors de la récupération des traitements:", error);
+        toast.error("Erreur lors de la récupération des traitements. Veuillez réessayer.");
       }
     };
     
@@ -109,8 +111,29 @@ const AddTraitementForm = ({ commandeId, commandes, onClose, onAddSuccess }) => 
     if (value === "" || /^\d*\.?\d*$/.test(value)) {
       const updatedProduits = [...produits];
       updatedProduits[index].quantiteRecue = value;
+      
+      // Si la quantité reçue est différente de la quantité commandée, on met la raison d'écart à "Autre"
+      // sinon on la met à "Aucun écart"
+      const quantiteRecue = parseFloat(value) || 0;
+      const quantiteCommandee = updatedProduits[index].quantiteCommandee;
+      
+      if (quantiteRecue !== quantiteCommandee && quantiteRecue > 0) {
+        if (updatedProduits[index].raisonEcart === "Aucun écart") {
+          updatedProduits[index].raisonEcart = "Autre";
+        }
+      } else if (quantiteRecue === quantiteCommandee) {
+        updatedProduits[index].raisonEcart = "Aucun écart";
+      }
+      
       setProduits(updatedProduits);
     }
+  };
+  
+  // Gérer le changement de raison d'écart
+  const handleRaisonEcartChange = (index, value) => {
+    const updatedProduits = [...produits];
+    updatedProduits[index].raisonEcart = value;
+    setProduits(updatedProduits);
   };
 
   const getNumericValue = (value) => {
@@ -122,19 +145,19 @@ const AddTraitementForm = ({ commandeId, commandes, onClose, onAddSuccess }) => 
     
     // Validation des champs requis
     if (!numeroBL) {
-      setError("Le numéro de BL est requis");
+      toast.error("Le numéro de BL est requis");
       return;
     }
     
     if (!dateReception) {
-      setError("La date de réception est requise");
+      toast.error("La date de réception est requise");
       return;
     }
     
     // Vérifier que toutes les quantités reçues sont renseignées
     const invalidProducts = produits.filter(p => !p.quantiteRecue || getNumericValue(p.quantiteRecue) <= 0);
     if (invalidProducts.length > 0) {
-      setError("Toutes les quantités reçues doivent être renseignées et supérieures à 0");
+      toast.error("Toutes les quantités reçues doivent être renseignées et supérieures à 0");
       return;
     }
     
@@ -149,7 +172,8 @@ const AddTraitementForm = ({ commandeId, commandes, onClose, onAddSuccess }) => 
         produits: produits.map(p => ({
           produitId: p.produitId,
           quantiteCommandee: p.quantiteCommandee,
-          quantiteRecue: getNumericValue(p.quantiteRecue)
+          quantiteRecue: getNumericValue(p.quantiteRecue),
+          raisonEcart: p.raisonEcart
         }))
       };
       
@@ -157,7 +181,7 @@ const AddTraitementForm = ({ commandeId, commandes, onClose, onAddSuccess }) => 
       const response = await traitementAPI.createTraitement(traitementData);
       
       if (response.status === 201 || response.status === 200) {
-        setSuccess("Traitement de commande enregistré avec succès");
+        toast.success("Traitement enregistré avec succès!");
         
         // Réinitialiser le formulaire
         setNumeroBL("");
@@ -174,21 +198,17 @@ const AddTraitementForm = ({ commandeId, commandes, onClose, onAddSuccess }) => 
         const commandesNonTraitees = commandes.filter(c => !commandesTraitees.includes(c._id));
         setFilteredCommandes(commandesNonTraitees);
         
-        // Fermer la modal et rafraîchir les données après 1.5 secondes
+        // Fermer la modal après un court délai
         setTimeout(() => {
+          onAddSuccess();
           onClose();
-          // Appeler la fonction de rappel pour rafraîchir les données
-          if (onAddSuccess && typeof onAddSuccess === 'function') {
-            onAddSuccess();
-          }
         }, 1500);
       } else {
         throw new Error("Erreur lors de la création du traitement");
       }
       
     } catch (error) {
-      console.error("Erreur lors de l'enregistrement du traitement:", error);
-      setError("Impossible d'enregistrer le traitement de commande");
+      toast.error("Erreur lors de l'enregistrement du traitement. Veuillez réessayer.");
       setLoading(false);
     }
   };
@@ -207,9 +227,6 @@ const AddTraitementForm = ({ commandeId, commandes, onClose, onAddSuccess }) => 
           <FaTimes />
         </button>
       </div>
-
-      {error && <div className="traite-error-message">{error}</div>}
-      {success && <div className="traite-success-message">{success}</div>}
 
       <form onSubmit={handleSubmit} className="traite-form">
         <div className="traite-form-section">
@@ -293,6 +310,7 @@ const AddTraitementForm = ({ commandeId, commandes, onClose, onAddSuccess }) => 
                     <th>Produit</th>
                     <th>Quantité commandée</th>
                     <th>Quantité reçue</th>
+                    <th>Raison écart</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -310,6 +328,18 @@ const AddTraitementForm = ({ commandeId, commandes, onClose, onAddSuccess }) => 
                           required
                           placeholder="0"
                         />
+                      </td>
+                      <td>
+                        <select
+                          value={produit.raisonEcart}
+                          onChange={(e) => handleRaisonEcartChange(index, e.target.value)}
+                          className="traite-form-select"
+                          disabled={parseFloat(produit.quantiteRecue) === produit.quantiteCommandee}
+                        >
+                          {raisonsEcart.map(raison => (
+                            <option key={raison} value={raison}>{raison}</option>
+                          ))}
+                        </select>
                       </td>
                     </tr>
                   ))}

@@ -18,7 +18,7 @@
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   width: 70%;
-  max-width: 600px;
+  max-width: 900px;
   max-height: 85vh;
   overflow-y: auto;
   position: relative;
@@ -172,6 +172,26 @@
 
 .traite-products-table tbody tr:hover {
   background-color: #f9f9f9;
+}
+
+/* Styles pour le dropdown de raison d'écart */
+.traite-products-table select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  font-size: 14px;
+}
+
+.traite-products-table select:disabled {
+  background-color: #f0f0f0;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.traite-products-table select option {
+  padding: 8px;
 }
 
 .traite-form-actions {

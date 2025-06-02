@@ -8,6 +8,7 @@ import EditStockItemForm from "../../components/Stock/EditStockItemForm"
 import DeleteStockConfirm from "../../components/Stock/DeleteStockConfirm"
 import { useSidebar } from "../../contexts/SidebarContext"
 import { stockAPI, fournisseurAPI } from "../../services/api"
+import toast from "react-hot-toast"
 
 const StockManagementPage = () => {
   const { sidebarOpen, toggleSidebar } = useSidebar()
@@ -37,7 +38,7 @@ const StockManagementPage = () => {
         setStockItems(response.data);
         setFilteredItems(response.data);
       } catch (error) {
-        console.error("Erreur lors du chargement des articles de stock:", error);
+        toast.error("Erreur lors du chargement des articles de stock");
       } finally {
         setLoading(false);
       }
@@ -155,8 +156,7 @@ const StockManagementPage = () => {
         await refreshStockData();
       }
     } catch (error) {
-      console.error("Erreur lors de l'ajout de l'article:", error);
-      alert("Une erreur est survenue lors de l'ajout de l'article");
+      toast.error("Une erreur est survenue lors de l'ajout de l'article");
     }
   }
 
@@ -168,7 +168,7 @@ const StockManagementPage = () => {
       setStockItems(response.data);
       setFilteredItems(response.data);
     } catch (error) {
-      console.error("Erreur lors du rafraîchissement des données:", error);
+      toast.error("Erreur lors du rafraîchissement des données");
     } finally {
       setLoading(false);
     }
@@ -186,6 +186,7 @@ const StockManagementPage = () => {
           )
         );
         setShowEditForm(false);
+        toast.success("Article modifié avec succès");
         
         // Rafraîchir les données depuis l'API pour s'assurer que tout est à jour
         await refreshStockData();
@@ -209,20 +210,20 @@ const StockManagementPage = () => {
           )
         );
         setShowEditForm(false);
+        toast.success("Article modifié avec succès");
         
         // Rafraîchir les données depuis l'API
         await refreshStockData();
       }
     } catch (error) {
-      console.error("Erreur lors de la modification de l'article:", error);
-      alert(error.message || "Une erreur est survenue lors de la modification de l'article");
+      toast.error(error.message || "Une erreur est survenue lors de la modification de l'article");
     }
   }
 
   // Gérer la suppression d'un élément
   const handleDeleteItem = async () => {
     if (!currentItem || !currentItem._id) {
-      alert("Article non valide");
+      toast.error("Article non valide");
       setShowDeleteConfirm(false);
       setCurrentItem(null);
       return;
@@ -234,12 +235,12 @@ const StockManagementPage = () => {
       setStockItems(updatedItems);
       setShowDeleteConfirm(false);
       setCurrentItem(null);
+      toast.success("Article supprimé avec succès");
       
       // Rafraîchir les données depuis l'API
       await refreshStockData();
     } catch (error) {
-      console.error("Erreur lors de la suppression de l'article:", error);
-      alert("Une erreur est survenue lors de la suppression de l'article");
+      toast.error("Une erreur est survenue lors de la suppression de l'article");
     }
   }
 

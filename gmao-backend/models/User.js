@@ -9,9 +9,6 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['admin', 'team_leader', 'technicien', 'opérateur'], required: true },
   department: { type: String, default: 'Non assigné' },
   phone: { type: String, default: '' },
-  status: { type: String, enum: ['Actif', 'Inactif'], default: 'Inactif' },
-  lastLogin: { type: Date },
-  lastActivity: { type: Date },
   createdAt: { type: Date, default: Date.now },
 }, {
   timestamps: true

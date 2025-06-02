@@ -9,6 +9,7 @@ import DeleteCommandeConfirm from "../../components/Commande/DeleteCommandeConfi
 import ViewCommandeDetails from "../../components/Commande/ViewCommandeDetails";
 import { useSidebar } from "../../contexts/SidebarContext";
 import { commandeAPI, fournisseurAPI } from "../../services/api";
+import toast from "react-hot-toast";
 
 const CommandePage = () => {
   const { sidebarOpen } = useSidebar();
@@ -40,7 +41,7 @@ const CommandePage = () => {
         setCommandes(response.data);
         setFilteredCommandes(response.data);
       } catch (error) {
-        console.error("Erreur lors du chargement des commandes:", error);
+        toast.error("Erreur lors du chargement des commandes");
       } finally {
         setLoading(false);
       }
@@ -51,7 +52,7 @@ const CommandePage = () => {
         const response = await fournisseurAPI.getAllFournisseurs();
         setFournisseurs(response.data);
       } catch (error) {
-        console.error("Erreur lors du chargement des fournisseurs:", error);
+        toast.error("Erreur lors du chargement des fournisseurs");
       }
     };
 

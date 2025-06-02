@@ -8,13 +8,13 @@ import { userAPI } from "../../services/api"
 import Modal from "../../components/Modal/Modal"
 import { RiKey2Line } from "react-icons/ri"
 import { FaChevronDown, FaEye, FaEyeSlash, FaTimes, FaEdit, FaSave } from "react-icons/fa"
+import toast from "react-hot-toast"
 
 function ProfilePage() {
   const { sidebarOpen, toggleSidebar } = useSidebar()
   const { currentUser } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [formData, setFormData] = useState({
     firstName: "",
@@ -29,8 +29,7 @@ function ProfilePage() {
     newPassword: "",
     confirmPassword: ""
   })
-  const [passwordError, setPasswordError] = useState("")
-  const [passwordSuccess, setPasswordSuccess] = useState("")
+  // États pour le mot de passe
   const [avatarImage, setAvatarImage] = useState(null)
   
   // États pour l'attribution de rôle
@@ -48,6 +47,11 @@ function ProfilePage() {
   const [newAdminPassword, setNewAdminPassword] = useState("")
   const [showNewAdminPassword, setShowNewAdminPassword] = useState(false)
   const [showPasswordResults, setShowPasswordResults] = useState(false)
+  
+  // États pour les messages d'erreur et de succès (maintenus pour compatibilité)
+  const [error, setError] = useState("")
+  const [passwordError, setPasswordError] = useState("")
+  const [passwordSuccess, setPasswordSuccess] = useState("")
   
   // États pour la liste des employés
   const [employeeList, setEmployeeList] = useState([])
@@ -77,8 +81,7 @@ function ProfilePage() {
           });
         }
       } catch (error) {
-        console.error("Erreur lors du chargement du profil:", error);
-        setError("Impossible de charger votre profil");
+        toast.error("Impossible de charger votre profil");
       } finally {
         setLoading(false);
       }
@@ -91,7 +94,7 @@ function ProfilePage() {
         const response = await userAPI.getAllUsers();
         setEmployeeList(response.data);
       } catch (error) {
-        console.error("Erreur lors du chargement des employés:", error);
+        toast.error("Erreur lors du chargement des employés");
       } finally {
         setEmployeeLoading(false);
       }
@@ -162,12 +165,9 @@ function ProfilePage() {
         department: formData.department
       })
       setIsEditing(false)
-      setPasswordSuccess("Profil mis à jour avec succès")
-      setTimeout(() => setPasswordSuccess(""), 3000)
+      toast.success("Profil mis à jour avec succès")
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du profil:", error)
-      setPasswordError("Erreur lors de la mise à jour du profil")
-      setTimeout(() => setPasswordError(""), 3000)
+      toast.error("Erreur lors de la mise à jour du profil")
     } finally {
       setLoading(false)
     }
@@ -200,8 +200,7 @@ function ProfilePage() {
   
   const handleAttributeRole = async () => {
     if (!selectedEmployee || !selectedRole) {
-      setPasswordError("Veuillez sélectionner un employé et un rôle")
-      setTimeout(() => setPasswordError(""), 3000)
+      toast.error("Veuillez sélectionner un employé et un rôle")
       return
     }
     
@@ -209,8 +208,7 @@ function ProfilePage() {
     
     try {
       await userAPI.assignRole(selectedEmployee, { role: selectedRole })
-      setPasswordSuccess("Le rôle a été attribué avec succès")
-      setTimeout(() => setPasswordSuccess(""), 3000)
+      toast.success("Le rôle a été attribué avec succès")
       
       // Réinitialiser les champs
       setSelectedEmployee("")
@@ -222,9 +220,7 @@ function ProfilePage() {
       const response = await userAPI.getAllUsers()
       setEmployeeList(response.data)
     } catch (error) {
-      console.error("Erreur lors de l'attribution du rôle:", error)
-      setPasswordError("Une erreur s'est produite lors de l'attribution du rôle")
-      setTimeout(() => setPasswordError(""), 3000)
+      toast.error("Une erreur s'est produite lors de l'attribution du rôle")
     } finally {
       setLoading(false)
     }
@@ -256,8 +252,7 @@ function ProfilePage() {
   
   const handleChangePassword = async () => {
     if (!selectedEmployeeForPassword || !newAdminPassword) {
-      setPasswordError("Veuillez sélectionner un employé et saisir un nouveau mot de passe")
-      setTimeout(() => setPasswordError(""), 3000)
+      toast.error("Veuillez sélectionner un employé et saisir un nouveau mot de passe")
       return
     }
     
@@ -265,8 +260,7 @@ function ProfilePage() {
     
     try {
       await userAPI.adminChangeUserPassword(selectedEmployeeForPassword, { newPassword: newAdminPassword })
-      setPasswordSuccess("Le mot de passe a été modifié avec succès")
-      setTimeout(() => setPasswordSuccess(""), 3000)
+      toast.success("Le mot de passe a été modifié avec succès")
       
       // Réinitialiser les champs
       setSelectedEmployeeForPassword("")
@@ -284,12 +278,10 @@ function ProfilePage() {
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault()
-    setPasswordError("")
-    setPasswordSuccess("")
     
     // Vérifier que les mots de passe correspondent
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordError("Les mots de passe ne correspondent pas");
+      toast.error("Les mots de passe ne correspondent pas");
       return;
     }
     
@@ -318,15 +310,13 @@ function ProfilePage() {
       // Fermer le modal après 2 secondes
       setTimeout(() => {
         setShowPasswordModal(false);
-        setPasswordSuccess("");
       }, 2000);
       
     } catch (error) {
-      console.error("Erreur lors du changement de mot de passe:", error);
       if (error.response && error.response.data && error.response.data.message) {
-        setPasswordError(error.response.data.message);
+        toast.error(error.response.data.message);
       } else {
-        setPasswordError("Une erreur est survenue lors du changement de mot de passe");
+        toast.error("Une erreur est survenue lors du changement de mot de passe");
       }
     }
   }
@@ -434,7 +424,7 @@ function ProfilePage() {
         <div className="profile-content">
           <Header title="Profil utilisateur" onToggleSidebar={toggleSidebar} />
           <main className="profile-main">
-            <div className="error-message">{error}</div>
+            <div className="loading-indicator">Chargement du profil...</div>
           </main>
         </div>
       </div>
@@ -809,8 +799,7 @@ function ProfilePage() {
             />
           </div>
 
-          {passwordError && <div className="error-message">{passwordError}</div>}
-          {passwordSuccess && <div className="success-message">{passwordSuccess}</div>}
+          {/* Les messages d'erreur et de succès sont maintenant affichés avec des toasts */}
 
           <div className="form-actions modal-buttons">
             <button type="button" className="btn-cancel" onClick={() => setShowPasswordModal(false)}>

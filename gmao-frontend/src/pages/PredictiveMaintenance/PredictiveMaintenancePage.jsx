@@ -5,13 +5,13 @@ import Modal from "../../components/Modal/Modal"
 import "./PredictiveMaintenancePage.css"
 import { useSidebar } from "../../contexts/SidebarContext"
 import { sensorAPI, equipmentAPI, interventionAPI, userAPI } from "../../services/api"
+import toast from "react-hot-toast"
 
 function PredictiveMaintenancePage() {
   const { sidebarOpen, toggleSidebar } = useSidebar()
   const [selectedEquipment, setSelectedEquipment] = useState(null)
   const [timeRange, setTimeRange] = useState("month")
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   const [equipments, setEquipments] = useState([])
   const [sensorData, setSensorData] = useState({
     vibrationData: { week: [], month: [], year: [] },
@@ -34,7 +34,6 @@ function PredictiveMaintenancePage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        setError(null);
         
         // Récupérer les équipements avec leur statut de santé
         const equipmentResponse = await equipmentAPI.getAllEquipments();
@@ -56,16 +55,15 @@ function PredictiveMaintenancePage() {
           
           // Récupérer les données des capteurs pour le premier équipement
           if (!firstEquipment || !firstEquipment._id) {
-            setError("Impossible de trouver l'ID de l'équipement");
+            toast.error("Impossible de trouver l'ID de l'équipement");
             return;
           }
           await fetchSensorData(firstEquipment._id.toString());
         } else {
-          setError("Aucun équipement disponible.");
+          toast.error("Aucun équipement disponible.");
         }
       } catch (err) {
-        console.error("Erreur lors du chargement des données:", err);
-        setError("Impossible de charger les données des équipements. Veuillez réessayer plus tard.");
+        toast.error("Impossible de charger les données des équipements. Veuillez réessayer plus tard.");
       } finally {
         setLoading(false);
       }
@@ -92,8 +90,7 @@ function PredictiveMaintenancePage() {
           setTechnicians(technicianUsers);
         }
       } catch (err) {
-        console.error("Erreur lors du chargement des techniciens:", err);
-        setError("Impossible de charger la liste des techniciens. Veuillez réessayer plus tard.");
+        toast.error("Impossible de charger la liste des techniciens. Veuillez réessayer plus tard.");
       }
     };
     
@@ -110,7 +107,6 @@ function PredictiveMaintenancePage() {
   // Charger les données de capteur pour un équipement spécifique
   const fetchSensorData = async (equipmentId) => {
     try {
-      setError(null);
       
       // Vérifier si l'ID est valide
       if (!equipmentId) {
@@ -181,8 +177,7 @@ function PredictiveMaintenancePage() {
         setRecommendations([]);
       }
     } catch (err) {
-      console.error("Erreur lors du chargement des données de capteur:", err);
-      setError("Impossible de charger les données de capteur pour cet équipement.");
+      toast.error("Impossible de charger les données de capteur pour cet équipement.");
       setSensorData({
         vibrationData: { week: [], month: [], year: [] },
         temperatureData: { week: [], month: [], year: [] },
@@ -210,13 +205,11 @@ function PredictiveMaintenancePage() {
       
       setSelectedEquipment(equipment);
       setLoading(true);
-      setError(null);
       
       // Récupérer les données de capteurs et recommandations pour le nouvel équipement
       await fetchSensorData(equipment._id || equipment.id);
     } catch (err) {
-      console.error("Erreur lors du changement d'équipement:", err);
-      setError("Impossible de charger les données pour cet équipement.");
+      toast.error("Impossible de charger les données pour cet équipement.");
     } finally {
       setLoading(false);
   }
@@ -433,8 +426,6 @@ function PredictiveMaintenancePage() {
         <main className="predictive-main">
           {loading ? (
             <div className="loading-indicator">Chargement des données...</div>
-          ) : error ? (
-            <div className="error-message">{error}</div>
           ) : (
             <>
               {/* Filtres */}

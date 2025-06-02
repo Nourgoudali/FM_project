@@ -4,28 +4,35 @@ import { useAuth } from "../../contexts/AuthContext"
 import "./LoginPage.css"
 import logoFM from "../../assets/images/logo-fm.png"
 import {FaEye, FaEyeSlash} from "react-icons/fa"
+import toast from "react-hot-toast"
 
 function LoginPage() {
-  const [email, setEmail] = useState("")
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { login, user } = useAuth()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError("")
     setLoading(true)
 
     try {
-      await login(email, password)
+      const userData = await login(email, password)
+      toast.success("Connexion réussie")
+      
+      // Utiliser les données de l'utilisateur directement depuis la réponse
+      const firstName = userData?.user?.firstName || userData?.firstName || ''
+      const lastName = userData?.user?.lastName || userData?.lastName || ''
+      
+      if (firstName && lastName) {
+        toast.success(`Bienvenue ${firstName} ${lastName}`)
+      }
+      
       navigate("/dashboard")
     } catch (err) {
-      console.error("Erreur lors de la connexion:", err);
-      // Utiliser le message d'erreur retourné par le backend
-      setError(err.message || "Échec de la connexion. Veuillez vérifier vos identifiants.")
+      toast.error(err.message || "Échec de la connexion. Veuillez vérifier vos identifiants.")
     } finally {
       setLoading(false)
     }
@@ -43,7 +50,7 @@ function LoginPage() {
           <h1 className="login-title">Bienvenue</h1>
           <p className="login-subtitle">Connectez-vous à votre compte GMAO</p>
  
-          {error && <div className="alert alert-danger">{error}</div>}
+          {/* Les erreurs sont maintenant affichées avec des toasts */}
 
           <form onSubmit={handleSubmit} className="login-form">
             <div className="form-group">

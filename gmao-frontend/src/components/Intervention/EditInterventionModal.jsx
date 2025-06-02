@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import "./NewInterventionModal.css" // Réutilisation du CSS
 import { FaTimes } from "react-icons/fa"
@@ -11,6 +9,8 @@ function EditInterventionModal({ intervention, onClose, onSubmit }) {
     priority: "Normale",
     status: "En cours",
     technician: "",
+    startDate: "",
+    endDate: "",
     description: "",
     location: ""
   })
@@ -25,6 +25,8 @@ function EditInterventionModal({ intervention, onClose, onSubmit }) {
         priority: intervention.priority || "Normale",
         status: intervention.status || "En cours",
         technician: intervention.technician?.name || "",
+        startDate: intervention.startDate ? new Date(intervention.startDate).toISOString().split('T')[0] : "",
+        endDate: intervention.endDate ? new Date(intervention.endDate).toISOString().split('T')[0] : "",
         description: intervention.description || "",
         location: intervention.location || ""
       })
@@ -130,6 +132,31 @@ function EditInterventionModal({ intervention, onClose, onSubmit }) {
                   id="technician"
                   name="technician"
                   value={formData.technician}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+            
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="startDate">Date de début</label>
+                <input 
+                  type="date" 
+                  id="startDate" 
+                  name="startDate" 
+                  value={formData.startDate} 
+                  onChange={handleChange}
+                  required 
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="endDate">Date de fin (optionnelle)</label>
+                <input 
+                  type="date" 
+                  id="endDate" 
+                  name="endDate" 
+                  value={formData.endDate} 
                   onChange={handleChange}
                 />
               </div>

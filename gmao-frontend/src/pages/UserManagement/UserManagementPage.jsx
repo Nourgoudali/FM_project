@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import {
   FaPlus,
@@ -22,13 +20,13 @@ import Modal from "../../components/Modal/Modal"
 import AddUserForm from "../../components/User/AddUserForm";
 import { useSidebar } from "../../contexts/SidebarContext"
 import { userAPI } from "../../services/api"
+import toast from "react-hot-toast"
 
 const UserManagementPage = () => {
   const { sidebarOpen, toggleSidebar } = useSidebar()
   const [users, setUsers] = useState([])
   const [filteredUsers, setFilteredUsers] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -36,7 +34,6 @@ const UserManagementPage = () => {
   const [sortConfig, setSortConfig] = useState({ key: "lastName", direction: "ascending" })
   const [filters, setFilters] = useState({
     role: "all",
-    status: "all",
     department: "all",
   })
   const [showFilters, setShowFilters] = useState(false)
@@ -48,63 +45,11 @@ const UserManagementPage = () => {
         setLoading(true);
         const response = await userAPI.getAllUsers();
         
-        if (response && response.data) {
           setUsers(response.data);
           setFilteredUsers(response.data);
-        } else {
-          // Données de test
-          const mockUsers = [
-            {
-              id: 1,
-              lastName: "admin",
-              firstName: "admin",
-              email: "admin@gmao.com",
-              role: "admin",
-              department: "Administration",
-              phone: "01 23 45 67 89",
-              status: "Actif",
-              lastLogin: "2024-02-20"
-            },
-            {
-              id: 2,
-              lastName: "teamleader",
-              firstName: "teamleader",
-              email: "team@gmao.com",
-              role: "team_leader",
-              department: "Maintenance",
-              phone: "01 23 45 67 90",
-              status: "Actif",
-              lastLogin: "2024-02-19"
-            },
-            {
-              id: 3,
-              lastName: "technician",
-              firstName: "technician",
-              email: "tech@gmao.com",
-              role: "technician",
-              department: "Production",
-              phone: "01 23 45 67 91",
-              status: "Actif",
-              lastLogin: "2024-02-18"
-            },
-            {
-              id: 4,
-              lastName: "aya",
-              firstName: "aya",
-              email: "AYA@gmail.com",
-              role: "admin",
-              department: "Administration",
-              phone: "01 23 45 67 92",
-              status: "Actif",
-              lastLogin: "2024-02-17"
-            }
-          ];
-          setUsers(mockUsers);
-          setFilteredUsers(mockUsers);
-        }
+         
       } catch (error) {
-        console.error("Erreur lors du chargement des utilisateurs:", error);
-        setError("Impossible de charger les utilisateurs. Veuillez réessayer plus tard.");
+        toast.error("Impossible de charger les utilisateurs. Veuillez réessayer plus tard.");
       } finally {
         setLoading(false);
       }
@@ -131,10 +76,6 @@ const UserManagementPage = () => {
     // Appliquer les filtres
     if (filters.role !== "all") {
       result = result.filter((user) => user.role === filters.role)
-    }
-
-    if (filters.status !== "all") {
-      result = result.filter((user) => user.status === filters.status)
     }
 
     if (filters.department !== "all") {
@@ -173,12 +114,12 @@ const UserManagementPage = () => {
       if (response && response.data) {
         setUsers([...users, response.data]);
         setShowAddModal(false);
+        toast.success("Utilisateur ajouté avec succès");
       } else {
         throw new Error("Erreur lors de l'ajout de l'utilisateur");
       }
     } catch (error) {
-      console.error("Erreur lors de l'ajout de l'utilisateur:", error);
-      alert("Une erreur est survenue lors de l'ajout de l'utilisateur");
+      toast.error("Une erreur est survenue lors de l'ajout de l'utilisateur");
     }
   }
 
@@ -192,12 +133,12 @@ const UserManagementPage = () => {
           (user._id || user.id) === (updatedUser._id || updatedUser.id) ? response.data : user
         ));
         setShowEditModal(false);
+        toast.success("Utilisateur modifié avec succès");
       } else {
         throw new Error("Erreur lors de la modification de l'utilisateur");
       }
     } catch (error) {
-      console.error("Erreur lors de la modification de l'utilisateur:", error);
-      alert("Une erreur est survenue lors de la modification de l'utilisateur");
+      toast.error("Une erreur est survenue lors de la modification de l'utilisateur");
     }
   }
 
@@ -207,9 +148,9 @@ const UserManagementPage = () => {
       try {
         await userAPI.deleteUser(userId);
         setUsers(users.filter(user => (user._id || user.id) !== userId));
+        toast.success("Utilisateur supprimé avec succès");
       } catch (error) {
-        console.error("Erreur lors de la suppression de l'utilisateur:", error);
-        alert("Une erreur est survenue lors de la suppression de l'utilisateur");
+        toast.error("Une erreur est survenue lors de la suppression de l'utilisateur");
       }
     }
   }
@@ -224,12 +165,12 @@ const UserManagementPage = () => {
         setUsers(users.map(user => 
           (user._id || user.id) === userId ? { ...user, status: newStatus } : user
         ));
+        toast.success(`Statut de l'utilisateur modifié en "${newStatus}"`);
       } else {
         throw new Error("Erreur lors du changement de statut");
       }
     } catch (error) {
-      console.error("Erreur lors du changement de statut de l'utilisateur:", error);
-      alert("Une erreur est survenue lors du changement de statut de l'utilisateur");
+      toast.error("Une erreur est survenue lors du changement de statut de l'utilisateur");
     }
   }
 
@@ -294,16 +235,7 @@ const UserManagementPage = () => {
                 </select>
               </div>
 
-              <div className="filter-group">
-                <label>Statut:</label>
-                <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
-                  {statuses.map((status) => (
-                    <option key={`status-${status.toLowerCase().replace(/\s+/g, '-')}`} value={status}>
-                      {status === "all" ? "Tous les statuts" : status}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Filtre de statut supprimé */}
 
               <div className="filter-group">
                 <label>Département:</label>
@@ -321,7 +253,6 @@ const UserManagementPage = () => {
                 onClick={() =>
                   setFilters({
                     role: "all",
-                    status: "all",
                     department: "all",
                   })
                 }
@@ -333,8 +264,6 @@ const UserManagementPage = () => {
 
           {loading ? (
             <div className="loading-indicator">Chargement des utilisateurs...</div>
-          ) : error ? (
-            <div className="error-message">{error}</div>
           ) : (
             <div className="user-table-container">
               <table className="user-table">
@@ -358,12 +287,9 @@ const UserManagementPage = () => {
                     <th onClick={() => requestSort("phone")}>
                       Téléphone <FaSort className="sort-icon" />
                     </th>
-                    <th onClick={() => requestSort("status")}>
-                      Statut <FaSort className="sort-icon" />
-                    </th>
-                    <th onClick={() => requestSort("lastLogin")}>
-                      Dernière connexion <FaSort className="sort-icon" />
-                    </th>
+                    {/* Colonne de statut supprimée */}
+                    
+                    
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -376,13 +302,7 @@ const UserManagementPage = () => {
                       <td>{user.role}</td>
                       <td>{user.department}</td>
                       <td>{user.phone}</td>
-                      <td>
-                        <span className={`status-badge ${user.lastLogin ? "active" : "inactive"}`}>
-                          <FaCircle className="status-icon" />
-                          {user.lastLogin ? "Actif" : "Inactif"}
-                        </span>
-                      </td>
-                      <td>{user.lastLogin ? new Date(user.lastLogin).toLocaleString() : "Jamais"}</td>
+                     
                       <td>
                         <div className="action-buttons">
                           <button 

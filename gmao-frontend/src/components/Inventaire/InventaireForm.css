@@ -14,7 +14,7 @@
 .inventaire-modal {
   background-color: white;
   border-radius: 8px;
-  width: 90%;
+  width: 70%;
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
@@ -121,6 +121,116 @@
   margin-top: 20px;
 }
 
+/* Styles pour la section des produits */
+.inventaire-produits-section {
+  margin-bottom: 20px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 15px;
+  background-color: #f9f9f9;
+}
+
+.inventaire-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.inventaire-section-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.inventaire-add-produit-btn {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: background-color 0.2s;
+}
+
+.inventaire-add-produit-btn:hover {
+  background-color: #45a049;
+}
+
+.inventaire-no-produits {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-style: italic;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
+
+.inventaire-produits-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.inventaire-produit-item {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 15px;
+  background-color: white;
+}
+
+.inventaire-produit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.inventaire-produit-header h4 {
+  margin: 0;
+  font-size: 15px;
+  color: #333;
+}
+
+.inventaire-remove-produit-btn {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.inventaire-remove-produit-btn:hover {
+  background-color: #d32f2f;
+}
+
+.inventaire-produit-content {
+  padding: 5px 0;
+}
+
+.inventaire-form-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 14px;
+}
+
 .inventaire-form-cancel {
   background-color: #f5f5f5;
   color: #333;
@@ -200,7 +310,8 @@
 }
 
 .inventaire-details-value {
-  flex: 1;
+  flex: 2;
+  font-weight: 400;
 }
 
 .inventaire-details-value.inventaire-ecart {
@@ -221,6 +332,74 @@
   padding: 10px;
   border-radius: 4px;
   margin-top: 5px;
+}
+
+/* Styles pour la vue détaillée d'inventaire avec plusieurs produits */
+.inventaire-produits-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.inventaire-produit-card {
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.inventaire-produit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.inventaire-produit-header h4 {
+  margin: 0;
+  font-size: 15px;
+  color: #333;
+  font-weight: 600;
+}
+
+.inventaire-ecart-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.inventaire-ecart-badge.negative {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+.inventaire-ecart-badge.positive {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.inventaire-ecart-badge.neutral {
+  background-color: #f5f5f5;
+  color: #757575;
+}
+
+.inventaire-produit-details {
+  padding: 5px 0;
+}
+
+.inventaire-no-produits {
+  text-align: center;
+  padding: 15px;
+  color: #666;
+  font-style: italic;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  margin-top: 10px;
 }
 
 /* Responsive */

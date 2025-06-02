@@ -7,6 +7,7 @@ import Modal from "../../components/Modal/Modal"
 import "./DocumentationPage.css"
 import { useSidebar } from "../../contexts/SidebarContext"
 import { documentAPI, equipmentAPI, API } from "../../services/api"
+import toast from "react-hot-toast"
 
 const DocumentationPage = () => {
   const { sidebarOpen, toggleSidebar } = useSidebar()
@@ -15,7 +16,6 @@ const DocumentationPage = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterCategory, setFilterCategory] = useState("all")
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [uploadForm, setUploadForm] = useState({
     title: "",
@@ -45,7 +45,7 @@ const DocumentationPage = () => {
           setEquipments(response.data);
         }
       } catch (error) {
-        console.error("Erreur lors de la récupération des équipements:", error);
+        toast.error("Erreur lors de la récupération des équipements");
       }
     };
     fetchEquipments();
@@ -131,8 +131,7 @@ const DocumentationPage = () => {
         }
         setLoading(false)
       } catch (error) {
-        console.error("Erreur lors du chargement des documents:", error)
-        setError("Impossible de charger les documents")
+        toast.error("Impossible de charger les documents")
         setLoading(false)
       }
     }
@@ -198,17 +197,20 @@ const DocumentationPage = () => {
   const handleUploadSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-    setError(null)
 
     try {
       // Vérifier que tous les champs requis sont remplis
-      if (!uploadForm.title.trim() || !uploadForm.category || !uploadForm.file) {
-        throw new Error("Veuillez remplir tous les champs requis");
+      if (!uploadForm.title.trim() || !uploadForm.category) {
+        toast.error("Veuillez remplir tous les champs obligatoires")
+        setLoading(false)
+        return
       }
 
       // Vérifier le fichier
-      if (!uploadForm.file || !uploadForm.file.name) {
-        throw new Error("Veuillez sélectionner un fichier valide");
+      if (!uploadForm.file && !uploadForm.fileUrl) {
+        toast.error("Veuillez sélectionner un fichier ou fournir une URL")
+        setLoading(false)
+        return
       }
 
       // Préparer les données du document
@@ -255,9 +257,7 @@ const DocumentationPage = () => {
         throw new Error(error.message || 'Erreur lors de l\'upload du document');
       }
     } catch (error) {
-      console.error("Erreur lors de l'upload du document:", error)
-      setError(error.response?.data?.message || "Impossible d'uploader le document")
-    } finally {
+      toast.error("Une erreur est survenue lors de l'upload du document")
       setLoading(false)
     }
   }
@@ -277,8 +277,7 @@ const DocumentationPage = () => {
 
       setDocuments(updatedDocuments)
     } catch (error) {
-      console.error("Erreur lors de la génération du QR code:", error);
-      alert("Erreur lors de la génération du QR code");
+      toast.error("Une erreur est survenue lors de la génération du QR code")
     }
   }
 
@@ -301,8 +300,7 @@ const DocumentationPage = () => {
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error("Erreur lors du téléchargement du QR code:", error);
-      setError("Impossible de télécharger le QR code");
+      toast.error("Une erreur est survenue lors du téléchargement du QR code")
     }
   }
 
@@ -325,14 +323,13 @@ const DocumentationPage = () => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(link);
     } catch (error) {
-      console.error("Erreur lors du téléchargement du document:", error);
-      alert(`Erreur lors du téléchargement de "${document.title}"`);
+      toast.error(`Une erreur est survenue lors du téléchargement de "${document.title}"`)
     }
   }
 
   const handleOpenDeleteModal = (document) => {
     if (!document || !document._id) {
-      setError("Document invalide");
+      toast.error("Document invalide")
       return;
     }
     setCurrentDocument(document)
@@ -341,7 +338,7 @@ const DocumentationPage = () => {
 
   const handleDeleteDocument = async () => {
     if (!currentDocument || !currentDocument._id) {
-      setError("Document non sélectionné");
+      toast.error("Document non sélectionné")
       return;
     }
     
@@ -350,13 +347,12 @@ const DocumentationPage = () => {
       await documentAPI.deleteDocument(currentDocument._id);
       
       // Mettre à jour la liste des documents
-      const updatedDocuments = documents.filter((doc) => doc._id === currentDocument._id);
+      const updatedDocuments = documents.filter((doc) => doc._id !== currentDocument._id);
       setDocuments(updatedDocuments);
       setShowDeleteModal(false);
       setCurrentDocument(null);
     } catch (error) {
-      console.error("Erreur lors de la suppression du document:", error);
-      setError(error.response?.data?.message || "Impossible de supprimer le document");
+      toast.error("Une erreur est survenue lors de la suppression du document")
     }
   }
 
@@ -403,8 +399,6 @@ const DocumentationPage = () => {
           {/* Documents Grid */}
           {loading ? (
             <div className="loading-indicator">Chargement des documents...</div>
-          ) : error ? (
-            <div className="error-message">{error}</div>
           ) : (
             <div className="documents-grid">
               {filteredDocuments.length === 0 ? (

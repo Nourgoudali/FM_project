@@ -191,8 +191,8 @@ export const userAPI = {
   updateUser: (id, userData) => API.put(`/users/${id}`, userData),
   // Supprimer un utilisateur
   deleteUser: (id) => API.delete(`/users/${id}`),
-  // Changer le statut d'un utilisateur (activer/désactiver)
-  changeUserStatus: (id, status) => API.patch(`/users/${id}/status`, { status }),
+  // Déconnexion (mise à jour de lastLogin)
+  logout: () => API.post('/users/logout'),
   // Récupérer les rôles disponibles
   getRoles: () => API.get('/users/roles'),
   // Récupérer les départements disponibles

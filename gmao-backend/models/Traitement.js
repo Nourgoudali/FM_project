@@ -27,6 +27,11 @@ const traitementSchema = new mongoose.Schema({
     quantiteRecue: {
       type: Number,
       required: true
+    },
+    raisonEcart: {
+      type: String,
+      enum: ['Pertes', 'Casses', 'Vols', 'Erreurs de saisie', 'Autre', 'Aucun écart'],
+      default: 'Aucun écart'
     }
   }],
   createdAt: {

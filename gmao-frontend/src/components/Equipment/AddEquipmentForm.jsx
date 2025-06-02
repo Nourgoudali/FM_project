@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import "./AddEquipmentForm.css"
 import { equipmentAPI } from "../../services/api"
+import toast from "react-hot-toast"
 
 export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null, isEdit = false }) {
   const [formData, setFormData] = useState({
@@ -19,7 +20,6 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
   })
 
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(initialData?.image && typeof initialData.image === 'string' ? 
     `http://localhost:5000${initialData.image}` : null)
@@ -66,7 +66,6 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-    setError(null)
 
     try {
       // Préparer les données du formulaire
@@ -98,9 +97,11 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
         if (isEdit && initialData) {
           // Pour la mise à jour, on utilise l'ID de l'équipement existant
           response = await equipmentAPI.updateEquipment(initialData.id, data);
+          toast.success("L'équipement a été mis à jour avec succès");
         } else {
           // Pour la création, on utilise l'endpoint de création
           response = await equipmentAPI.createEquipment(data);
+          toast.success("L'équipement a été créé avec succès");
         }
 
         const equipmentToReturn = {
@@ -113,12 +114,10 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
         onEquipmentAdded(equipmentToReturn)
         onClose()
       } catch (err) {
-        console.error("Erreur lors de l'enregistrement de l'équipement:", err)
-        setError("Une erreur est survenue lors de l'enregistrement de l'équipement. Veuillez réessayer.")
+        toast.error("Une erreur est survenue lors de l'enregistrement de l'équipement. Veuillez réessayer.")
       }
     } catch (err) {
-      console.error("Erreur lors de l'enregistrement de l'équipement:", err)
-      setError("Une erreur est survenue lors de l'enregistrement de l'équipement. Veuillez réessayer.")
+      toast.error("Une erreur est survenue lors de l'enregistrement de l'équipement. Veuillez réessayer.")
     } finally {
       setLoading(false)
     }
@@ -126,7 +125,7 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
 
   return (
     <form onSubmit={handleSubmit} className="aef-equipment-form">
-      {error && <div className="aef-form-error">{error}</div>}
+      {/* Les messages d'erreur sont maintenant affichés avec des toasts */}
 
       <div className="aef-form-section">
         <h3 className="aef-form-section-title">Informations générales</h3>

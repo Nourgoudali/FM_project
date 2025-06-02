@@ -15,13 +15,13 @@ import Modal from "../../components/Modal/Modal"
 import AddSupplierForm from "../../components/Supplier/AddSupplierForm"
 import { useSidebar } from "../../contexts/SidebarContext"
 import { fournisseurAPI } from "../../services/api"
+import toast from "react-hot-toast"
 
 const SupplierManagementPage = () => {
   const { sidebarOpen, toggleSidebar } = useSidebar()
   const [suppliers, setSuppliers] = useState([])
   const [filteredSuppliers, setFilteredSuppliers] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -39,8 +39,7 @@ const SupplierManagementPage = () => {
         setSuppliers(response.data);
         setFilteredSuppliers(response.data);
       } catch (error) {
-        console.error("Erreur lors du chargement des fournisseurs:", error);
-        setError("Impossible de charger les fournisseurs. Veuillez réessayer plus tard.");
+        toast.error("Impossible de charger les fournisseurs. Veuillez réessayer plus tard.");
       } finally {
         setLoading(false);
       }
@@ -98,12 +97,12 @@ const SupplierManagementPage = () => {
       if (response && response.data) {
         setSuppliers([...suppliers, response.data]);
         setShowAddModal(false);
+        toast.success("Fournisseur ajouté avec succès");
       } else {
         throw new Error("Erreur lors de l'ajout du fournisseur");
       }
     } catch (error) {
-      console.error("Erreur lors de l'ajout du fournisseur:", error);
-      alert("Une erreur est survenue lors de l'ajout du fournisseur");
+      toast.error("Une erreur est survenue lors de l'ajout du fournisseur");
     }
   }
 
@@ -117,12 +116,12 @@ const SupplierManagementPage = () => {
           supplier._id === updatedSupplier._id ? response.data : supplier
         ));
         setShowEditModal(false);
+        toast.success("Fournisseur modifié avec succès");
       } else {
         throw new Error("Erreur lors de la modification du fournisseur");
       }
     } catch (error) {
-      console.error("Erreur lors de la modification du fournisseur:", error);
-      alert("Une erreur est survenue lors de la modification du fournisseur");
+      toast.error("Une erreur est survenue lors de la modification du fournisseur");
     }
   }
 
@@ -136,12 +135,12 @@ const SupplierManagementPage = () => {
       if (response) {
         setSuppliers(suppliers.filter(supplier => supplier._id !== currentSupplier._id));
         setShowDeleteModal(false);
+        toast.success("Fournisseur supprimé avec succès");
       } else {
         throw new Error("Erreur lors de la suppression du fournisseur");
       }
     } catch (error) {
-      console.error("Erreur lors de la suppression du fournisseur:", error);
-      alert("Une erreur est survenue lors de la suppression du fournisseur");
+      toast.error("Une erreur est survenue lors de la suppression du fournisseur");
     }
   }
 
@@ -184,7 +183,7 @@ const SupplierManagementPage = () => {
             
           </div>
           
-          {error && <div className="admin-error-message">{error}</div>}
+          {/* Les messages d'erreur sont maintenant affichés avec des toasts */}
           
           {loading ? (
             <div className="admin-loading">Chargement des fournisseurs...</div>

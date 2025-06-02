@@ -15,7 +15,7 @@ const userController = {
         return res.status(400).json({ message: 'User already exists' });
       }
 
-      // Create new user with status Inactif
+      // Create new user
       const user = new User({ 
         firstName, 
         lastName, 
@@ -24,7 +24,6 @@ const userController = {
         role, 
         department: department || 'Non assigné',
         phone: phone || '',
-        status: 'Inactif', // Initialiser comme Inactif
         lastLogin: null
       });
       console.log('New user created');
@@ -71,26 +70,13 @@ const userController = {
           return res.status(500).json({ message: 'Erreur de configuration du serveur' });
         }
 
-        // Mettre à jour la date de dernière connexion et le statut
-        const now = new Date();
-        const updates = {
-          lastLogin: now,
-          status: 'Actif',
-          lastActivity: now
-        };
-
-        // Mettre à jour l'utilisateur
-        const updatedUser = await User.findByIdAndUpdate(
-          user._id,
-          updates,
-          { new: true, select: '-password' }
-        );
+        // Récupérer l'utilisateur à jour
+        const updatedUser = await User.findById(user._id).select('-password');
 
         const token = jwt.sign(
           { 
             id: updatedUser._id, 
-            role: updatedUser.role,
-            status: updatedUser.status
+            role: updatedUser.role
           }, 
           process.env.JWT_SECRET, 
           { expiresIn: '30d' }
@@ -248,33 +234,20 @@ const userController = {
     }
   },
 
-  // Changer le statut d'un utilisateur
-  changeUserStatus: async (req, res) => {
+  // Simple déconnexion (sans mise à jour de données)
+  logout: async (req, res) => {
     try {
-      const { status } = req.body;
+      const userId = req.user.id;
       
-      if (!status || !['Actif', 'Inactif'].includes(status)) {
-        return res.status(400).json({ message: 'Invalid status value' });
+      if (!userId) {
+        return res.status(400).json({ message: 'User ID is required' });
       }
       
-      const user = await User.findById(req.params.id);
-      if (!user) {
-        console.log(`Status update failed: User not found: ${req.params.id}`);
-        return res.status(404).json({ message: 'User not found' });
-      }
-      
-      user.status = status;
-      const updatedUser = await user.save();
-      console.log(`User status updated to ${status}: ${req.params.id}`);
-      
-      // Retourner l'utilisateur mis à jour sans le mot de passe
-      const userResponse = updatedUser.toObject();
-      delete userResponse.password;
-      
-      res.json(userResponse);
+      console.log(`User logged out: ${userId}`);
+      res.status(200).json({ message: 'Logout successful' });
     } catch (err) {
-      console.error('Error changing user status');
-      res.status(400).json({ message: err.message });
+      console.error('Error during logout:', err);
+      res.status(500).json({ message: 'Server error during logout' });
     }
   },
 
@@ -296,29 +269,7 @@ const userController = {
     }
   },
 
-  // Ajouter une méthode pour vérifier et mettre à jour automatiquement le statut des utilisateurs inactifs
-  checkInactiveUsers: async () => {
-    try {
-      const inactivityThreshold = new Date();
-      inactivityThreshold.setDate(inactivityThreshold.getDate() - 30); // 30 jours d'inactivité
-      
-      const inactiveUsers = await User.find({
-        lastActivity: { $lt: inactivityThreshold },
-        status: 'Actif'
-      });
-      
-      for (const user of inactiveUsers) {
-        user.status = 'Inactif';
-        await user.save();
-        console.log(`Utilisateur ${user.email} marqué comme inactif après 30 jours d'inactivité`);
-      }
-      
-      return inactiveUsers.length;
-    } catch (error) {
-      console.error('Erreur lors de la vérification des utilisateurs inactifs:', error);
-      return 0;
-    }
-  },
+  // Cette fonction a été supprimée car nous n'utilisons plus lastActivity
 
   // Récupérer l'utilisateur actuel
   getCurrentUser: async (req, res, next) => {

@@ -3,11 +3,11 @@ import { FaEye, FaSearch, FaPlus } from "react-icons/fa";
 import { traitementAPI } from "../../services/api";
 import "../Commande/CommandeForm.css";
 import "./TraitementForm.css";
+import toast from "react-hot-toast";
 
 const TraitementList = ({ onViewTraitement, onAddTraitement }) => {
   const [traitements, setTraitements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredTraitements, setFilteredTraitements] = useState([]);
 
@@ -20,8 +20,7 @@ const TraitementList = ({ onViewTraitement, onAddTraitement }) => {
         setFilteredTraitements(response.data);
         setLoading(false);
       } catch (error) {
-        console.error("Erreur lors de la récupération des traitements:", error);
-        setError("Impossible de charger la liste des traitements");
+        toast.error("Impossible de charger la liste des traitements");
         setLoading(false);
       }
     };
@@ -82,7 +81,7 @@ const TraitementList = ({ onViewTraitement, onAddTraitement }) => {
         </div>
       </div>
 
-      {error && <div className="error-message">{error}</div>}
+      {/* Les messages d'erreur sont maintenant affichés avec des toasts */}
 
       {filteredTraitements.length === 0 ? (
         <div className="no-data">Aucun traitement trouvé</div>
