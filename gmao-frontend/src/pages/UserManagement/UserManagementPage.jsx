@@ -3,21 +3,21 @@ import {
   FaPlus,
   FaEdit,
   FaTrash,
-  FaSearch,
-  FaFileExport,
   FaFilter,
   FaSort,
+  FaTimes,
   FaUserShield,
   FaUserCog,
   FaUserTie,
   FaUserCheck,
-  FaCircle,
 } from "react-icons/fa"
 import Sidebar from "../../components/Sidebar/Sidebar"
 import Header from "../../components/Header/Header"
 import "./UserManagementPage.css"
 import Modal from "../../components/Modal/Modal"
 import AddUserForm from "../../components/User/AddUserForm";
+import EditUserModal from "../../components/User/EditUserModal";
+import DeleteUserModal from "../../components/User/DeleteUserModal";
 import { useSidebar } from "../../contexts/SidebarContext"
 import { userAPI } from "../../services/api"
 import toast from "react-hot-toast"
@@ -30,6 +30,7 @@ const UserManagementPage = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
   const [sortConfig, setSortConfig] = useState({ key: "lastName", direction: "ascending" })
   const [filters, setFilters] = useState({
@@ -106,52 +107,58 @@ const UserManagementPage = () => {
     setFilteredUsers(sortedUsers)
   }
 
-  // Fonction pour gérer l'ajout d'un nouvel utilisateur
-  const handleAddUser = async (newUser) => {
+  // Fonction pour gérer l'ajout d'un utilisateur
+  const handleAddUser = async (userData) => {
     try {
-      const response = await userAPI.register(newUser);
+      const response = await userAPI.addUser(userData);
       
       if (response && response.data) {
-        setUsers([...users, response.data]);
+        // Mettre à jour la liste des utilisateurs avec le nouvel utilisateur
+        setUsers(prevUsers => [...prevUsers, response.data]);
         setShowAddModal(false);
         toast.success("Utilisateur ajouté avec succès");
       } else {
         throw new Error("Erreur lors de l'ajout de l'utilisateur");
       }
     } catch (error) {
-      toast.error("Une erreur est survenue lors de l'ajout de l'utilisateur");
+      console.error("Erreur d'ajout d'utilisateur:", error);
+      toast.error(error.response?.data?.message || "Une erreur est survenue lors de l'ajout de l'utilisateur");
     }
   }
 
   // Fonction pour gérer la modification d'un utilisateur
   const handleEditUser = async (updatedUser) => {
     try {
-      const response = await userAPI.updateUser(updatedUser._id || updatedUser.id, updatedUser);
+      const userId = updatedUser._id || updatedUser.id;
+      const response = await userAPI.updateUser(userId, updatedUser);
       
       if (response && response.data) {
-        setUsers(users.map(user => 
-          (user._id || user.id) === (updatedUser._id || updatedUser.id) ? response.data : user
+        setUsers(prevUsers => prevUsers.map(user => 
+          (user._id || user.id) === userId ? response.data : user
         ));
         setShowEditModal(false);
+        setCurrentUser(null);
         toast.success("Utilisateur modifié avec succès");
       } else {
         throw new Error("Erreur lors de la modification de l'utilisateur");
       }
     } catch (error) {
-      toast.error("Une erreur est survenue lors de la modification de l'utilisateur");
+      console.error("Erreur de modification d'utilisateur:", error);
+      toast.error(error.response?.data?.message || "Une erreur est survenue lors de la modification de l'utilisateur");
     }
   }
 
   // Fonction pour gérer la suppression d'un utilisateur
   const handleDeleteUser = async (userId) => {
-    if (window.confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?")) {
-      try {
-        await userAPI.deleteUser(userId);
-        setUsers(users.filter(user => (user._id || user.id) !== userId));
-        toast.success("Utilisateur supprimé avec succès");
-      } catch (error) {
-        toast.error("Une erreur est survenue lors de la suppression de l'utilisateur");
-      }
+    try {
+      await userAPI.deleteUser(userId);
+      setUsers(prevUsers => prevUsers.filter(user => (user._id || user.id) !== userId));
+      setShowDeleteModal(false);
+      setCurrentUser(null);
+      toast.success("Utilisateur supprimé avec succès");
+    } catch (error) {
+      console.error("Erreur de suppression d'utilisateur:", error);
+      toast.error(error.response?.data?.message || "Une erreur est survenue lors de la suppression de l'utilisateur");
     }
   }
 
@@ -196,74 +203,102 @@ const UserManagementPage = () => {
   }
 
   return (
-    <div className="user-management-container">
+    <div className="user-container">
       <Sidebar isOpen={sidebarOpen} />
-      <div className="user-management-content">
+      <div className="user-content">
         <Header title="Gestion des Utilisateurs" onToggleSidebar={toggleSidebar} />
-        <main className="user-management-main">
+        <main className="user-main">
           <div className="user-controls">
-            <div className="search-bar">
-              <input
-                type="text"
-                placeholder="Rechercher par nom, email ou téléphone..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-
-            <div className="filter-controls">
-              <button className="filter-button" onClick={() => setShowFilters(!showFilters)}>
-                <FaFilter /> Filtres
-              </button>
-
-              <button className="add-button" onClick={() => setShowAddModal(true)}>
-                <FaPlus /> Ajouter un utilisateur
-              </button>
+            <div className="user-search-filter-container">
+              <div className="user-search-container">
+                <input
+                  type="text"
+                  placeholder="Rechercher par nom, email ou téléphone..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="user-search-input"
+                />
+                <button className="user-filter-button" onClick={() => setShowFilters(!showFilters)}>
+                  <FaFilter />
+                </button>
+              </div>
+              <div className="user-action-buttons">
+                <button 
+                  className="user-add-button"
+                  onClick={() => setShowAddModal(true)}
+                >
+                  <FaPlus /> Ajouter un utilisateur
+                </button>
+              </div>
             </div>
           </div>
 
           {showFilters && (
-            <div className="filters-panel">
-              <div className="filter-group">
-                <label>Rôle:</label>
-                <select value={filters.role} onChange={(e) => setFilters({ ...filters, role: e.target.value })}>
-                  {roles.map((role) => (
-                    <option key={`role-${role.toLowerCase().replace(/\s+/g, '-')}`} value={role}>
-                      {role === "all" ? "Tous les rôles" : role}
-                    </option>
-                  ))}
-                </select>
+            <div className="user-filters-container">
+              <div className="user-filters-header">
+                <h3>Filtres</h3>
+                <button
+                  className="user-close-filters-button"
+                  onClick={() => setShowFilters(false)}
+                >
+                  <FaTimes />
+                </button>
               </div>
+              <div className="user-filters-body">
+                <div className="user-filter-group">
+                  <label>Rôle</label>
+                  <select
+                    className="user-filter-select"
+                    value={filters.role}
+                    onChange={(e) => setFilters({ ...filters, role: e.target.value })}
+                  >
+                    {roles.map((role) => (
+                      <option key={`role-${role.toLowerCase().replace(/\s+/g, '-')}`} value={role}>
+                        {role === "all" ? "Tous les rôles" : 
+                         role === "admin" ? "Admin" : 
+                         role === "team_leader" ? "Team Leader" : 
+                         role === "technicien" ? "Technicien" : 
+                         role === "opérateur" ? "Opereteur" : 
+                         role}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              {/* Filtre de statut supprimé */}
-
-              <div className="filter-group">
-                <label>Département:</label>
-                <select value={filters.department} onChange={(e) => setFilters({ ...filters, department: e.target.value })}>
-                  {departments.map((department) => (
-                    <option key={`dept-${department.toLowerCase().replace(/\s+/g, '-')}`} value={department}>
-                      {department === "all" ? "Tous les départements" : department}
-                    </option>
-                  ))}
-                </select>
+                <div className="user-filter-group">
+                  <label>Département</label>
+                  <select
+                    className="user-filter-select"
+                    value={filters.department}
+                    onChange={(e) => setFilters({ ...filters, department: e.target.value })}
+                  >
+                    {departments.map((department) => (
+                      <option key={`dept-${department.toLowerCase().replace(/\s+/g, '-')}`} value={department}>
+                        {department === "all" ? "Tous les départements" : department}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="user-filter-actions">
+                  <button
+                    className="user-reset-filters-button"
+                    onClick={() => {
+                      setFilters({
+                        role: "all",
+                        department: "all",
+                      });
+                      setSearchTerm("");
+                    }}
+                  >
+                    Réinitialiser les filtres
+                  </button>
+                </div>
               </div>
-
-              <button
-                className="reset-filters"
-                onClick={() =>
-                  setFilters({
-                    role: "all",
-                    department: "all",
-                  })
-                }
-              >
-                Réinitialiser
-              </button>
             </div>
           )}
 
           {loading ? (
-            <div className="loading-indicator">Chargement des utilisateurs...</div>
+            <div className="user-loading-indicator">Chargement des utilisateurs...</div>
           ) : (
             <div className="user-table-container">
               <table className="user-table">
@@ -299,22 +334,34 @@ const UserManagementPage = () => {
                       <td>{user.lastName}</td>
                       <td>{user.firstName}</td>
                       <td>{user.email}</td>
-                      <td>{user.role}</td>
+                      <td>
+                        {user.role === "admin" ? "Admin" : 
+                         user.role === "team_leader" ? "Team Leader" : 
+                         user.role === "technicien" ? "Technicien" : 
+                         user.role === "opérateur" ? "Opérateur" :
+                         user.role}
+                      </td>
                       <td>{user.department}</td>
                       <td>{user.phone}</td>
                      
                       <td>
-                        <div className="action-buttons">
+                        <div className="user-action-buttons">
                           <button 
-                            className="action-btn edit" 
-                            onClick={() => handleEditUser(user)}
+                            className="user-action-btn user-edit" 
+                            onClick={() => {
+                              setCurrentUser(user);
+                              setShowEditModal(true);
+                            }}
                             title="Modifier"
                           >
                             <FaEdit />
                           </button>
                           <button 
-                            className="action-btn delete" 
-                            onClick={() => handleDeleteUser(user._id || user.id)}
+                            className="user-action-btn user-delete" 
+                            onClick={() => {
+                              setCurrentUser(user);
+                              setShowDeleteModal(true);
+                            }}
                             title="Supprimer"
                           >
                             <FaTrash />
@@ -341,19 +388,28 @@ const UserManagementPage = () => {
       </Modal>
 
       {/* Modal d'édition d'utilisateur */}
-      <Modal 
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        title="Modifier l'utilisateur"
-        size="large"
-      >
-        <AddUserForm
+      {showEditModal && currentUser && (
+        <EditUserModal
           user={currentUser}
           onSubmit={handleEditUser}
-          onClose={() => setShowEditModal(false)}
-          isEdit
+          onClose={() => {
+            setShowEditModal(false);
+            setCurrentUser(null);
+          }}
         />
-      </Modal>
+      )}
+
+      {/* Modal de suppression d'utilisateur */}
+      {showDeleteModal && currentUser && (
+        <DeleteUserModal
+          user={currentUser}
+          onConfirm={handleDeleteUser}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setCurrentUser(null);
+          }}
+        />
+      )}
     </div>
   )
 }

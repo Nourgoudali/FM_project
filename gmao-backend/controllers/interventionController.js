@@ -1,4 +1,5 @@
 const Intervention = require('../models/Intervention');
+const Equipment = require('../models/Equipment');
 
 const interventionController = {
   create: async (req, res) => {
@@ -140,9 +141,13 @@ const interventionController = {
 
       // Save the intervention with the generated reference
       await intervention.save();
+      
+      // Récupérer l'intervention avec les données complètes de l'équipement peuplées
+      const savedIntervention = await Intervention.findById(intervention._id)
+        .populate('equipment');
 
-      console.log('Intervention sauvegardée:', intervention);
-      res.status(201).json(intervention);
+      console.log('Intervention sauvegardée:', savedIntervention);
+      res.status(201).json(savedIntervention);
     } catch (err) {
       console.error('Intervention creation error:', err);
       res.status(400).json({ 
@@ -193,7 +198,8 @@ const interventionController = {
   getById: async (req, res) => {
     const { id } = req.params;
     try {
-      const intervention = await Intervention.findById(id).populate('equipment');
+      const intervention = await Intervention.findById(id)
+        .populate('equipment');
       if (!intervention) return res.status(404).json({ message: 'Intervention not found' });
       res.json(intervention);
     } catch (err) {

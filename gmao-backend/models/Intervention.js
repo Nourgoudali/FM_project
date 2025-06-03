@@ -53,17 +53,25 @@ interventionSchema.pre('save', async function (next) {
   // Détermination automatique du statut en fonction des dates
   const now = new Date();
   
-  // Si la date de fin est définie, l'intervention est terminée
-  if (this.endDate) {
-    this.status = 'Terminée';
-  } 
-  // Si la date de début est dans le futur, l'intervention est planifiée
-  else if (this.startDate > now) {
-    this.status = 'Planifiée';
-  } 
-  // Si la date de début est passée ou aujourd'hui et pas de date de fin, l'intervention est en cours
-  else {
-    this.status = 'En cours';
+  // Si c'est une nouvelle intervention ou si le statut n'est pas déjà défini manuellement
+  if (this.isNew || !this.isModified('status')) {
+    // Si la date de fin est définie et est passée, l'intervention est terminée
+    if (this.endDate && new Date(this.endDate) <= now) {
+      this.status = 'Terminée';
+    }
+    // Si la date de début est dans le futur, l'intervention est planifiée
+    else if (new Date(this.startDate) > now) {
+      this.status = 'Planifiée';
+    }
+    // Si la date de début est passée ou aujourd'hui et pas de date de fin passée, l'intervention est en cours
+    else if (new Date(this.startDate) <= now && (!this.endDate || new Date(this.endDate) > now)) {
+      this.status = 'En cours';
+    }
+  }
+  
+  // Vérification de la cohérence des dates
+  if (this.endDate && new Date(this.endDate) < new Date(this.startDate)) {
+    return next(new Error('La date de fin doit être postérieure à la date de début'));
   }
   
   next();

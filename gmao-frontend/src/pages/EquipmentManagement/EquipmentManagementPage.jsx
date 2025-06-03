@@ -10,7 +10,7 @@ import EditEquipmentModal from "../../components/Equipment/EditEquipmentModal"
 import "./EquipmentManagementPage.css"
 import { useSidebar } from "../../contexts/SidebarContext"
 import { equipmentAPI } from "../../services/api"
-import { FaHistory, FaEdit, FaTrash, FaEye } from "react-icons/fa"
+import { FaHistory, FaEdit, FaTrash, FaEye, FaPlus, FaFilter, FaTimes } from "react-icons/fa"
 import toast from "react-hot-toast"
 
 const EquipmentManagementPage = () => {
@@ -20,6 +20,7 @@ const EquipmentManagementPage = () => {
   const [equipments, setEquipments] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
 
   // États pour les modaux
   const [showEditModal, setShowEditModal] = useState(false)
@@ -43,30 +44,42 @@ const EquipmentManagementPage = () => {
       (equipment?.location || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (equipment?.brand || '').toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = filterStatus === "all" || 
-      (equipment?.status || '').toLowerCase() === filterStatus.toLowerCase();
+    const matchesStatus = filterStatus === "all" || equipment?.status === filterStatus;
 
     return matchesSearch && matchesStatus;
   });
 
-  const getStatusColor = (status) => {
+  const getStatusClass = (status) => {
+    // Mapping entre les valeurs affichées en français et les classes CSS
     switch (status) {
       case "En service":
-        return "bg-green-500"
+      case "operational":
+        return "equip-status-operational"
       case "En maintenance":
-        return "bg-yellow-500"
+      case "maintenance":
+        return "equip-status-maintenance"
       case "Hors service":
-        return "bg-red-500"
+      case "out_of_service":
+        return "equip-status-out-of-service"
       default:
-        return "bg-gray-500"
+        return "equip-status-unknown"
+    }
+  }
+  
+  // Fonction pour traduire les valeurs d'énumération du backend en français
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case "operational":
+        return "En service"
+      case "maintenance":
+        return "En maintenance"
+      case "out_of_service":
+        return "Hors service"
+      default:
+        return status || "-"
     }
   }
 
-  const getAvailabilityColor = (availability) => {
-    if (availability >= 90) return "bg-green-500"
-    if (availability >= 70) return "bg-yellow-500"
-    return "bg-red-500"
-  }
 
   const handleAddEquipment = async (newEquipment, error = null) => {
     // If there's an error, show it and return
@@ -188,57 +201,87 @@ const EquipmentManagementPage = () => {
   }
 
   return (
-    <div className="emp-equipment-management-container">
+    <div className="equip-container">
       <Sidebar isOpen={sidebarOpen} />
 
-      <div className="emp-equipment-management-content">
+      <div className="equip-content">
         <Header title="Gestion des Équipements" onToggleSidebar={toggleSidebar} />
 
-        <main className="emp-equipment-management-main">
-          {/* Actions Bar */}
-          <div className="emp-actions-bar">
-            <div className="emp-search-container">
-              <input
-                type="text"
-                placeholder="Rechercher un équipement..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="emp-search-input"
-              />
-            </div>
-
-            <div className="emp-filters-container">
-              <div className="emp-filter-select">
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="emp-select-input"
-                >
-                  <option value="all">Tous les statuts</option>
-                  <option value="En service">En service</option>
-                  <option value="En maintenance">En maintenance</option>
-                  <option value="Hors service">Hors service</option>
-                </select>
-                <span className="emp-select-icon"></span>
+        <main className="equip-main">
+          <div className="equip-controls">
+            <div className="equip-search-filter-container">
+              <div className="equip-search-container">
+                <input
+                  type="text"
+                  placeholder="Rechercher un équipement..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="equip-search-input"
+                />
+                <button className="equip-filter-button" onClick={() => setShowFilters(!showFilters)}>
+                  <FaFilter />
+                </button>
               </div>
-
-              <button className="emp-btn emp-btn-primary emp-add-btn" onClick={() => setShowAddModal(true)}>
-                <span className="emp-btn-icon emp-add-icon"></span>
-                Ajouter un équipement
-              </button>
+              <div className="equip-action-buttons">
+                <button 
+                  className="equip-add-button"
+                  onClick={() => setShowAddModal(true)}
+                >
+                  <FaPlus /> Ajouter un équipement
+                </button>
+              </div>
             </div>
+            
+            {showFilters && (
+              <div className="equip-filters-container">
+                <div className="equip-filters-header">
+                  <h3>Filtres</h3>
+                  <button
+                    className="equip-close-filters-button"
+                    onClick={() => setShowFilters(false)}
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+                <div className="equip-filters-body">
+                  <div className="equip-filter-group">
+                    <label>Statut</label>
+                    <select
+                      className="equip-filter-select"
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                    >
+                      <option value="all">Tous les statuts</option>
+                      <option value="operational">En service</option>
+                      <option value="maintenance">En maintenance</option>
+                      <option value="out_of_service">Hors service</option>
+                    </select>
+                  </div>
+                  <div className="equip-filter-actions">
+                    <button
+                      className="equip-reset-filters-button"
+                      onClick={() => {
+                        setFilterStatus("all");
+                        setSearchTerm("");
+                        setShowFilters(false);
+                      }}
+                    >
+                      Réinitialiser les filtres
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Les messages d'erreur sont maintenant affichés avec des toasts */}
 
           {/* Liste des équipements */}
-          <div className="emp-equipment-table-container">
+          <div className="equip-table-container">
             {loading ? (
-              <div className="emp-loading-indicator">Chargement des équipements...</div>
-            ) : filteredEquipments.length === 0 ? (
-              <div className="emp-no-results">Aucun équipement trouvé</div>
+              <div className="equip-loading-indicator">Chargement des équipements...</div>
             ) : (
-              <table className="emp-equipment-table">
+              <table className="equip-table">
                 <thead>
                   <tr>
                     <th>Référence</th>
@@ -251,7 +294,6 @@ const EquipmentManagementPage = () => {
                     <th>Numéro de série</th>
                     <th>Date d'achat</th>
                     <th>Date de fin de garantie</th>
-                    <th>Description</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -262,31 +304,34 @@ const EquipmentManagementPage = () => {
                       <td>{equipment.name || '-'}</td>
                       <td>{equipment.category || '-'}</td>
                       <td>{equipment.location || '-'}</td>
-                      <td>{equipment.status || '-'}</td>
+                      <td>
+                        <span className={`equip-status-badge ${getStatusClass(equipment.status)}`}>
+                          {getStatusLabel(equipment.status)}
+                        </span>
+                      </td>
                       <td>{equipment.brand || '-'}</td>
                       <td>{equipment.model || '-'}</td>
                       <td>{equipment.serialNumber || '-'}</td>
                       <td>{equipment.purchaseDate ? new Date(equipment.purchaseDate).toLocaleDateString() : '-'}</td>
                       <td>{equipment.warrantyEnd ? new Date(equipment.warrantyEnd).toLocaleDateString() : '-'}</td>
-                      <td>{equipment.description || '-'}</td>
                       <td>
-                        <div className="emp-btn-group">
+                        <div className="equip-action-buttons">
                           <button
-                            className="emp-btn emp-btn-sm emp-btn-info"
+                            className="equip-action-btn equip-view"
                             onClick={() => handleOpenViewModal(equipment)}
                             title="Voir les détails"
                           >
                             <FaEye />
                           </button>
                           <button
-                            className="emp-btn emp-btn-sm emp-btn-primary"
+                            className="equip-action-btn equip-edit"
                             onClick={() => handleOpenEditModal(equipment)}
                             title="Modifier l'équipement"
                           >
                             <FaEdit />
                           </button>
                           <button
-                            className="emp-btn emp-btn-sm emp-btn-danger"
+                            className="equip-action-btn equip-delete"
                             onClick={() => handleOpenDeleteModal(equipment)}
                             title="Supprimer l'équipement"
                           >
@@ -337,8 +382,8 @@ const EquipmentManagementPage = () => {
       >
         <p>Êtes-vous sûr de vouloir supprimer l'équipement <b>{selectedEquipment?.name}</b> ? Cette action est irréversible.</p>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "1rem", marginTop: "2rem" }}>
-          <button className="emp-btn emp-btn-outline" onClick={handleCloseModals}>Annuler</button>
-          <button className="emp-btn emp-btn-primary" onClick={handleDeleteEquipmentModal}>Supprimer</button>
+          <button className="equip-btn equip-btn-outline" onClick={handleCloseModals}>Annuler</button>
+          <button className="equip-btn equip-btn-delete" onClick={handleDeleteEquipmentModal}>Supprimer</button>
         </div>
       </Modal>
     </div>

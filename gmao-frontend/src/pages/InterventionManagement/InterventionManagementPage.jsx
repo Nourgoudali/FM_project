@@ -5,7 +5,7 @@ import NewInterventionModal from "../../components/Intervention/NewInterventionM
 import EditInterventionModal from "../../components/Intervention/EditInterventionModal"
 import InterventionDetailsModal from "../../components/Intervention/InterventionDetailsModal"
 import "./InterventionManagementPage.css"
-import { FaEye, FaPen, FaCalendarAlt, FaList } from "react-icons/fa"
+import { FaEye, FaEdit, FaPlus, FaFilter, FaTimes} from "react-icons/fa"
 import { useSidebar } from "../../contexts/SidebarContext"
 import { interventionAPI, equipmentAPI } from "../../services/api"
 import toast from "react-hot-toast"
@@ -16,6 +16,7 @@ const InterventionManagementPage = () => {
   const [showNewModal, setShowNewModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
   const [selectedIntervention, setSelectedIntervention] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [filters, setFilters] = useState({
@@ -25,6 +26,7 @@ const InterventionManagementPage = () => {
   })
   const [loading, setLoading] = useState(true)
   const [interventions, setInterventions] = useState([])
+  const [filteredInterventions, setFilteredInterventions] = useState([])
 
   // Charger les interventions et les équipements au chargement de la page
   useEffect(() => {
@@ -64,36 +66,41 @@ const InterventionManagementPage = () => {
     fetchData()
   }, [])
 
+  // Mettre à jour les interventions filtrées quand les interventions originales changent
+  useEffect(() => {
+    setFilteredInterventions(interventions);
+  }, [interventions]);
+
   // Appliquer les filtres
   useEffect(() => {
-    let filteredData = interventions
+    let filteredData = [...interventions];
 
     if (searchTerm) {
-      const lowercaseTerm = searchTerm.toLowerCase()
+      const lowercaseTerm = searchTerm.toLowerCase();
       filteredData = filteredData.filter(
         (item) => 
-          item.reference.toLowerCase().includes(lowercaseTerm) || 
+          (item.reference && item.reference.toLowerCase().includes(lowercaseTerm)) || 
           (item.equipment?.reference?.toLowerCase().includes(lowercaseTerm) || 
            item.equipment?.name?.toLowerCase().includes(lowercaseTerm) || 
            (typeof item.equipment === 'string' && item.equipment.toLowerCase().includes(lowercaseTerm))) ||
           item.technician?.name?.toLowerCase().includes(lowercaseTerm)
-      )
+      );
     }
 
     if (filters.type !== "all") {
-      filteredData = filteredData.filter(item => item.type === filters.type)
+      filteredData = filteredData.filter(item => item.type === filters.type);
     }
 
     if (filters.status !== "all") {
-      filteredData = filteredData.filter(item => item.status === filters.status)
+      filteredData = filteredData.filter(item => item.status === filters.status);
     }
 
     if (filters.priority !== "all") {
-      filteredData = filteredData.filter(item => item.priority === filters.priority)
+      filteredData = filteredData.filter(item => item.priority === filters.priority);
     }
 
-    setInterventions(filteredData)
-  }, [searchTerm, filters])
+    setFilteredInterventions(filteredData);
+  }, [searchTerm, filters, interventions])
 
   const getPriorityClass = (priority) => {
     switch(priority) {
@@ -117,16 +124,15 @@ const InterventionManagementPage = () => {
 
   const getTypeClass = (type) => {
     switch(type) {
-      case "Curative": return "intv-type-curative"
-      case "Préventive": return "intv-type-preventive"
-      case "Corrective": return "intv-type-corrective"
+      case "Curative": return "curative"
+      case "Préventive": return "preventive"
+      case "Corrective": return "corrective"
       default: return ""
     }
   }
 
   const handleNewIntervention = async (data) => {
     try {
-      // Préparation des données
       const interventionData = {
         equipment: data.equipment,
         type: data.type,
@@ -136,18 +142,19 @@ const InterventionManagementPage = () => {
         description: data.description,
         location: data.location,
         technician: data.technician
-      }
+      };
       
-      // Envoi des données au backend
-      const response = await interventionAPI.createIntervention(interventionData)
+      const response = await interventionAPI.createIntervention(interventionData);
       
       if (response && response.data) {
-        setInterventions([...interventions, response.data])
-        setShowNewModal(false)
-        toast.success("Intervention créée avec succès")
+        // L'API retourne maintenant directement l'intervention avec les données d'équipement peuplées
+        setInterventions(prevInterventions => [...prevInterventions, response.data]);
+        setShowNewModal(false);
+        toast.success("Intervention créée avec succès");
       }
     } catch (error) {
-      toast.error("Une erreur est survenue lors de la création de l'intervention")
+      toast.error("Une erreur est survenue lors de la création de l'intervention");
+      console.error("Erreur de création d'intervention:", error);
     }
   }
 
@@ -156,18 +163,22 @@ const InterventionManagementPage = () => {
       const response = await interventionAPI.updateIntervention(
         updatedIntervention._id,
         updatedIntervention
-      )
+      );
       
       if (response && response.data) {
-        const updatedInterventions = interventions.map(item => 
-          item._id === response.data._id ? response.data : item
-        )
-        setInterventions(updatedInterventions)
-        setShowEditModal(false)
-        toast.success("Intervention mise à jour avec succès")
+        // L'API retourne maintenant directement l'intervention avec les données d'équipement peuplées
+        setInterventions(prevInterventions => {
+          return prevInterventions.map(item => 
+            item._id === response.data._id ? response.data : item
+          );
+        });
+        
+        setShowEditModal(false);
+        toast.success("Intervention mise à jour avec succès");
       }
     } catch (error) {
-      toast.error("Une erreur est survenue lors de la mise à jour de l'intervention")
+      toast.error("Une erreur est survenue lors de la mise à jour de l'intervention");
+      console.error("Erreur de mise à jour d'intervention:", error);
     }
   }
 
@@ -189,70 +200,112 @@ const InterventionManagementPage = () => {
         <Header title="Gestion des Interventions" onToggleSidebar={toggleSidebar} />
         
         <main className="intv-main">
-          <div className="intv-header"></div>
-          
-          <div className="intv-filters">
-            <div className="intv-search-container">
-              <input 
-                type="text" 
-                placeholder="Rechercher une intervention..." 
-                className="intv-search"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="intv-filter-buttons">
-              <div className="intv-filter-dropdown">
-                <select 
-                  className="intv-filter-select" 
-                  value={filters.type}
-                  onChange={(e) => setFilters({...filters, type: e.target.value})}
-                >
-                  <option value="all">Tous les types</option>
-                  <option value="Curative">Curative</option>
-                  <option value="Préventive">Préventive</option>
-                  <option value="Corrective">Corrective</option>
-                </select>
+          <div className="intv-controls">
+            <div className="intv-search-filter-container">
+              <div className="intv-search-container">
+                <input 
+                  type="text" 
+                  placeholder="Rechercher une intervention..." 
+                  className="intv-search-input"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <button className="intv-filter-button" onClick={() => setShowFilters(!showFilters)}>
+                  <FaFilter />
+                </button>
               </div>
-              <div className="intv-filter-dropdown">
-                <select 
-                  className="intv-filter-select"
-                  value={filters.status}
-                  onChange={(e) => setFilters({...filters, status: e.target.value})}
+              <div className="intv-action-buttons">
+                <button 
+                  className="intv-add-button"
+                  onClick={() => setShowNewModal(true)}
                 >
-                  <option value="all">Tous les statuts</option>
-                  <option value="En cours">En cours</option>
-                  <option value="Planifiée">Planifiée</option>
-                  <option value="Terminée">Terminée</option>
-                  <option value="Reportée">Reportée</option>
-                </select>
+                  <FaPlus /> Ajouter une intervention
+                </button>
               </div>
-              <div className="intv-filter-dropdown">
-                <select 
-                  className="intv-filter-select"
-                  value={filters.priority}
-                  onChange={(e) => setFilters({...filters, priority: e.target.value})}
-                >
-                  <option value="all">Toutes les priorités</option>
-                  <option value="Basse">Basse</option>
-                  <option value="Normale">Normale</option>
-                  <option value="Haute">Haute</option>
-                  <option value="Critique">Critique</option>
-                </select>
-              </div>
-              <button 
-                className="intv-new-btn"
-                onClick={() => setShowNewModal(true)}
-              >
-                <span>+</span> Nouvelle Intervention
-              </button>
             </div>
           </div>
+          
+          {showFilters && (
+            <div className="intv-filters-container">
+              <div className="intv-filters-header">
+                <h3>Filtres</h3>
+                <button
+                  className="intv-close-filters-button"
+                  onClick={() => setShowFilters(false)}
+                >
+                  <FaTimes />
+                </button>
+              </div>
+              <div className="intv-filters-body">
+                <div className="intv-filter-group">
+                  <label>Type</label>
+                  <select 
+                    className="intv-filter-select"
+                    value={filters.type}
+                    onChange={(e) => setFilters({...filters, type: e.target.value})}
+                  >
+                    <option value="all">Tous</option>
+                    <option value="Préventive">Préventive</option>
+                    <option value="Curative">Curative</option>
+                    <option value="Corrective">Corrective</option>
+                  </select>
+                </div>
+                
+                <div className="intv-filter-group">
+                  <label>Statut</label>
+                  <select 
+                    className="intv-filter-select"
+                    value={filters.status}
+                    onChange={(e) => setFilters({...filters, status: e.target.value})}
+                  >
+                    <option value="all">Tous</option>
+                    <option value="Planifiée">Planifiée</option>
+                    <option value="En cours">En cours</option>
+                    <option value="Terminée">Terminée</option>
+                    <option value="Reportée">Reportée</option>
+                  </select>
+                </div>
+                
+                <div className="intv-filter-group">
+                  <label>Priorité</label>
+                  <select 
+                    className="intv-filter-select"
+                    value={filters.priority}
+                    onChange={(e) => setFilters({...filters, priority: e.target.value})}
+                  >
+                    <option value="all">Tous</option>
+                    <option value="Basse">Basse</option>
+                    <option value="Normale">Normale</option>
+                    <option value="Haute">Haute</option>
+                    <option value="Critique">Critique</option>
+                  </select>
+                </div>
+              </div>
+              <div className="intv-filter-actions">
+                <button 
+                  className="intv-reset-filters-button"
+                  onClick={() => {
+                    setFilters({
+                      type: "all",
+                      status: "all",
+                      priority: "all"
+                    });
+                    setSearchTerm("");
+                  }}
+                >
+                  Réinitialiser les filtres
+                </button>
+              </div>
+            </div>
+          )}
+          
+          
           
           {loading ? (
             <div className="loading-indicator">Chargement des interventions...</div>
           ) : viewMode === "list" ? (
             <div className="intv-table-container">
+            <div className="intv-table-wrapper">
               <table className="intv-table">
                 <thead>
                   <tr>
@@ -277,44 +330,44 @@ const InterventionManagementPage = () => {
                           : intervention.equipment || 'Équipement non assigné'}
                       </td>
                       <td>
-                        <span className={`badge ${getTypeClass(intervention.type)}`}>
+                        <span className={`intv-type-badge ${getTypeClass(intervention.type)}`}>
                           {intervention.type}
                         </span>
                       </td>
                       <td>
-                        <span className={`badge ${getPriorityClass(intervention.priority)}`}>
+                        <span className={`intv-priority-badge ${getPriorityClass(intervention.priority)}`}>
                           {intervention.priority}
                         </span>
                       </td>
                       <td>
-                        <span className={`badge ${getStatusClass(intervention.status)}`}>
+                        <span className={`intv-status-badge ${getStatusClass(intervention.status)}`}>
                           {intervention.status}
                         </span>
                       </td>
                       <td>{intervention.startDate ? new Date(intervention.startDate).toLocaleDateString() : 'Non spécifiée'}</td>
                       <td>{intervention.endDate ? new Date(intervention.endDate).toLocaleDateString() : 'Non spécifiée'}</td>
                       <td>
-                        <div className="technician-info">
-                          <span className="technician-name">
+                        <div className="intv-technician-info">
+                          <span className="intv-technician-name">
                             {intervention.technician?.name || 'Non assigné'}
                           </span>
                         </div>
                       </td>
                       <td>
-                        <div className="action-buttons">
+                        <div className="intv-action-buttons">
                           <button
-                            className="action-btn view"
+                            className="intv-action-btn intv-view"
                             onClick={() => handleViewIntervention(intervention)}
                             title="Voir les détails"
                           >
                             <FaEye />
                           </button>
                           <button
-                            className="action-btn edit"
+                            className="intv-action-btn intv-edit"
                             onClick={() => handleEditButton(intervention)}
                             title="Modifier"
                           >
-                            <FaPen />
+                            <FaEdit />
                           </button>
                         </div>
                       </td>
@@ -323,6 +376,7 @@ const InterventionManagementPage = () => {
                 </tbody>
               </table>
             </div>
+          </div>
           ) : (
             <div className="intv-calendar-view">
               <p className="intv-calendar-placeholder">Vue calendrier en développement</p>

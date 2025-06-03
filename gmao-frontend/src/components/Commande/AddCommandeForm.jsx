@@ -192,20 +192,20 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
   const totalTTC = selectedProducts.reduce((sum, product) => sum + product.ttc, 0);
 
   return (
-    <div className="modal-overlay">
-      <div className="commande-form-modal">
-        <div className="commande-form-header">
+    <div className="cmd-modal-overlay">
+      <div className="cmd-form-modal">
+        <div className="cmd-form-header">
           <h2>Ajouter une nouvelle commande</h2>
-          <button className="close-button" onClick={onClose}>
+          <button className="cmd-close-button" onClick={onClose}>
             <FaTimes />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="commande-form">
-          <div className="form-section">
+        <form onSubmit={handleSubmit} className="cmd-form">
+          <div className="cmd-form-section">
             <h3>Informations générales</h3>
-            <div className="form-row">
-              <div className="form-group">
+            <div className="cmd-form-row">
+              <div className="cmd-form-group">
                 <label htmlFor="fournisseur">Fournisseur</label>
                 <select
                   id="fournisseur"
@@ -217,13 +217,13 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
                   <option value="">Sélectionner un fournisseur</option>
                   {fournisseurs.map((fournisseur) => (
                     <option key={fournisseur._id} value={fournisseur._id}>
-                      {fournisseur.nom}
+                    {fournisseur.nomEntreprise}  - {fournisseur.nom} {fournisseur.prenom} 
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div className="form-group">
+              <div className="cmd-form-group">
                 <label htmlFor="devise">Devise</label>
                 <select
                   id="devise"
@@ -238,7 +238,7 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
                 </select>
               </div>
 
-              <div className="form-group">
+              <div className="cmd-form-group">
                 <label htmlFor="tva">TVA (%)</label>
                 <input
                   type="text"
@@ -260,7 +260,7 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="cmd-form-group">
                 <label htmlFor="numeroBL">Numéro BL (facultatif)</label>
                 <input
                   type="text"
@@ -273,10 +273,10 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
             </div>
           </div>
 
-          <div className="form-section">
+          <div className="cmd-form-section">
             <h3>Ajouter des produits</h3>
-            <div className="form-row">
-              <div className="form-group">
+            <div className="cmd-form-row">
+              <div className="cmd-form-group">
                 <label htmlFor="produit">Produit</label>
                 <select
                   id="produit"
@@ -293,7 +293,7 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
                 </select>
               </div>
 
-              <div className="form-group">
+              <div className="cmd-form-group">
                 <label htmlFor="quantiteSouhaitee">Quantité souhaitée</label>
                 <input
                   type="text"
@@ -307,7 +307,7 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="cmd-form-group">
                 <label htmlFor="quantiteMinCommande">Quantité min à commander</label>
                 <input
                   type="text"
@@ -319,7 +319,7 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="cmd-form-group">
                 <label htmlFor="prixUnitaire">Prix unitaire</label>
                 <input
                   type="text"
@@ -331,7 +331,7 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="cmd-form-group">
                 <label htmlFor="remise">Remise (%)</label>
                 <input
                   type="text"
@@ -348,7 +348,7 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
             <div style={{ textAlign: 'right', marginTop: '1rem' }}>
               <button
                 type="button"
-                className="add-product-button"
+                className="cmd-add-product-button"
                 onClick={addProductToList}
               >
                 Ajouter
@@ -356,15 +356,15 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
             </div>
           </div>
 
-          {error && <div className="error-message">{error}</div>}
+          {error && <div className="cmd-error-message">{error}</div>}
 
-          <div className="selected-products-section">
+          <div className="cmd-selected-products-section">
             <h3>Produits sélectionnés</h3>
             {selectedProducts.length === 0 ? (
               <p>Aucun produit sélectionné</p>
             ) : (
-              <div className="selected-products-table-container">
-                <table className="selected-products-table">
+              <div className="cmd-selected-products-table-container">
+                <table className="cmd-selected-products-table">
                   <thead>
                     <tr>
                       <th>Référence</th>
@@ -392,7 +392,7 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
                         <td>
                           <button
                             type="button"
-                            className="remove-product-button"
+                            className="cmd-remove-product-button"
                             onClick={() => removeProduct(index)}
                           >
                             <FaTimes />
@@ -402,7 +402,7 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
                     ))}
                   </tbody>
                   <tfoot>
-                  <td colSpan="5" className="view-cmd-total-label">Total</td>
+                  <td colSpan="5" className="cmd-total-label">Total</td>
                     <td>{totalHT.toFixed(2)}</td>
                     <td></td>
                     <td>{totalTTC.toFixed(2)}</td>
@@ -412,13 +412,13 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
             )}
           </div>
 
-          <div className="form-actions">
-            <button type="button" className="cancel-button" onClick={onClose}>
+          <div className="cmd-form-actions">
+            <button type="button" className="cmd-cancel-button" onClick={onClose}>
               Annuler
             </button>
             <button
               type="submit"
-              className="submit-button"
+              className="cmd-submit-button"
               disabled={loading || selectedProducts.length === 0}
             >
               {loading ? "Création en cours..." : "Créer la commande"}

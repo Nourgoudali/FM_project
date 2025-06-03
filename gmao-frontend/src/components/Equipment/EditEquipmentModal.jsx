@@ -1,5 +1,3 @@
-"use client"
-
 import { FaTimes } from "react-icons/fa"
 import { AddEquipmentForm } from "./AddEquipmentForm"
 import "./EquipmentModals.css"

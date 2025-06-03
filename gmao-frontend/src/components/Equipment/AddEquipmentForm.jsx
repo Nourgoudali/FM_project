@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import "./AddEquipmentForm.css"
 import { equipmentAPI } from "../../services/api"
@@ -24,6 +22,26 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
   const [imagePreview, setImagePreview] = useState(initialData?.image && typeof initialData.image === 'string' ? 
     `http://localhost:5000${initialData.image}` : null)
 
+  // Fonction pour formater les dates au format YYYY-MM-DD pour les champs input type="date"
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return ""
+    
+    // Si la date est déjà au format YYYY-MM-DD, on la retourne telle quelle
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString
+    
+    // Sinon, on essaie de la convertir
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return "" // Date invalide
+      
+      // Format YYYY-MM-DD
+      return date.toISOString().split('T')[0]
+    } catch (error) {
+      console.error("Erreur lors du formatage de la date:", error)
+      return ""
+    }
+  }
+
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -33,8 +51,8 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
         brand: initialData.brand || "",
         model: initialData.model || "",
         serialNumber: initialData.serialNumber || "",
-        purchaseDate: initialData.purchaseDate || "",
-        warrantyEnd: initialData.warrantyEnd || "",
+        purchaseDate: formatDateForInput(initialData.purchaseDate),
+        warrantyEnd: formatDateForInput(initialData.warrantyEnd),
         status: initialData.status || "En service",
         description: initialData.description || "",
       })
@@ -131,8 +149,6 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
         <h3 className="aef-form-section-title">Informations générales</h3>
 
         <div className="aef-form-row">
-          {/* Le champ de référence a été supprimé car il est généré automatiquement */}
-
           <div className="aef-form-group">
             <label htmlFor="name" className="aef-form-label">
               Nom *
@@ -146,6 +162,25 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
               className="aef-form-control"
               required
             />
+          </div>
+
+          <div className="aef-form-group">
+            <label htmlFor="status" className="aef-form-label">
+              État *
+            </label>
+            <select
+              id="status"
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              className="aef-form-control"
+              required
+            >
+              <option value="En service">En service</option>
+              <option value="En maintenance">En maintenance</option>
+              <option value="Hors service">Hors service</option>
+              <option value="En stock">En stock</option>
+            </select>
           </div>
         </div>
 
@@ -245,31 +280,6 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
           </div>
 
           <div className="aef-form-group">
-            <label htmlFor="status" className="aef-form-label">
-              État *
-            </label>
-            <select
-              id="status"
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              className="aef-form-control"
-              required
-            >
-              <option value="En service">En service</option>
-              <option value="En maintenance">En maintenance</option>
-              <option value="Hors service">Hors service</option>
-              <option value="En stock">En stock</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div className="aef-form-section">
-        <h3 className="aef-form-section-title">Informations complémentaires</h3>
-
-        <div className="aef-form-row">
-          <div className="aef-form-group">
             <label htmlFor="purchaseDate" className="aef-form-label">
               Date d'achat
             </label>
@@ -282,7 +292,13 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
               className="aef-form-control"
             />
           </div>
+        </div>
+      </div>
 
+      <div className="aef-form-section">
+        <h3 className="aef-form-section-title">Informations complémentaires</h3>
+
+        <div className="aef-form-row">
           <div className="aef-form-group">
             <label htmlFor="warrantyEnd" className="aef-form-label">
               Fin de garantie
@@ -295,6 +311,31 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
               onChange={handleChange}
               className="aef-form-control"
             />
+          </div>
+
+          <div className="aef-form-group">
+            <label htmlFor="image" className="aef-form-label">
+              Image de l'équipement
+            </label>
+            <div className="aef-image-upload-container">
+              <input
+                type="file"
+                id="image"
+                name="image"
+                onChange={handleImageChange}
+                accept="image/*"
+                className="aef-image-input"
+              />
+              <div className="aef-image-preview-container">
+                {imagePreview ? (
+                  <img src={imagePreview || "/placeholder.svg"} alt="Aperçu" className="aef-image-preview" />
+                ) : (
+                  <div className="aef-image-placeholder">
+                    <span className="aef-image-placeholder-text">Ajouter une image</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -310,31 +351,6 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
             className="aef-form-control"
             rows="3"
           ></textarea>
-        </div>
-
-        <div className="aef-form-group">
-          <label htmlFor="image" className="aef-form-label">
-            Image de l'équipement
-          </label>
-          <div className="aef-image-upload-container">
-            <input
-              type="file"
-              id="image"
-              name="image"
-              onChange={handleImageChange}
-              accept="image/*"
-              className="aef-image-input"
-            />
-            <div className="aef-image-preview-container">
-              {imagePreview ? (
-                <img src={imagePreview || "/placeholder.svg"} alt="Aperçu" className="aef-image-preview" />
-              ) : (
-                <div className="aef-image-placeholder">
-                  <span className="aef-image-placeholder-text">Ajouter une image</span>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </div>
 

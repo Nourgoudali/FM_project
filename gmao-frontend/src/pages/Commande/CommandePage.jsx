@@ -231,7 +231,7 @@ const CommandePage = () => {
 
               <div className="commande-action-buttons">
                 <button className="commande-add-button" onClick={handleAddClick}>
-                  <FaPlus /> Ajouter
+                  <FaPlus /> Ajouter une commande
                 </button>
               </div>
             </div>
@@ -278,26 +278,6 @@ const CommandePage = () => {
                       <option value="USD">USD</option>
                     </select>
                   </div>
-                  <div className="commande-filter-group">
-                    <label>Date début:</label>
-                    <input
-                      type="date"
-                      value={filters.dateDebut}
-                      onChange={(e) =>
-                        setFilters({ ...filters, dateDebut: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="commande-filter-group">
-                    <label>Date fin:</label>
-                    <input
-                      type="date"
-                      value={filters.dateFin}
-                      onChange={(e) =>
-                        setFilters({ ...filters, dateFin: e.target.value })
-                      }
-                    />
-                  </div>
                   <div className="commande-filter-actions">
                     <button
                       className="commande-reset-filters-button"
@@ -313,8 +293,6 @@ const CommandePage = () => {
 
           {loading ? (
             <div className="commande-loading">Chargement des commandes...</div>
-          ) : filteredCommandes.length === 0 ? (
-            <div className="commande-no-data">Aucune commande trouvée</div>
           ) : (
             <div className="commande-table-container">
               <div className="commande-table-wrapper">
@@ -405,7 +383,7 @@ const CommandePage = () => {
                                 <FaEdit />
                               </button>
                               <button
-                                className="cmd-delete-button"
+                                className="cmd-delete-button-icon"
                                 onClick={() => handleDeleteClick(commande)}
                                 title="Supprimer"
                               >

@@ -86,7 +86,7 @@
   
   .aef-image-preview-container {
     width: 100%;
-    height: 150px;
+    height: 40px;
     border: 2px dashed var(--border-color);
     border-radius: var(--radius);
     display: flex;
@@ -111,7 +111,6 @@
   
   .aef-image-placeholder-text {
     font-size: 0.875rem;
-    margin-top: 0.5rem;
   }
   
   .aef-btn {
@@ -131,11 +130,7 @@
     color: white;
     border: none;
   }
-  
-  .aef-btn-primary:hover {
-    background-color: var(--primary-dark);
-  }
-  
+   
   .aef-btn-outline {
     background-color: transparent;
     color: var(--text-color);

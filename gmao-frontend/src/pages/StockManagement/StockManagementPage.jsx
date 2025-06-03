@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { FaPlus, FaEdit, FaTrash, FaFileExport, FaFilter, FaTimes } from "react-icons/fa"
 import Sidebar from "../../components/Sidebar/Sidebar"
 import Header from "../../components/Header/Header"
@@ -249,105 +249,120 @@ const StockManagementPage = () => {
   const statuses = ["all", "En stock", "Stock faible", "Rupture de stock"]
 
   return (
-    <div className="stock-management-container">
+    <div className="stock-container">
       <Sidebar isOpen={sidebarOpen} />
       
-      <div className="stock-management-content">
+      <div className="stock-content">
         <Header title="Gestion du Stock" onToggleSidebar={toggleSidebar} />
         
-        <main className="stock-management-main">
+        <main className="stock-main">
           <div className="stock-controls">
-            <div className="search-bar">
-              <input
-                type="text"
-                placeholder="Rechercher par nom, référence ou fournisseur..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-
-            <div className="filter-controls">
-              <button className="filter-button" onClick={() => setShowFilters(!showFilters)}>
-                <FaFilter /> Filtres
-              </button>
-              <button
-                className="add-button"
-                onClick={() => {
-                  setShowAddForm(true);
-                  setShowEditForm(false);
-                  setShowDeleteConfirm(false);
-                }}
-                aria-label="Ajouter un article"
-              >
-                <FaPlus /> Ajouter un article
-              </button>
+            <div className="stock-search-filter-container">
+              <div className="stock-search-container">
+                <input
+                  type="text"
+                  placeholder="Rechercher par nom, référence ou fournisseur..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="stock-search-input"
+                />
+                <button className="stock-filter-button" onClick={() => setShowFilters(!showFilters)}>
+                  <FaFilter />
+                </button>
+              </div>
+              <div className="stock-action-buttons">
+                <button 
+                  className="stock-add-button"
+                  onClick={() => {
+                    setShowAddForm(true);
+                    setShowEditForm(false);
+                    setShowDeleteConfirm(false);
+                  }}
+                  aria-label="Ajouter un article"
+                >
+                  <FaPlus /> Ajouter un article
+                </button>
+              </div>
             </div>
           </div>
 
           {showFilters && (
-            <div className="filters-panel">
-              <div className="filter-group">
-                <label>Catégorie:</label>
-                <select value={filters.category} onChange={(e) => setFilters({ ...filters, category: e.target.value })}>
-                  {categories.map((category) => (
-                    <option key={`cat-${category.toLowerCase().replace(/\s+/g, '-')}`} value={category}>
-                      {category === "all" ? "Toutes les catégories" : category}
-                    </option>
-                  ))}
-                </select>
+            <div className="stock-filters-container">
+              <div className="stock-filters-header">
+                <h3>Filtres</h3>
+                <button
+                  className="stock-close-filters-button"
+                  onClick={() => setShowFilters(false)}
+                >
+                  <FaTimes />
+                </button>
               </div>
+              <div className="stock-filters-body">
+                <div className="stock-filter-group">
+                  <label>Catégorie:</label>
+                  <select value={filters.category} onChange={(e) => setFilters({ ...filters, category: e.target.value })}>
+                    {categories.map((category) => (
+                      <option key={`cat-${category.toLowerCase().replace(/\s+/g, '-')}`} value={category}>
+                        {category === "all" ? "Toutes les catégories" : category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              <div className="filter-group">
-                <label>Statut:</label>
-                <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
-                  {statuses.map((status) => (
-                    <option key={`status-${status.toLowerCase().replace(/\s+/g, '-')}`} value={status}>
-                      {status === "all" ? "Tous les statuts" : status}
-                    </option>
-                  ))}
-                </select>
+                <div className="stock-filter-group">
+                  <label>Statut:</label>
+                  <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
+                    {statuses.map((status) => (
+                      <option key={`status-${status.toLowerCase().replace(/\s+/g, '-')}`} value={status}>
+                        {status === "all" ? "Tous les statuts" : status}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="stock-filter-group">
+                  <label>Quantité min:</label>
+                  <input
+                    type="number"
+                    value={filters.minQuantity}
+                    onChange={(e) => setFilters({ ...filters, minQuantity: e.target.value })}
+                  />
+                </div>
+
+                <div className="stock-filter-group">
+                  <label>Quantité max:</label>
+                  <input
+                    type="number"
+                    value={filters.maxQuantity}
+                    onChange={(e) => setFilters({ ...filters, maxQuantity: e.target.value })}
+                  />
+                </div>
+
+                <div className="stock-filter-actions">
+                  <button
+                    className="stock-reset-filters-button"
+                    onClick={() => {
+                      setFilters({
+                        category: "all",
+                        status: "all",
+                        minQuantity: "",
+                        maxQuantity: "",
+                      });
+                      setSearchTerm("");
+                    }}
+                  >
+                    Réinitialiser les filtres
+                  </button>
+                </div>
               </div>
-
-              <div className="filter-group">
-                <label>Quantité min:</label>
-                <input
-                  type="number"
-                  value={filters.minQuantity}
-                  onChange={(e) => setFilters({ ...filters, minQuantity: e.target.value })}
-                />
-              </div>
-
-              <div className="filter-group">
-                <label>Quantité max:</label>
-                <input
-                  type="number"
-                  value={filters.maxQuantity}
-                  onChange={(e) => setFilters({ ...filters, maxQuantity: e.target.value })}
-                />
-              </div>
-
-              <button
-                className="reset-filters"
-                onClick={() =>
-                  setFilters({
-                    category: "all",
-                    status: "all",
-                    minQuantity: "",
-                    maxQuantity: "",
-                  })
-                }
-              >
-                Réinitialiser
-              </button>
             </div>
           )}
 
           {loading ? (
-            <div className="loading-indicator">Chargement des articles...</div>
+            <div className="stock-loading-indicator">Chargement des articles...</div>
           ) : (
             <div className="stock-table-container">
-              <div className="table-container">
-                <table className="data-table">
+              <table className="stock-table">
                   <thead>
                     <tr>
                       <th onClick={() => requestSort("reference")}>
@@ -423,30 +438,31 @@ const StockManagementPage = () => {
                           <td>{item.stockMin}</td>
                           <td>{item.stockMax}</td>
                           <td>{item.stockSecurite}</td>
-                          <td className="actions-cell">
-                            <button
-                              className="action-btn edit"
-                              onClick={() => handleOpenEditForm(item)}
-                              aria-label="Modifier"
-                              title="Modifier"
-                            >
-                              <FaEdit />
-                            </button>
-                            <button
-                              className="action-btn delete"
-                              onClick={() => handleOpenDeleteConfirm(item)}
-                              aria-label="Supprimer"
-                              title="Supprimer"
-                            >
-                              <FaTrash />
-                            </button>
+                          <td>
+                            <div className="stock-action-buttons">
+                              <button
+                                className="stock-action-btn stock-edit"
+                                onClick={() => handleOpenEditForm(item)}
+                                aria-label="Modifier"
+                                title="Modifier"
+                              >
+                                <FaEdit />
+                              </button>
+                              <button
+                                className="stock-action-btn stock-delete"
+                                onClick={() => handleOpenDeleteConfirm(item)}
+                                aria-label="Supprimer"
+                                title="Supprimer"
+                              >
+                                <FaTrash />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
-              </div>
             </div>
           )}
         </main>

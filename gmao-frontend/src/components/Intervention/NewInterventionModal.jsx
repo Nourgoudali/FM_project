@@ -99,6 +99,28 @@ function NewInterventionModal({ onClose, onSubmit }) {
         }
       }
       
+      // Validation des dates: si la date de début change, vérifier que la date de fin est postérieure
+      if (name === "startDate" && prev.endDate) {
+        const startDate = new Date(value)
+        const endDate = new Date(prev.endDate)
+        
+        // Si la date de fin est antérieure à la nouvelle date de début, réinitialiser la date de fin
+        if (endDate < startDate) {
+          newData.endDate = ""
+        }
+      }
+      
+      // Si la date de fin est modifiée, vérifier qu'elle est postérieure à la date de début
+      if (name === "endDate" && value) {
+        const startDate = new Date(prev.startDate)
+        const endDate = new Date(value)
+        
+        if (endDate < startDate) {
+          alert("La date de fin doit être postérieure à la date de début")
+          return prev // Conserver l'ancienne valeur
+        }
+      }
+      
       return newData
     })
   }
@@ -122,6 +144,19 @@ function NewInterventionModal({ onClose, onSubmit }) {
       const selectedEquipment = equipments.find(eq => eq._id === formData.equipment)
       // Trouver le technicien sélectionné
       const selectedTechnician = technicians.find(tech => tech._id === formData.technician)
+      
+      // Détermination du statut initial en fonction des dates
+      const now = new Date()
+      const startDate = new Date(formData.startDate)
+      const endDate = formData.endDate ? new Date(formData.endDate) : null
+      
+      let initialStatus = 'Planifiée' // Par défaut, une nouvelle intervention est planifiée
+      
+      if (endDate && endDate <= now) {
+        initialStatus = 'Terminée'
+      } else if (startDate <= now && (!endDate || endDate > now)) {
+        initialStatus = 'En cours'
+      }
 
       const interventionData = {
         type: formData.type,
@@ -130,6 +165,7 @@ function NewInterventionModal({ onClose, onSubmit }) {
         endDate: formData.endDate || null,
         description: formData.description,
         location: formData.location,
+        status: initialStatus, // Définir le statut initial
         equipment: selectedEquipment?._id,
         technician: selectedTechnician ? {
           _id: selectedTechnician._id,

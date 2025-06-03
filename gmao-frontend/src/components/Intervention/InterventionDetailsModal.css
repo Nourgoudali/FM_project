@@ -97,21 +97,74 @@
 }
 
 /* Style pour les badges */
-.type-badge.curative, 
-.type-badge.preventive,
-.priority-badge,
-.status-badge {
+.intv-type-badge, 
+.intv-priority-badge,
+.intv-status-badge {
   font-size: 12px;
   padding: 4px 10px;
   border-radius: 20px;
+  display: inline-block;
+}
+
+/* Styles pour les types d'intervention */
+.intv-type-badge.preventive {
+  background-color: #e6f7ff;
+  color: #0077cc;
+}
+
+.intv-type-badge.curative {
+  background-color: #fff7e6;
+  color: #92400e;
+}
+
+.intv-type-badge.corrective {
+  background-color: #ffcccc;
+  color: #990000;
+}
+
+/* Styles pour les priorités */
+.intv-priority-badge.intv-priority-critical {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.intv-priority-badge.intv-priority-high {
+  background-color: #ffedd5;
+  color: #c2410c;
+}
+
+.intv-priority-badge.intv-priority-medium {
+  background-color: #fef9c3;
+  color: #854d0e;
+}
+
+.intv-priority-badge.intv-priority-low {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+/* Styles pour les statuts */
+.intv-status-badge.intv-status-in-progress {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.intv-status-badge.intv-status-planned {
+  background-color: #e0e7ff;
+  color: #4338ca;
+}
+
+.intv-status-badge.intv-status-completed {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.intv-status-badge.intv-status-late {
+  background-color: #fee2e2;
+  color: #b91c1c;
 }
 
 /* Style spécifique pour le bouton de modification */
 .edit-submit-btn {
-  background-color: #3b82f6;
+  background-color: var(--primary-color);
 }
-
-/* Style pour le select bleu dans le formulaire d'édition */
-.blue-select {
-  border-color: #3b82f6;
-} 

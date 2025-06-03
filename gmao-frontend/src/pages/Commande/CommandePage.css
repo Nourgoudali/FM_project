@@ -202,11 +202,19 @@
 }
 
 .commande-table th {
-  background-color: #f8f9fa;
+  background-color: #f8fafc;
   font-weight: 600;
-  color: #4a5568;
+  color: #475569;
+  padding: 1rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  border-bottom: 2px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
   cursor: pointer;
-  user-select: none;
 }
 
 .commande-table th:hover {
@@ -233,7 +241,7 @@
 
 .view-button, .cmd-view-button,
 .edit-button, .cmd-edit-button,
-.delete-button, .cmd-delete-button {
+.delete-button, .cmd-delete-button-icon {
   background: none;
   border: none;
   cursor: pointer;
@@ -262,11 +270,11 @@
   background-color: rgba(66, 153, 225, 0.1);
 }
 
-.delete-button, .cmd-delete-button {
+.delete-button, .cmd-delete-button-icon {
   color: #e53e3e;
 }
 
-.delete-button:hover, .cmd-delete-button:hover {
+.delete-button:hover, .cmd-delete-button-icon:hover {
   background-color: rgba(229, 62, 62, 0.1);
 }
 

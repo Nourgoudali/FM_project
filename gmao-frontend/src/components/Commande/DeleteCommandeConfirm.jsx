@@ -21,16 +21,16 @@ const DeleteCommandeConfirm = ({ commande, onClose, onSuccess }) => {
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="delete-confirm-modal">
-        <div className="commande-form-header">
+    <div className="cmd-modal-overlay">
+      <div className="cmd-delete-confirm-modal">
+        <div className="cmd-form-header">
           <h2>Supprimer la commande</h2>
-          <button className="close-button" onClick={onClose}>
+          <button className="cmd-close-button" onClick={onClose}>
             <FaTimes />
           </button>
         </div>
 
-        <div className="delete-confirm-content">
+        <div className="cmd-delete-confirm-content">
           <p>
             Êtes-vous sûr de vouloir supprimer la commande{" "}
             <strong>{commande.numeroCommande}</strong> ?
@@ -39,13 +39,13 @@ const DeleteCommandeConfirm = ({ commande, onClose, onSuccess }) => {
 
           {/* Les messages d'erreur sont maintenant affichés avec des toasts */}
 
-          <div className="delete-confirm-actions">
-            <button type="button" className="cancel-button" onClick={onClose}>
+          <div className="cmd-delete-confirm-actions">
+            <button type="button" className="cmd-cancel-button" onClick={onClose}>
               Annuler
             </button>
             <button
               type="button"
-              className="delete-button"
+              className="cmd-delete-button"
               onClick={handleDelete}
               disabled={loading}
             >

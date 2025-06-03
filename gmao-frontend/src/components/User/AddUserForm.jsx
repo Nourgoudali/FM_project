@@ -1,11 +1,9 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import "./AddUserForm.css"
 import { userAPI } from "../../services/api"
 import toast from "react-hot-toast"
 
-function AddUserForm({ user, onClose, onSubmit, isEdit }) {
+function AddUserForm({ onClose, onSubmit, user, isEdit = false, hidePasswordFields = false }) {
   const [formData, setFormData] = useState(
     user
       ? { ...user, confirmPassword: "********" }
@@ -32,11 +30,13 @@ function AddUserForm({ user, onClose, onSubmit, isEdit }) {
         setIsLoading(true)
         // Récupérer les rôles depuis le backend
         const rolesResponse = await userAPI.getRoles()
-        setRoles(rolesResponse.data)
+        // Vérifier si les données sont dans le format attendu
+        setRoles(rolesResponse.data?.data || [])
 
         // Récupérer les départements depuis le backend
         const departmentsResponse = await userAPI.getDepartments()
-        setDepartments(departmentsResponse.data)
+        // Vérifier si les données sont dans le format attendu
+        setDepartments(departmentsResponse.data?.data || [])
       } catch (error) {
         toast.error("Erreur lors de la récupération des données")
       } finally {
@@ -85,20 +85,22 @@ function AddUserForm({ user, onClose, onSubmit, isEdit }) {
       isValid = false
     }
 
-    if (!isEdit) {
-    if (!formData.password) {
-      formErrors.password = "Le mot de passe est requis"
-      isValid = false
-    } else if (formData.password.length < 6) {
-      formErrors.password = "Le mot de passe doit contenir au moins 6 caractères"
-      isValid = false
-    }
+    // Ne valider les mots de passe que si hidePasswordFields est false
+    if (!hidePasswordFields) {
+      if (!isEdit) {
+        if (!formData.password) {
+          formErrors.password = "Le mot de passe est requis"
+          isValid = false
+        } else if (formData.password.length < 6) {
+          formErrors.password = "Le mot de passe doit contenir au moins 6 caractères"
+          isValid = false
+        }
 
-    if (formData.password !== formData.confirmPassword) {
-      formErrors.confirmPassword = "Les mots de passe ne correspondent pas"
-      isValid = false
-      }
-    } else if (formData.password && formData.password !== "********") {
+        if (formData.password !== formData.confirmPassword) {
+          formErrors.confirmPassword = "Les mots de passe ne correspondent pas"
+          isValid = false
+        }
+      } else if (formData.password && formData.password !== "********") {
       // Si c'est une modification et que le mot de passe a été changé
       if (formData.password.length < 6) {
         formErrors.password = "Le mot de passe doit contenir au moins 6 caractères"
@@ -109,6 +111,7 @@ function AddUserForm({ user, onClose, onSubmit, isEdit }) {
         formErrors.confirmPassword = "Les mots de passe ne correspondent pas"
         isValid = false
       }
+    }
     }
 
     setErrors(formErrors)
@@ -127,11 +130,11 @@ function AddUserForm({ user, onClose, onSubmit, isEdit }) {
         role: formData.role,
         department: formData.department,
         phone: formData.phone,
-        status: formData.status || "Actif"
       }
 
       // Ajouter le mot de passe pour les nouveaux utilisateurs ou si modifié
-      if (!isEdit || (isEdit && formData.password && formData.password !== "********")) {
+      // Ne pas inclure le mot de passe si hidePasswordFields est true
+      if (!hidePasswordFields && (!isEdit || (isEdit && formData.password && formData.password !== "********"))) {
         userData.password = formData.password
       }
 
@@ -202,9 +205,13 @@ function AddUserForm({ user, onClose, onSubmit, isEdit }) {
                   <label htmlFor="role">Rôle*</label>
                   <select id="role" name="role" value={formData.role} onChange={handleChange}>
                     <option value="">Sélectionner un rôle</option>
-                    {roles.map((role) => (
-                      <option key={`role-${role._id || role.id || role.name.toLowerCase().replace(/\s+/g, '-')}`} value={role.id}>
-                        {role.name}
+                    {Array.isArray(roles) && roles.map((role) => (
+                      <option key={`role-${role}`} value={role}>
+                        {role === "admin" ? "Admin" : 
+                         role === "team_leader" ? "Team Leader" : 
+                         role === "technicien" ? "Technicien" : 
+                         role === "opérateur" ? "Opérateur" : 
+                         role}
                       </option>
                     ))}
                   </select>
@@ -214,9 +221,9 @@ function AddUserForm({ user, onClose, onSubmit, isEdit }) {
                   <label htmlFor="department">Département</label>
                   <select id="department" name="department" value={formData.department} onChange={handleChange}>
                     <option value="">Sélectionner un département</option>
-                    {departments.map((dept) => (
-                      <option key={`dept-${dept._id || dept.id || dept.name.toLowerCase().replace(/\s+/g, '-')}`} value={dept.id}>
-                        {dept.name}
+                    {Array.isArray(departments) && departments.map((dept) => (
+                      <option key={`dept-${dept}`} value={dept}>
+                        {dept}
                       </option>
                     ))}
                   </select>
@@ -235,41 +242,37 @@ function AddUserForm({ user, onClose, onSubmit, isEdit }) {
                 />
               </div>
 
-              <div className="user-form-group">
-                <label htmlFor="status">Statut</label>
-                <select id="status" name="status" value={formData.status || "Actif"} onChange={handleChange}>
-                  <option value="Actif">Actif</option>
-                  <option value="Inactif">Inactif</option>
-                </select>
-              </div>
+              {!hidePasswordFields && (
+                <>
+                  <div className="user-form-group">
+                    <label htmlFor="password">{isEdit ? "Nouveau mot de passe" : "Mot de passe*"}</label>
+                    <input
+                      type="password"
+                      id="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder={isEdit ? "Laisser vide pour ne pas changer" : "Mot de passe"}
+                    />
+                    {errors.password && <span className="user-form-error-message">{errors.password}</span>}
+                  </div>
 
-              <div className="user-form-group">
-                <label htmlFor="password">{isEdit ? "Nouveau mot de passe" : "Mot de passe*"}</label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder={isEdit ? "Laisser vide pour ne pas changer" : "Mot de passe"}
-                />
-                {errors.password && <span className="user-form-error-message">{errors.password}</span>}
-              </div>
-
-              <div className="user-form-group">
-                <label htmlFor="confirmPassword">Confirmer le mot de passe*</label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="Confirmer le mot de passe"
-                />
-                {errors.confirmPassword && (
-                  <span className="user-form-error-message">{errors.confirmPassword}</span>
-                )}
-              </div>
+                  <div className="user-form-group">
+                    <label htmlFor="confirmPassword">Confirmer le mot de passe*</label>
+                    <input
+                      type="password"
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      placeholder="Confirmer le mot de passe"
+                    />
+                    {errors.confirmPassword && (
+                      <span className="user-form-error-message">{errors.confirmPassword}</span>
+                    )}
+                  </div>
+                </>
+              )}
 
             </div>
           </div>

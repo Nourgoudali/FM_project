@@ -6,7 +6,9 @@ import {
   FaSort,
   FaBuilding,
   FaEnvelope,
-  FaPhoneAlt
+  FaPhoneAlt,
+  FaFilter,
+  FaTimes
 } from "react-icons/fa"
 import Sidebar from "../../components/Sidebar/Sidebar"
 import Header from "../../components/Header/Header"
@@ -157,39 +159,68 @@ const SupplierManagementPage = () => {
   }
 
   return (
-    <div className="admin-layout">
-      <Sidebar />
-      <div className="admin-main">
-        <Header title="Gestion des Fournisseurs" />
+    <div className="supplier-container">
+      <Sidebar isOpen={sidebarOpen} />
+      <div className="supplier-content">
+        <Header title="Gestion des Fournisseurs" onToggleSidebar={toggleSidebar} />
         
-        <div className="admin-content">
-          <div className="admin-toolbar">
-            <div className="admin-toolbar-right">
-              <div className="admin-search">
+        <main className="supplier-main">
+          <div className="supplier-controls">
+            <div className="supplier-search-filter-container">
+              <div className="supplier-search-container">
                 <input
                   type="text"
-                  placeholder="Rechercher..."
+                  placeholder="Rechercher un fournisseur..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  className="supplier-search-input"
                 />
+                <button className="supplier-filter-button" onClick={() => setShowFilters(!showFilters)}>
+                  <FaFilter />
+                </button>
+              </div>
+              <div className="supplier-action-buttons">
+                <button 
+                  className="supplier-add-button"
+                  onClick={() => setShowAddModal(true)}
+                >
+                  <FaPlus /> Ajouter un fournisseur
+                </button>
               </div>
             </div>
-            <div className="admin-toolbar-left">
-              <button className="admin-button primary" onClick={() => setShowAddModal(true)}>
-                <FaPlus /> Ajouter un fournisseur
-              </button>
-            </div>
-            
-            
           </div>
           
-          {/* Les messages d'erreur sont maintenant affichés avec des toasts */}
+          {showFilters && (
+            <div className="supplier-filters-container">
+              <div className="supplier-filters-header">
+                <h3>Filtres</h3>
+                <button
+                  className="supplier-close-filters-button"
+                  onClick={() => setShowFilters(false)}
+                >
+                  <FaTimes />
+                </button>
+              </div>
+              <div className="supplier-filters-body">
+                <div className="supplier-filter-actions">
+                  <button
+                    className="supplier-reset-filters-button"
+                    onClick={() => {
+                      setSearchTerm("");
+                    }}
+                  >
+                    Réinitialiser les filtres
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           
           {loading ? (
-            <div className="admin-loading">Chargement des fournisseurs...</div>
+            <div className="supplier-loading-indicator">Chargement des fournisseurs...</div>
           ) : (
-            <div className="admin-table-container">
-              <table className="admin-table">
+            <div className="supplier-table-container">
+              <table className="supplier-table">
                 <thead>
                   <tr>
                     <th onClick={() => requestSort("nomEntreprise")}>
@@ -216,14 +247,14 @@ const SupplierManagementPage = () => {
                         <FaSort className={`sort-icon ${sortConfig.direction}`} />
                       )}
                     </th>
-                    <th>Adresse</th>
-                    <th>Actions</th>
+                    <th className="supplier-table-header">Adresse</th>
+                    <th className="supplier-table-header">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredSuppliers.length === 0 ? (
                     <tr>
-                      <td colSpan="6" className="admin-no-data">
+                      <td colSpan="6" className="supplier-no-results">
                         Aucun fournisseur trouvé
                       </td>
                     </tr>
@@ -231,38 +262,38 @@ const SupplierManagementPage = () => {
                     filteredSuppliers.map((supplier) => (
                       <tr key={supplier._id}>
                         <td>
-                          <div className="admin-cell-with-icon">
-                            <FaBuilding className="admin-cell-icon" />
+                          <div className="supplier-cell-with-icon">
+                            <FaBuilding className="supplier-cell-icon" />
                             <span>{supplier.nomEntreprise}</span>
                           </div>
                         </td>
                         <td>{supplier.prenom} {supplier.nom}</td>
                         <td>
-                          <div className="admin-cell-with-icon">
-                            <FaPhoneAlt className="admin-cell-icon" />
+                          <div className="supplier-cell-with-icon">
+                            <FaPhoneAlt className="supplier-cell-icon" />
                             <span>{supplier.telephone}</span>
                           </div>
                         </td>
                         <td>
-                          <div className="admin-cell-with-icon">
-                            <FaEnvelope className="admin-cell-icon" />
-                            <a href={`mailto:${supplier.email}`} className="admin-email-link">
+                          <div className="supplier-cell-with-icon">
+                            <FaEnvelope className="supplier-cell-icon" />
+                            <a href={`mailto:${supplier.email}`} className="supplier-email-link">
                               {supplier.email}
                             </a>
                           </div>
                         </td>
                         <td>{supplier.adresse}</td>
                         <td>
-                          <div className="admin-actions">
+                          <div className="supplier-action-buttons">
                             <button
-                              className="admin-action-button edit"
+                              className="supplier-action-btn supplier-edit"
                               onClick={() => handleOpenEditModal(supplier)}
                               title="Modifier"
                             >
                               <FaEdit />
                             </button>
                             <button
-                              className="admin-action-button delete"
+                              className="supplier-action-btn supplier-delete"
                               onClick={() => handleOpenDeleteModal(supplier)}
                               title="Supprimer"
                             >
@@ -277,7 +308,7 @@ const SupplierManagementPage = () => {
               </table>
             </div>
           )}
-        </div>
+        </main>
       </div>
       
       {/* Modal pour ajouter un fournisseur */}

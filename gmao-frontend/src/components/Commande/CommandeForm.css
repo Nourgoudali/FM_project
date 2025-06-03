@@ -1,4 +1,4 @@
-.modal-overlay, .edit-cmd-modal-overlay, .view-cmd-modal-overlay {
+.cmd-modal-overlay, .edit-cmd-modal-overlay, .view-cmd-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -11,7 +11,7 @@
   z-index: 1000;
 }
 
-.commande-form-modal, .edit-cmd-form-modal, .view-cmd-form-modal {
+.cmd-form-modal, .edit-cmd-form-modal, .view-cmd-form-modal {
   background-color: white;
   border-radius: 0.5rem;
   width: 90%;
@@ -21,7 +21,7 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.commande-form-header, .edit-cmd-form-header, .view-cmd-form-header {
+.cmd-form-header, .edit-cmd-form-header, .view-cmd-form-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -29,14 +29,14 @@
   border-bottom: 1px solid #e2e8f0;
 }
 
-.commande-form-header h2 {
+.cmd-form-header h2 {
   font-size: 1.25rem;
   font-weight: 600;
   color: #2d3748;
   margin: 0;
 }
 
-.close-button, .edit-cmd-close-button, .view-cmd-close-button {
+.cmd-close-button, .edit-cmd-close-button, .view-cmd-close-button {
   background: none;
   border: none;
   font-size: 1.25rem;
@@ -47,15 +47,15 @@
   justify-content: center;
 }
 
-.close-button:hover {
+.cmd-close-button:hover {
   color: #4a5568;
 }
 
-.commande-form, .edit-cmd-form, .view-cmd-form {
+.cmd-form, .edit-cmd-form, .view-cmd-form {
   padding: 1.5rem;
 }
 
-.form-section h3, .edit-cmd-form-section h3, .view-cmd-form-section h3 {
+.cmd-form-section h3, .edit-cmd-form-section h3, .view-cmd-form-section h3 {
   font-size: 1rem;
   font-weight: 600;
   color: #4a5568;
@@ -64,19 +64,19 @@
   padding-bottom: 0.5rem;
 }
 
-.form-row, .edit-cmd-form-row {
+.cmd-form-row, .edit-cmd-form-row {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
   margin-bottom: 1rem;
 }
 
-.form-group, .edit-cmd-form-group {
+.cmd-form-group, .edit-cmd-form-group {
   flex: 1;
   min-width: 200px;
 }
 
-.form-group label, .edit-cmd-form-group label {
+.cmd-form-group label, .edit-cmd-form-group label {
   display: block;
   font-size: 0.875rem;
   font-weight: 500;
@@ -84,9 +84,9 @@
   margin-bottom: 0.5rem;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea,
+.cmd-form-group input,
+.cmd-form-group select,
+.cmd-form-group textarea,
 .edit-cmd-form-group input,
 .edit-cmd-form-group select,
 .edit-cmd-form-group textarea {
@@ -98,8 +98,8 @@
 }
 
 .form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus,
+.cmd-form-group select:focus,
+.cmd-form-group textarea:focus,
 .edit-cmd-form-group input:focus,
 .edit-cmd-form-group select:focus,
 .edit-cmd-form-group textarea:focus {
@@ -108,7 +108,7 @@
   box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
 }
 
-.error-message, .edit-cmd-error-message {
+.cmd-error-message, .edit-cmd-error-message {
   color: #e53e3e;
   font-size: 0.875rem;
   margin-bottom: 1rem;
@@ -117,18 +117,18 @@
   border-radius: 0.375rem;
 }
 
-.selected-products-table-container, .edit-cmd-selected-products-table-container {
+.cmd-selected-products-table-container, .edit-cmd-selected-products-table-container {
   overflow-x: auto;
 }
 
-.selected-products-table, .edit-cmd-selected-products-table {
+.cmd-selected-products-table, .edit-cmd-selected-products-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.875rem;
 }
 
-.selected-products-table th,
-.selected-products-table td,
+.cmd-selected-products-table th,
+.cmd-selected-products-table td,
 .edit-cmd-selected-products-table th,
 .edit-cmd-selected-products-table td {
   padding: 0.75rem;
@@ -136,25 +136,25 @@
   border-bottom: 1px solid #e2e8f0;
 }
 
-.selected-products-table th,
+.cmd-selected-products-table th,
 .edit-cmd-selected-products-table th {
   background-color: #f8f9fa;
   font-weight: 600;
   color: #4a5568;
 }
 
-.selected-products-table tbody tr:hover,
+.cmd-selected-products-table tbody tr:hover,
 .edit-cmd-selected-products-table tbody tr:hover {
   background-color: #f8f9fa;
 }
 
-.total-label, .edit-cmd-total-label, .view-cmd-total-label {
+.cmd-total-label, .edit-cmd-total-label, .view-cmd-total-label {
   text-align: right;
   font-weight: 600;
 }
 
-.add-product-button, .edit-cmd-add-product-button {
-  background-color: #4299e1;
+.cmd-add-product-button, .edit-cmd-add-product-button {
+  background-color: var(--primary-color);
   color: white;
   border: none;
   border-radius: 0.375rem;
@@ -164,17 +164,13 @@
   transition: background-color 0.2s;
 }
 
-.add-product-button:hover, .edit-cmd-add-product-button:hover {
-  background-color: #3182ce;
-}
-
-.add-product-button, .edit-cmd-add-product-button {
+.cmd-add-product-button, .edit-cmd-add-product-button {
   margin-top: 1.5rem;
   width: 100%;
 }
 
 
-.remove-product-button, .edit-cmd-remove-product-button {
+.cmd-remove-product-button, .edit-cmd-remove-product-button {
   background: none;
   border: none;
   color: #e53e3e;
@@ -184,19 +180,19 @@
   justify-content: center;
 }
 
-.remove-product-button:hover, .edit-cmd-remove-product-button:hover {
+.cmd-remove-product-button:hover, .edit-cmd-remove-product-button:hover {
   color: #c53030;
 }
 
-.form-actions, .edit-cmd-form-actions, .view-cmd-form-actions {
+.cmd-form-actions, .edit-cmd-form-actions, .view-cmd-form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
   margin-top: 2rem;
 }
 
-.cancel-button,
-.submit-button,
+.cmd-cancel-button,
+.cmd-submit-button,
 .edit-cmd-cancel-button,
 .edit-cmd-submit-button {
   padding: 0.5rem 1rem;
@@ -207,31 +203,26 @@
   transition: background-color 0.2s;
 }
 
-.cancel-button,
+.cmd-cancel-button,
 .edit-cmd-cancel-button {
   background-color: #e2e8f0;
   border: none;
   color: #4a5568;
 }
 
-.cancel-button:hover,
+.cmd-cancel-button:hover,
 .edit-cmd-cancel-button:hover {
   background-color: #cbd5e0;
 }
 
-.submit-button,
+.cmd-submit-button,
 .edit-cmd-submit-button {
-  background-color: #4299e1;
+  background-color: var(--primary-color);
   border: none;
   color: white;
 }
 
-.submit-button:hover,
-.edit-cmd-submit-button:hover {
-  background-color: #3182ce;
-}
-
-.submit-button:disabled,
+.cmd-submit-button:disabled,
 .edit-cmd-submit-button:disabled {
   background-color: #a0aec0;
   cursor: not-allowed;
@@ -292,25 +283,6 @@
   background-color: #f8f9fa;
 }
 
-.view-cmd-export-button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background-color: #38a169;
-  color: white;
-  border: none;
-  border-radius: 0.375rem;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.view-cmd-export-button:hover {
-  background-color: #2f855a;
-}
-
 .view-cmd-close-button-bottom {
   background-color: #e2e8f0;
   border: none;
@@ -360,7 +332,7 @@
 }
 
 /* Styles pour le formulaire de suppression */
-.delete-confirm-modal {
+.cmd-delete-confirm-modal {
   background-color: white;
   border-radius: 0.5rem;
   width: 90%;
@@ -368,28 +340,28 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.delete-confirm-content {
+.cmd-delete-confirm-content {
   padding: 1.5rem;
   text-align: center;
 }
 
-.delete-confirm-content p {
+.cmd-delete-confirm-content p {
   margin-bottom: 1.5rem;
   color: #4a5568;
 }
 
-.delete-confirm-actions {
+.cmd-delete-confirm-actions {
   display: flex;
   justify-content: center;
   gap: 1rem;
 }
 
-.delete-button {
+.cmd-delete-button {
   background-color: #e53e3e;
   border: none;
   color: white;
 }
 
-.delete-button:hover {
+.cmd-delete-button:hover {
   background-color: #c53030;
 }

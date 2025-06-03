@@ -15,7 +15,7 @@
     flex: 1;
   padding: 1.5rem;
     overflow-y: auto;
-  background-color: var(--background-color);
+  background-color: #f5f7fa;
 }
 
 .profile-layout {
@@ -47,24 +47,24 @@
   gap: 1rem;
 }
 
-.form-row {
+.profile-form-row {
     display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
   }
   
-  .form-group {
+  .profile-form-group {
   margin-bottom: 0.5rem;
   }
   
-  .form-group label {
+  .profile-form-group label {
   display: block;
   margin-bottom: 0.5rem;
   font-size: 0.875rem;
   color: var(--text-light);
   }
   
-  .form-group input {
+  .profile-form-group input {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid var(--border-color);
@@ -74,15 +74,15 @@
   transition: border-color 0.2s;
   }
   
-  .form-group input:focus {
+  .profile-form-group input:focus {
   border-color: var(--primary-color);
 }
 
-.form-action {
+.profile-form-actions {
   margin-top: 1rem;
 }
 
-.edit-button {
+.profile-edit-button {
   background: none;
     border: none;
   color: var(--primary-color);
@@ -97,13 +97,13 @@
     grid-template-columns: 1fr;
   }
   
-  .form-row {
+  .profile-form-row {
     grid-template-columns: 1fr;
     }
   }
   
 /* Styles pour le bouton de modification de mot de passe */
-.password-button {
+.profile-password-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -118,34 +118,34 @@
   width: 100%;
 }
 
-.password-button:hover {
+.profile-password-button:hover {
   background-color: #e0e0e0;
   border-color: #ccc;
 }
 
-.password-button .key-icon {
+.profile-password-button .key-icon {
   margin-right: 8px;
   font-size: 16px;
 }
 
 /* Styles pour le formulaire de mot de passe */
-.password-form {
+.profile-password-form {
   width: 100%;
   padding: 16px;
 }
 
-.password-form .form-group {
+.profile-password-form .profile-form-group {
   margin-bottom: 20px;
 }
 
-.password-form label {
+.profile-password-form label {
   display: block;
   margin-bottom: 6px;
   font-weight: 500;
   color: #555;
 }
 
-.password-form input {
+.profile-password-form input {
   width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
@@ -153,21 +153,21 @@
   font-size: 14px;
 }
 
-.password-form input:focus {
+.profile-password-form input:focus {
   outline: none;
   border-color: #4a90e2;
   box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
 }
 
 /* Styles pour les boutons du modal */
-.modal-buttons {
+.profile-modal-buttons {
   display: flex;
   justify-content: flex-end;
   margin-top: 24px;
   gap: 12px;
 }
 
-.btn-cancel {
+.profile-btn-cancel {
   background-color: #f0f0f0;
   color: #333;
   border: 1px solid #ddd;
@@ -177,11 +177,11 @@
   cursor: pointer;
 }
 
-.btn-cancel:hover {
+.profile-btn-cancel:hover {
   background-color: #e0e0e0;
 }
 
-.btn-primary {
+.profile-btn-primary {
   background-color: #4a90e2;
   color: white;
   border: none;
@@ -194,18 +194,18 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.btn-primary:hover {
+.profile-btn-primary:hover {
   background-color: #3a80d2;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   transform: translateY(-1px);
 }
 
-.btn-primary:active {
+.profile-btn-primary:active {
   transform: translateY(0);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.btn-primary:disabled {
+.profile-btn-primary:disabled {
   background-color: #a0c0e8;
   cursor: not-allowed;
   box-shadow: none;
@@ -247,7 +247,7 @@
 }
 
 /* Styles pour les cartes d'administration */
-.admin-card {
+.profile-admin-card {
   margin-top: 1.5rem;
   background-color: white;
   border-radius: 8px;
@@ -255,16 +255,16 @@
   transition: all 0.3s ease;
 }
 
-.admin-card:hover {
+.profile-admin-card:hover {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
   transform: translateY(-2px);
 }
 
-.admin-form {
+.profile-admin-form {
   width: 100%;
 }
 
-.admin-card {
+.profile-admin-card {
   margin-top: 1.5rem;
   background-color: white;
   border-radius: 8px;
@@ -282,21 +282,21 @@
   padding-bottom: 0;
 }
 
-.admin-form-row {
+.profile-admin-form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
   margin-bottom: 1rem;
 }
 
-.admin-form-row .form-action {
+.profile-admin-form-row .profile-form-actions {
   grid-column: 1 / -1;
   display: flex;
   justify-content: flex-end;
   margin-top: 1rem;
 }
 
-.btn-action {
+.profile-btn-action {
   background-color: #8BC34A;
   color: white;
   border: none;
@@ -308,27 +308,27 @@
   min-width: 120px;
 }
 
-.btn-action:hover {
+.profile-btn-action:hover {
   background-color: #7CB342;
 }
 
-.btn-action:disabled {
+.profile-btn-action:disabled {
   background-color: #BDBDBD;
   cursor: not-allowed;
 }
 
 @media (max-width: 768px) {
-  .admin-form-row {
+  .profile-admin-form-row {
     grid-template-columns: 1fr;
   }
 }
 
-.search-container {
+.profile-search-container {
   position: relative;
   width: 100%;
 }
 
-.form-input {
+.profile-form-input {
   width: 100%;
   padding: 0.75rem 1rem;
   border: none;
@@ -340,16 +340,16 @@
   padding-right: 30px;
 }
 
-.form-input:focus {
+.profile-form-input:focus {
   outline: none;
   background-color: #D5D5D5;
 }
 
-.form-input::placeholder {
+.profile-form-input::placeholder {
   color: #666;
 }
 
-.form-select {
+.profile-form-select {
   width: 100%;
   padding: 0.75rem 1rem;
   border: none;
@@ -361,7 +361,7 @@
   padding-right: 30px;
 }
 
-.search-clear {
+.profile-search-clear {
   position: absolute;
   right: 10px;
   top: 50%;
@@ -377,11 +377,11 @@
   font-size: 1rem;
 }
 
-.search-clear:hover {
+.profile-search-clear:hover {
   color: #e53935;
 }
 
-.search-results {
+.profile-search-results {
   position: absolute;
   width: 100%;
   max-height: 200px;
@@ -396,45 +396,45 @@
   list-style: none;
 }
 
-.search-item {
+.profile-search-item {
   padding: 12px 15px;
   cursor: pointer;
   transition: all 0.2s ease;
   border-bottom: 1px solid #f0f0f0;
 }
 
-.search-item:last-child {
+.profile-search-item:last-child {
   border-bottom: none;
 }
 
-.search-item:hover {
+.profile-search-item:hover {
   background-color: #f5f5f5;
 }
 
-.search-item-selected {
+.profile-search-item-selected {
   background-color: rgba(74, 144, 226, 0.1);
   color: #4a90e2;
   font-weight: 500;
 }
 
-.search-message {
+.profile-search-message {
   padding: 12px 15px;
   color: #777;
   text-align: center;
   font-style: italic;
 }
 
-.selected-employee {
+.profile-selected-employee {
   border-color: #4a90e2;
   background-color: rgba(74, 144, 226, 0.05);
 }
 
-.select-wrapper {
+.profile-select-wrapper {
   position: relative;
   width: 100%;
 }
 
-.form-select {
+.profile-form-select {
   width: 100%;
   padding: 0.75rem 1rem;
   border: 1px solid #ddd;
@@ -446,17 +446,17 @@
   transition: border-color 0.2s;
 }
 
-.form-select:focus {
+.profile-form-select:focus {
   outline: none;
   border-color: #4a90e2;
 }
 
-.form-select:disabled {
+.profile-form-select:disabled {
   background-color: #f5f5f5;
   cursor: not-allowed;
 }
 
-.select-icon {
+.profile-select-icon {
   position: absolute;
   right: 10px;
   top: 50%;
@@ -465,7 +465,7 @@
   pointer-events: none;
 }
 
-.search-container .select-icon {
+.profile-search-container .profile-select-icon {
   position: absolute;
   right: 10px;
   top: 50%;
@@ -474,12 +474,12 @@
   pointer-events: none;
 }
 
-.password-input-container {
+.profile-password-input-container {
   position: relative;
   width: 100%;
 }
 
-.password-toggle-button {
+.profile-password-toggle-button {
   position: absolute;
   right: 10px;
   top: 50%;
@@ -494,24 +494,24 @@
   padding: 0;
 }
 
-.password-toggle-button:hover {
+.profile-password-toggle-button:hover {
   color: #4a90e2;
 }
 
-.admin-action {
+.profile-admin-action {
   margin-top: 1rem;
   display: flex;
   justify-content: flex-end;
 }
 
-.admin-message {
+.profile-admin-message {
   margin-top: 1rem;
   padding: 0.75rem 1rem;
   border-radius: 4px;
   text-align: center;
 }
 
-.edit-button {
+.profile-edit-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -529,14 +529,14 @@
   width: 100%;
 }
 
-.edit-button:hover {
+.profile-edit-button:hover {
   background-color: #3a80d2;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   transform: translateY(-1px);
 }
 
 /* Card Styles */
-.ad-card {
+.profile-admin-card {
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -544,7 +544,7 @@
   margin-bottom: 30px;
 }
 
-.ad-card-title {
+.profile-admin-card-title {
   color: #111827;
   font-size: 18px;
   font-weight: 600;
@@ -555,7 +555,7 @@
 }
 
 /* Form Elements */
-.ad-form-group {
+.profile-admin-form-group {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -563,12 +563,12 @@
   position: relative;
 }
 
-.ad-form-group:focus-within {
+.profile-admin-form-group:focus-within {
   z-index: 1000;
 }
 
 /* Form Row - for displaying inputs side by side */
-.ad-form-row {
+.profile-admin-form-row {
   display: flex;
   flex-wrap: wrap;
   gap: 15px;
@@ -576,25 +576,25 @@
   align-items: flex-end;
 }
 
-.ad-form-row .ad-form-group {
+.profile-admin-form-row .profile-admin-form-group {
   flex: 1;
   min-width: 0; /* Permet aux éléments de rétrécir en-dessous de leur largeur minimale */
 }
 
-.ad-form-label {
+.profile-admin-form-label {
   margin-bottom: 0.5rem;
   font-weight: 500;
   color: #333;
 }
 
-.ad-form-input,
-.ad-form-select,
-.ad-select-wrapper,
-.ad-password-input-container {
+.profile-admin-form-input,
+.profile-admin-form-select,
+.profile-admin-select-wrapper,
+.profile-admin-password-input-container {
   height: 40px;
 }
 
-.ad-form-input {
+.profile-admin-form-input {
   width: 100%;
   background-color: #fff;
   border: 1px solid #e5e7eb;
@@ -606,17 +606,17 @@
   box-sizing: border-box;
 }
 
-.ad-form-input:focus {
+.profile-admin-form-input:focus {
   outline: none;
 }
 
 /* Select Styles */
-.ad-select-wrapper {
+.profile-admin-select-wrapper {
   position: relative;
   width: 100%;
 }
 
-.ad-form-select {
+.profile-admin-form-select {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -631,7 +631,7 @@
   cursor: pointer;
 }
 
-.ad-select-icon {
+.profile-admin-select-icon {
   position: absolute;
   right: 14px;
   top: 50%;
@@ -641,13 +641,13 @@
 }
 
 /* Button Styles */
-.ad-button-group {
+.profile-admin-button-group {
   display: flex;
   gap: 15px;
   margin-top: 20px;
 }
 
-.ad-button-container {
+.profile-admin-button-container {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -657,7 +657,7 @@
   align-self: flex-end;
 }
 
-.ad-btn {
+.profile-admin-btn {
   padding: 12px;
   border-radius: 6px;
   font-family: "Poppins", sans-serif;
@@ -668,19 +668,19 @@
   transition: background-color 0.2s;
 }
 
-.ad-btn-password {
+.profile-admin-btn-password {
   background-color: #2563eb;
   color: #ffffff;
   width: 100%;
 }
 
-.ad-btn-save {
+.profile-admin-btn-save {
   background-color: #4b5563;
   color: #ffffff;
   width: 100%;
 }
 
-.ad-btn-primary {
+.profile-admin-btn-primary {
   background-color: #2563eb;
   color: white;
   border: none;
@@ -689,10 +689,15 @@
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
 }
 
 /* Assurer que le bouton dans le conteneur de bouton est correctement aligné */
-.ad-button-container .ad-btn-primary {
+.profile-admin-button-container .profile-admin-btn-primary {
   height: 40px;
   margin-top: auto; /* Pousse le bouton vers le bas du conteneur */
   display: flex;
@@ -701,7 +706,7 @@
 }
 
 /* Styles spécifiques pour le conteneur de mot de passe */
-.ad-password-input-container {
+.profile-admin-password-input-container {
   position: relative;
   display: flex;
   align-items: center;
@@ -711,13 +716,13 @@
   overflow: hidden;
 }
 
-.ad-password-input-container .ad-form-input {
+.profile-admin-password-input-container .profile-admin-form-input {
   border: none;
   height: 100%;
   flex: 1;
 }
 
-.ad-password-toggle-button {
+.profile-admin-password-toggle-button {
   background: none;
   border: none;
   padding: 0 10px;
@@ -728,12 +733,12 @@
   align-items: center;
 }
 
-.ad-password-toggle-button:hover {
+.profile-admin-password-toggle-button:hover {
   color: #374151;
 }
 
 /* Password Modal */
-.ad-modal-overlay {
+.profile-admin-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -746,7 +751,7 @@
   z-index: 1000;
 }
 
-.ad-password-modal {
+.profile-admin-password-modal {
   background-color: white;
   border-radius: 8px;
   width: 100%;
@@ -769,32 +774,32 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .ad-form-row {
+  .profile-admin-form-row {
     flex-direction: column;
     align-items: stretch;
   }
   
-  .ad-button-container {
+  .profile-admin-button-container {
     width: 100% !important;
     margin-top: 0;
   }
   
-  .ad-button-container .ad-btn-primary {
+  .profile-admin-button-container .profile-admin-btn-primary {
     width: 100%;
   }
   
-  .ad-password-modal {
+  .profile-admin-password-modal {
     max-width: 90%;
   }
 }
 
 /* Search Results */
-.ad-search-container {
+.profile-ad-search-container {
   position: relative;
   width: 100%;
 }
 
-.ad-search-results {
+.profile-admin-search-results {
   position: absolute;
   top: 100%;
   left: 0;
@@ -813,7 +818,7 @@
   margin-bottom: 0;
 }
 
-.ad-search-item {
+.profile-admin-search-item {
   padding: 12px 16px;
   cursor: pointer;
   font-size: 14px;
@@ -826,15 +831,15 @@
   margin: 0;
 }
 
-.ad-search-item:hover {
+.profile-admin-search-item:hover {
   background-color: #f3f4f6;
 }
 
-.ad-search-item:last-child {
+.profile-admin-search-item:last-child {
   border-bottom: none;
 }
 
-.ad-search-message {
+.profile-admin-search-message {
   padding: 12px 16px;
   color: #6b7280;
   font-size: 14px;
@@ -844,18 +849,42 @@
 }
 
 /* Search item selected */
-.ad-search-item-selected {
+.profile-admin-search-item-selected {
   background-color: #f3f4f6;
   font-weight: 500;
   border-left: 3px solid #8dc63f;
 }
 
-.ad-search-item-selected:hover {
+/* Bouton pour effacer la recherche */
+.profile-admin-search-clear {
+  position: absolute;
+  right: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.profile-admin-search-clear:hover {
+  color: #6b7280;
+  background-color: #f3f4f6;
+}
+
+.profile-admin-search-item-selected:hover {
   background-color: #e5e7eb;
 }
 
 /* Clear button for search input */
-.ad-search-clear {
+.profile-search-clear {
   position: absolute;
   right: 10px;
   top: 50%;
@@ -873,21 +902,21 @@
   transition: all 0.2s;
 }
 
-.ad-search-clear:hover {
+.profile-search-clear:hover {
   color: #4b5563;
   background-color: #f3f4f6;
 }
 
-.edit-button:active {
+.profile-edit-button:active {
   transform: translateY(0);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.edit-icon, .save-icon {
+.profile-edit-icon, .profile-save-icon {
   font-size: 1.1rem;
 }
 
-.password-button {
+.profile-password-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -902,7 +931,7 @@
   transition: all 0.3s ease;
 }
 
-.password-button:hover {
+.profile-password-button:hover {
   background-color: #e8e8e8;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
@@ -912,7 +941,7 @@
   color: #666;
 }
 
-.form-action {
+.profile-form-actions {
   display: flex;
   margin-top: 1.5rem;
   justify-content: flex-start;

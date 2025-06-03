@@ -1,74 +1,86 @@
 /* Styles pour la page d'inventaire */
-.inventaire-page-container {
+.inventaire-container {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
-.inventaire-main-content {
+.inventaire-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background-color: #f5f7fa;
-  width: calc(100% - 250px);
-  transition: width 0.3s ease;
+  overflow: hidden;
 }
 
-.inventaire-main-content.sidebar-closed {
-  width: calc(100% - 60px);
-}
-
-.inventaire-container {
-  padding: 20px;
+.inventaire-main {
   flex: 1;
-  height: calc(100vh - 60px);
+  padding: 1.5rem;
   overflow-y: auto;
+  background-color: #f5f7fa;
 }
 
-.inventaire-header {
+.inventaire-controls {
+  margin-bottom: 1.5rem;
+}
+
+.inventaire-search-filter-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 1rem;
+}
+
+.inventaire-search-container {
+  display: flex;
+  align-items: center;
+  width: 50%;
+}
+
+.inventaire-search-input {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+
+.inventaire-filter-button {
+  background-color: #f8f9fa;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  margin-left: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inventaire-filter-button:hover {
+  background-color: #e2e8f0;
+}
+
+.inventaire-action-buttons {
+  display: flex;
+  gap: 0.75rem;
 }
 
 .inventaire-add-button {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 4px;
-  border: none;
-  background-color: #4a90e2;
-  color: white;
-  font-weight: 500;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
   cursor: pointer;
-  transition: all 0.2s;
+  font-weight: 500;
+  background-color: #4299e1;
+  border: none;
+  color: white;
 }
 
 .inventaire-add-button:hover {
-  background-color: #3a7bc8;
-}
-
-.inventaire-filters {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.inventaire-search {
-  position: relative;
-  width: 250px;
-}
-
-.inventaire-search input {
-  width: 100%;
-  padding: 8px 12px;
-  padding-right: 35px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-  font-size: 14px;
+  background-color: #3182ce;
 }
 
 .inventaire-filter {
@@ -93,11 +105,11 @@
 }
 
 .inventaire-table-container {
+  overflow-x: auto;
   background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-  margin-top: 20px;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  max-height: calc(100vh - 250px);
 }
 
 .inventaire-produits-info {
@@ -228,33 +240,39 @@
 .inventaire-table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 0.875rem;
 }
 
 .inventaire-table th {
-  background-color: #f9f9f9;
+  background-color: #f8fafc;
   font-weight: 600;
-  color: #333;
+  color: #475569;
+  padding: 1rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  border-bottom: 2px solid #e2e8f0;
   position: sticky;
   top: 0;
   z-index: 10;
-  padding: 12px 15px;
-  text-align: left;
   cursor: pointer;
   user-select: none;
 }
 
 .inventaire-table th:hover {
-  background-color: #f0f0f0;
+  background-color: #f1f5f9;
 }
 
+.inventaire-table th,
 .inventaire-table td {
-  padding: 12px 15px;
+  padding: 0.75rem 1rem;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.inventaire-table tbody tr:hover {
-  background-color: #f5f7fa;
+.inventaire-table tr:hover {
+  background-color: #f8fafc;
 }
 
 .inventaire-row-ecart {
@@ -273,55 +291,44 @@
   color: #388e3c;
 }
 
-.inventaire-actions {
+.inventaire-action-buttons {
   display: flex;
-  gap: 10px;
-  justify-content: center;
-  align-items: center;
+  gap: 8px;
 }
 
-.inventaire-view-button,
-.inventaire-delete-button {
+.inventaire-action-btn {
   background: none;
   border: none;
   cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  transition: background-color 0.2s;
-  padding: 0;
+  color: #6b7280;
 }
 
-.inventaire-view-button {
-  color: #4a90e2;
+.inventaire-view {
+  color: #4299e1;
 }
 
-.inventaire-view-button:hover {
-  background-color: #eaf2fd;
+.inventaire-view:hover {
+  background-color: rgba(66, 153, 225, 0.1);
 }
 
-.inventaire-delete-button {
-  color: #f44336;
+.inventaire-delete {
+  color: #f56565;
 }
 
-.inventaire-delete-button:hover {
-  background-color: #ffebee;
+.inventaire-delete:hover {
+  background-color: rgba(245, 101, 101, 0.1);
 }
 
-.inventaire-loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-  font-size: 1.2rem;
-  color: #666;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-top: 20px;
+.inventaire-loading-indicator {
+  padding: 2rem;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.875rem;
 }
 
 .inventaire-error {
@@ -336,7 +343,7 @@
 .inventaire-no-data {
   text-align: center;
   padding: 30px;
-  color: #777;
+  color: #64748b;
   font-style: italic;
 }
 

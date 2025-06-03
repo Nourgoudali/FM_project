@@ -1,6 +1,7 @@
 .intv-container {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .intv-content {
@@ -12,8 +13,9 @@
 
 .intv-main {
   flex: 1;
-  padding: 20px;
+  padding: 1.5rem;
   overflow-y: auto;
+  background-color: var(--background-color);
 }
 
 .intv-header {
@@ -37,8 +39,7 @@
 }
 
 .intv-controls {
-  display: flex;
-  gap: 10px;
+  margin-bottom: 1.5rem;
 }
 
 .intv-view-toggle {
@@ -69,61 +70,109 @@
   font-size: 12px;
 }
 
-.intv-new-btn {
+.intv-action-buttons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.intv-export-button,
+.intv-add-button {
   display: flex;
   align-items: center;
-  gap: 5px;
-  background-color: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 16px;
-  font-size: 14px;
-  font-weight: 500;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
   cursor: pointer;
-  height: 40px;
-  margin-left: 10px;
-  white-space: nowrap;
+  font-weight: 500;
+}
+
+.intv-export-button {
+  background-color: #f8f9fa;
+  border: 1px solid #e2e8f0;
+  color: #4a5568;
+}
+
+.intv-export-button:hover {
+  background-color: #e2e8f0;
+}
+
+.intv-add-button {
+  background-color: #4299e1;
+  border: none;
+  color: white;
+}
+
+.intv-add-button:hover {
+  background-color: #3182ce;
 }
 
 .intv-new-btn:hover {
   background-color: #2563eb;
 }
 
+.intv-controls {
+  margin-bottom: 1.5rem;
+}
+
+.intv-search-filter-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
 .intv-filters {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 1rem;
   align-items: center;
 }
 
 .intv-search-container {
-  width: 300px;
+  display: flex;
+  align-items: center;
+  width: 50%;
 }
 
-.intv-search {
-  width: 100%;
-  padding: 10px 15px;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  font-size: 14px;
+.intv-search-input {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
 }
 
 .intv-filter-buttons {
   display: flex;
-  gap: 10px;
+  gap: 0.75rem;
 }
 
 .intv-filter-dropdown {
   position: relative;
 }
 
+.intv-filter-button {
+  background-color: #f8f9fa;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  margin-left: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.intv-filter-button:hover {
+  background-color: #e2e8f0;
+}
+
 .intv-filter-select {
-  width: 100%;
-  padding: 10px 15px;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  font-size: 14px;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
   background-color: white;
   color: #374151;
   cursor: pointer;
@@ -142,9 +191,13 @@
 
 .intv-table-container {
   background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+}
+
+.intv-table-wrapper {
+  overflow-x: auto;
 }
 
 .intv-table {
@@ -152,24 +205,113 @@
   border-collapse: collapse;
 }
 
-.intv-table th {
+.intv-table th,
+.intv-table td {
+  padding: 0.75rem 1rem;
   text-align: left;
-  padding: 16px 20px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #6b7280;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.intv-table th {
+  background-color: #f8fafc;
+    font-weight: 600;
+    color: #475569;
+    padding: 1rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    border-bottom: 2px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .intv-table td {
-  padding: 16px 20px;
-  font-size: 14px;
-  color: #111827;
-  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.875rem;
+  color: #4a5568;
+}
+
+.intv-table tr:hover td {
+  background-color: #f8fafc;
 }
 
 .intv-table tr:last-child td {
   border-bottom: none;
+}
+
+.intv-filters-container {
+  background-color: #f8f9fa;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.intv-filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.intv-filters-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.intv-close-filters-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #718096;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.intv-close-filters-button:hover {
+  color: #4a5568;
+}
+
+.intv-filters-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.intv-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.intv-filter-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.intv-filter-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.intv-reset-filters-button {
+  background-color: #e2e8f0;
+  border: none;
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.intv-reset-filters-button:hover {
+  background-color: #cbd5e0;
 }
 
 .intv-ref-column {
@@ -195,14 +337,17 @@
   color: #92400e;
 }
 
+.intv-type-badge.corrective {
+  background-color: #ffcccc;
+  color: #990000;
+}
+
 .intv-priority-badge,
 .intv-status-badge {
   display: inline-block;
-  padding: 6px 12px;
-  border-radius: 30px;
+  padding: 4px 8px;
+  border-radius: 12px;
   font-size: 12px;
-  font-weight: 500;
-  text-align: center;
 }
 
 .intv-priority-badge.intv-priority-critical {
@@ -280,23 +425,25 @@
   color: #6b7280;
 }
 
-.intv-action-btn:hover {
-  background-color: #f3f4f6;
-  color: #111827;
+.intv-view {
+  color: #38a169;
 }
 
-.intv-calendar-view {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  padding: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 400px;
+.intv-view:hover {
+  background-color: rgba(56, 161, 105, 0.1);
 }
 
-.intv-calendar-placeholder {
+.intv-edit {
+  color: #4299e1;
+}
+
+.intv-edit:hover {
+  background-color: rgba(66, 153, 225, 0.1);
+}
+
+.no-data-message {
+  text-align: center;
+  padding: 20px;
   color: #6b7280;
-  font-size: 16px;
+  font-style: italic;
 }

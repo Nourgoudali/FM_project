@@ -176,7 +176,7 @@
   }
   
   .stock-form__btn--primary {
-    background-color: #3b82f6;
+    background-color: var(--primary-color);
     color: white;
     border: none;
   }
@@ -185,10 +185,6 @@
     background-color: #f3f4f6;
     color: #333;
     border: 1px solid #ddd;
-  }
-  
-  .stock-form__btn--outline:hover {
-    background-color: #e5e7eb;
   }
   
   @media (max-width: 768px) {

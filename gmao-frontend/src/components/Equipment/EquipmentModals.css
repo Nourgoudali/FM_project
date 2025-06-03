@@ -249,15 +249,10 @@
 }
 
 .equipment-btn-primary {
-  background-color: #3b82f6;
+  background-color: var(--primary-color);
   color: white;
   border: none;
 }
-
-.equipment-btn-primary:hover {
-  background-color: #2563eb;
-}
-
 /* Styles pour l'affichage de l'image en plein écran */
 .fullscreen-image-overlay {
   position: fixed;

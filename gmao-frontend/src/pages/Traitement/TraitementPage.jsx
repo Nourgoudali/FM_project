@@ -153,42 +153,40 @@ const TraitementPage = () => {
   };
 
   return (
-    <div className="traite-layout">
-      <Sidebar />
-      <div className="traite-main">
+    <div className="traitement-container">
+      <Sidebar isOpen={isCollapsed} />
+      <div className="traitement-content">
         <Header title="Traitements de commande" />
-        <div className="traite-content">
-          <div className="traite-container">
-            <div className="traite-toolbar">
-              <div className="traite-toolbar-right">
-                <div className="traite-search">
+        <main className="traitement-main">
+            <div className="traitement-controls">
+              <div className="traitement-search-filter-container">
+                <div className="traitement-search-container">
                   <input
                     type="text"
-                    placeholder="Rechercher..."
+                    placeholder="Rechercher par numéro, fournisseur..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    className="traitement-search-input"
                   />
                 </div>
-              </div>
-              <div className="traite-toolbar-left">
-                <button 
-                  className="traite-button primary"
-                  onClick={() => handleOpenAddModal()}
-                >
-                  <FaPlus /> Ajouter un traitement
-                </button>
+                <div className="traitement-action-buttons">
+                  <button 
+                    className="traitement-add-button"
+                    onClick={() => handleOpenAddModal()}
+                  >
+                    <FaPlus /> Ajouter un traitement
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Les messages d'erreur sont maintenant affichés avec des toasts */}
 
             {loading ? (
-              <div className="traite-loading">Chargement des traitements...</div>
-            ) : filteredTraitements.length === 0 ? (
-              <div className="traite-no-data">Aucun traitement trouvé</div>
+              <div className="traitement-loading-indicator">Chargement des traitements...</div>
             ) : (
-              <div className="traite-table-container">
-                <table className="traite-table">
+              <div className="traitement-table-container">
+                <table className="traitement-table">
                   <thead>
                     <tr>
                       <th>Numéro de commande</th>
@@ -212,9 +210,9 @@ const TraitementPage = () => {
                         </td>
                         <td>{formatDate(traitement.dateReception)}</td>
                         <td>
-                          <div className="traite-actions">
+                          <div className="traitement-action-buttons">
                             <button
-                              className="traite-action-button view"
+                              className="traitement-action-btn traitement-view"
                               onClick={() => handleViewTraitement(traitement)}
                               title="Voir les détails"
                             >
@@ -245,8 +243,7 @@ const TraitementPage = () => {
                 onAddSuccess={fetchTraitements}
               />
             )}
-          </div>
-        </div>
+          </main>
       </div>
     </div>
   );

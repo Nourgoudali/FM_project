@@ -48,10 +48,7 @@ function ProfilePage() {
   const [showNewAdminPassword, setShowNewAdminPassword] = useState(false)
   const [showPasswordResults, setShowPasswordResults] = useState(false)
   
-  // États pour les messages d'erreur et de succès (maintenus pour compatibilité)
-  const [error, setError] = useState("")
-  const [passwordError, setPasswordError] = useState("")
-  const [passwordSuccess, setPasswordSuccess] = useState("")
+  // États pour la gestion des opérations
   
   // États pour la liste des employés
   const [employeeList, setEmployeeList] = useState([])
@@ -157,16 +154,11 @@ function ProfilePage() {
     if (e) e.preventDefault()
     setLoading(true)
     try {
-      await userAPI.updateCurrentUser({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        department: formData.department
-      })
-      setIsEditing(false)
+      await userAPI.updateCurrentUser(formData)
       toast.success("Profil mis à jour avec succès")
+      setIsEditing(false)
     } catch (error) {
+      console.error("Erreur lors de la mise à jour du profil:", error)
       toast.error("Erreur lors de la mise à jour du profil")
     } finally {
       setLoading(false)
@@ -207,20 +199,12 @@ function ProfilePage() {
     setLoading(true)
     
     try {
-      await userAPI.assignRole(selectedEmployee, { role: selectedRole })
-      toast.success("Le rôle a été attribué avec succès")
-      
-      // Réinitialiser les champs
-      setSelectedEmployee("")
-      setSelectedEmployeeName("")
-      setSearchRole("")
-      setSelectedRole("")
-      
-      // Rafraîchir la liste des employés
-      const response = await userAPI.getAllUsers()
-      setEmployeeList(response.data)
+      await userAPI.updateUserRole(selectedEmployee, selectedRole)
+      toast.success(`Rôle attribué avec succès`)
+      clearRoleSearch()
     } catch (error) {
-      toast.error("Une erreur s'est produite lors de l'attribution du rôle")
+      console.error("Erreur lors de l'attribution du rôle:", error)
+      toast.error("Erreur lors de l'attribution du rôle")
     } finally {
       setLoading(false)
     }
@@ -259,18 +243,13 @@ function ProfilePage() {
     setLoading(true)
     
     try {
-      await userAPI.adminChangeUserPassword(selectedEmployeeForPassword, { newPassword: newAdminPassword })
-      toast.success("Le mot de passe a été modifié avec succès")
-      
-      // Réinitialiser les champs
-      setSelectedEmployeeForPassword("")
-      setSelectedEmployeePasswordName("")
-      setSearchPassword("")
+      await userAPI.adminChangeUserPassword(selectedEmployeeForPassword, newAdminPassword)
+      toast.success(`Mot de passe modifié avec succès`)
+      clearPasswordSearch()
       setNewAdminPassword("")
     } catch (error) {
       console.error("Erreur lors de la modification du mot de passe:", error)
-      setPasswordError("Une erreur s'est produite lors de la modification du mot de passe")
-      setTimeout(() => setPasswordError(""), 3000)
+      toast.error("Erreur lors de la modification du mot de passe")
     } finally {
       setLoading(false)
     }
@@ -287,7 +266,7 @@ function ProfilePage() {
     
     // Vérifier que le mot de passe est suffisamment fort
     if (passwordData.newPassword.length < 6) {
-      setPasswordError("Le nouveau mot de passe doit contenir au moins 6 caractères");
+      toast.error("Le nouveau mot de passe doit contenir au moins 6 caractères");
       return;
     }
     
@@ -305,7 +284,7 @@ function ProfilePage() {
         confirmPassword: ""
       });
       
-      setPasswordSuccess("Mot de passe modifié avec succès");
+      toast.success("Mot de passe modifié avec succès");
       
       // Fermer le modal après 2 secondes
       setTimeout(() => {
@@ -320,30 +299,6 @@ function ProfilePage() {
       }
     }
   }
-
-  const handleAvatarChange = async (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      
-      reader.onload = async (event) => {
-        // Afficher localement l'image avant de l'envoyer au serveur
-        setAvatarImage(event.target.result);
-        
-        try {
-          // Envoyer l'image au serveur
-          await userAPI.updateAvatar({ file });
-          // Afficher un message de succès si nécessaire
-        } catch (error) {
-          console.error("Erreur lors du téléchargement de l'avatar:", error);
-          // L'image est déjà affichée localement, pas besoin de la retirer
-          // mais vous pourriez ajouter un message d'erreur si besoin
-        }
-      };
-      
-      reader.readAsDataURL(file);
-    }
-  };
 
   // Compétences pour la démo
   const skills = ["Mécanique", "Électricité", "Automatisme"]
@@ -410,26 +365,14 @@ function ProfilePage() {
         <div className="profile-content">
           <Header title="Profil utilisateur" onToggleSidebar={toggleSidebar} />
           <main className="profile-main">
-            <div className="loading-indicator">Chargement du profil...</div>
+            <div className="profile-loading-indicator">Chargement du profil...</div>
           </main>
         </div>
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div className="profile-container">
-        <Sidebar isOpen={sidebarOpen} />
-        <div className="profile-content">
-          <Header title="Profil utilisateur" onToggleSidebar={toggleSidebar} />
-          <main className="profile-main">
-            <div className="loading-indicator">Chargement du profil...</div>
-          </main>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="profile-container">
@@ -445,8 +388,8 @@ function ProfilePage() {
               <h3>Informations personnelles</h3>
               
               <div className="profile-form">
-                <div className="form-row">
-                  <div className="form-group">
+                <div className="profile-form-row">
+                  <div className="profile-form-group">
                     <label>Prénom</label>
                     <input 
                       type="text" 
@@ -457,7 +400,7 @@ function ProfilePage() {
                     />
                   </div>
                   
-                  <div className="form-group">
+                  <div className="profile-form-group">
                     <label>Nom</label>
                     <input 
                       type="text" 
@@ -469,8 +412,8 @@ function ProfilePage() {
                   </div>
                 </div>
                 
-                <div className="form-row">
-                  <div className="form-group">
+                <div className="profile-form-row">
+                  <div className="profile-form-group">
                     <label>Email</label>
                     <input 
                       type="email" 
@@ -481,7 +424,7 @@ function ProfilePage() {
                     />
                   </div>
                   
-                  <div className="form-group">
+                  <div className="profile-form-group">
                     <label>Téléphone</label>
                     <input 
                       type="tel" 
@@ -494,8 +437,8 @@ function ProfilePage() {
                   </div>
                 </div>
                 
-                <div className="form-row">
-                  <div className="form-group">
+                <div className="profile-form-row">
+                  <div className="profile-form-group">
                     <label>Service</label>
                     <input 
                       type="text" 
@@ -507,7 +450,7 @@ function ProfilePage() {
                     />
                   </div>
                   
-                  <div className="form-group">
+                  <div className="profile-form-group">
                     <label>Poste</label>
                     <input 
                       type="text" 
@@ -521,9 +464,9 @@ function ProfilePage() {
                   </div>
                 </div>
 
-                <div className="form-action">
+                <div className="profile-form-actions">
                   <button 
-                    className="password-button"
+                    className="profile-password-button"
                     onClick={() => setShowPasswordModal(true)}
                   >
                     <RiKey2Line className="key-icon" />
@@ -531,17 +474,17 @@ function ProfilePage() {
                   </button>
                   
                   <button 
-                    className="edit-button"
+                    className="profile-edit-button"
                     onClick={() => isEditing ? handleSubmit() : setIsEditing(true)}
                   >
                     {isEditing ? (
                       <>
-                        <FaSave className="save-icon" />
+                        <FaSave className="profile-save-icon" />
                         Enregistrer
                       </>
                     ) : (
                       <>
-                        <FaEdit className="edit-icon" />
+                        <FaEdit className="profile-edit-icon" />
                         Modifier le profil
                       </>
                     )}
@@ -553,18 +496,18 @@ function ProfilePage() {
           
           {/* Cartes d'administration des utilisateurs */}
           {formData.role === "admin" && (
-            <div className="admin-cards">
+            <div className="profile-admin-section">
               {/* Carte d'attribution de rôle */}
-              <div className="ad-card">
-                <h3 className="ad-card-title">Attribution de rôle</h3>
-                <div className="ad-form-row">
-                  <div className="ad-form-group" ref={roleSearchRef}>
-                    <label className="ad-form-label" htmlFor="searchEmployee">Employé</label>
-                    <div className="ad-search-container">
+              <div className="profile-admin-card">
+                <h3 className="profile-admin-card-title">Attribution de rôle</h3>
+                <div className="profile-admin-form-row">
+                  <div className="profile-admin-form-group" ref={roleSearchRef}>
+                    <label className="profile-admin-form-label" htmlFor="searchEmployee">Employé</label>
+                    <div className="profile-admin-search-container">
                       <input
                         id="searchEmployee"
                         type="text"
-                        className={`ad-form-input ${selectedEmployee ? 'ad-search-item-selected' : ''}`}
+                        className={`profile-admin-form-input ${selectedEmployee ? 'profile-admin-search-item-selected' : ''}`}
                         value={searchRole}
                         onChange={(e) => {
                           setSearchRole(e.target.value);
@@ -579,11 +522,11 @@ function ProfilePage() {
                         placeholder="Sélectionner un employé"
                         disabled={loading || employeeLoading}
                       />
-                      <FaChevronDown className="ad-select-icon" />
+                      <FaChevronDown className="profile-admin-select-icon" />
                       {searchRole && (
                         <button 
                           type="button" 
-                          className="ad-search-clear" 
+                          className="profile-admin-search-clear" 
                           onClick={clearRoleSearch}
                           aria-label="Effacer la recherche"
                         >
@@ -593,32 +536,32 @@ function ProfilePage() {
                     </div>
                     
                     {showRoleResults && (
-                      <ul className="ad-search-results">
+                      <ul className="profile-admin-search-results">
                         {employeeLoading ? (
-                          <li className="ad-search-message">Chargement des employés...</li>
+                          <li className="profile-admin-search-message">Chargement des employés...</li>
                         ) : getFilteredEmployeesForRole().length > 0 ? (
                           getFilteredEmployeesForRole().map(emp => (
                             <li 
                               key={emp._id} 
-                              className={`ad-search-item ${selectedEmployee === emp._id ? 'ad-search-item-selected' : ''}`}
+                              className={`profile-admin-search-item ${selectedEmployee === emp._id ? 'profile-admin-search-item-selected' : ''}`}
                               onClick={() => handleSelectEmployeeForRole(emp)}
                             >
                               {emp.firstName} {emp.lastName}
                             </li>
                           ))
                         ) : (
-                          <li className="ad-search-message">Aucun employé trouvé</li>
+                          <li className="profile-admin-search-message">Aucun employé trouvé</li>
                         )}
                       </ul>
                     )}
                   </div>
                   
-                  <div className="ad-form-group">
-                    <label className="ad-form-label" htmlFor="role">Rôle</label>
-                    <div className="ad-select-wrapper">
+                  <div className="profile-admin-form-group">
+                    <label className="profile-admin-form-label" htmlFor="role">Rôle</label>
+                    <div className="profile-admin-select-wrapper">
                       <select
                         id="role"
-                        className="ad-form-select"
+                        className="profile-admin-form-select"
                         value={selectedRole}
                         onChange={(e) => setSelectedRole(e.target.value)}
                         disabled={loading || !selectedEmployee}
@@ -632,13 +575,13 @@ function ProfilePage() {
                           ))
                         }
                       </select>
-                      <FaChevronDown className="ad-select-icon" />
+                      <FaChevronDown className="profile-admin-select-icon" />
                     </div>
                   </div>
                   
-                  <div className="ad-button-container">
+                  <div className="profile-admin-button-container">
                     <button 
-                      className="ad-btn-primary" 
+                      className="profile-admin-btn-primary" 
                       onClick={handleAttributeRole}
                       disabled={loading || !selectedEmployee || !selectedRole}
                     >
@@ -649,16 +592,16 @@ function ProfilePage() {
               </div>
               
               {/* Carte de modification du mot de passe */}
-              <div className="ad-card">
-                <h3 className="ad-card-title">Modification du mot de passe</h3>
-                <div className="ad-form-row">
-                  <div className="ad-form-group" ref={passwordSearchRef}>
-                    <label className="ad-form-label" htmlFor="searchEmployeePassword">Employé</label>
-                    <div className="ad-search-container">
+              <div className="profile-admin-card">
+                <h3 className="profile-admin-card-title">Modification du mot de passe</h3>
+                <div className="profile-admin-form-row">
+                  <div className="profile-admin-form-group" ref={passwordSearchRef}>
+                    <label className="profile-admin-form-label" htmlFor="searchEmployeePassword">Employé</label>
+                    <div className="profile-admin-search-container">
                       <input
                         id="searchEmployeePassword"
                         type="text"
-                        className={`ad-form-input ${selectedEmployeeForPassword ? 'ad-search-item-selected' : ''}`}
+                        className={`profile-admin-form-input ${selectedEmployeeForPassword ? 'profile-admin-search-item-selected' : ''}`}
                         value={searchPassword}
                         onChange={(e) => {
                           setSearchPassword(e.target.value);
@@ -672,11 +615,11 @@ function ProfilePage() {
                         placeholder="Sélectionner un employé"
                         disabled={loading || employeeLoading}
                       />
-                      <FaChevronDown className="ad-select-icon" />
+                      <FaChevronDown className="profile-admin-select-icon" />
                       {searchPassword && (
                         <button 
                           type="button" 
-                          className="ad-search-clear" 
+                          className="profile-admin-search-clear" 
                           onClick={clearPasswordSearch}
                           aria-label="Effacer la recherche"
                         >
@@ -686,33 +629,33 @@ function ProfilePage() {
                     </div>
                     
                     {showPasswordResults && (
-                      <ul className="ad-search-results">
+                      <ul className="profile-admin-search-results">
                         {employeeLoading ? (
-                          <li className="ad-search-message">Chargement des employés...</li>
+                          <li className="profile-admin-search-message">Chargement des employés...</li>
                         ) : getFilteredEmployeesForPassword().length > 0 ? (
                           getFilteredEmployeesForPassword().map(emp => (
                             <li 
                               key={emp._id} 
-                              className={`ad-search-item ${selectedEmployeeForPassword === emp._id ? 'ad-search-item-selected' : ''}`}
+                              className={`profile-admin-search-item ${selectedEmployeeForPassword === emp._id ? 'profile-admin-search-item-selected' : ''}`}
                               onClick={() => handleSelectEmployeeForPassword(emp)}
                             >
                               {emp.firstName} {emp.lastName}
                             </li>
                           ))
                         ) : (
-                          <li className="ad-search-message">Aucun employé trouvé</li>
+                          <li className="profile-admin-search-message">Aucun employé trouvé</li>
                         )}
                       </ul>
                     )}
                   </div>
                   
-                  <div className="ad-form-group">
-                    <label className="ad-form-label" htmlFor="newAdminPassword">Nouveau mot de passe</label>
-                    <div className="ad-password-input-container">
+                  <div className="profile-admin-form-group">
+                    <label className="profile-admin-form-label" htmlFor="newAdminPassword">Nouveau mot de passe</label>
+                    <div className="profile-admin-password-input-container">
                       <input
                         id="newAdminPassword"
                         type={showNewAdminPassword ? "text" : "password"}
-                        className="ad-form-input"
+                        className="profile-admin-form-input"
                         value={newAdminPassword}
                         onChange={(e) => setNewAdminPassword(e.target.value)}
                         placeholder="Entrer le nouveau mot de passe"
@@ -721,7 +664,7 @@ function ProfilePage() {
                       />
                       <button
                         type="button"
-                        className="ad-password-toggle-button"
+                        className="profile-admin-password-toggle-button"
                         onClick={() => setShowNewAdminPassword(!showNewAdminPassword)}
                         disabled={loading}
                       >
@@ -730,9 +673,9 @@ function ProfilePage() {
                     </div>
                   </div>
                   
-                  <div className="ad-button-container">
+                  <div className="profile-admin-button-container">
                     <button 
-                      className="ad-btn-primary" 
+                      className="profile-admin-btn-primary" 
                       onClick={handleChangePassword}
                       disabled={loading || !selectedEmployeeForPassword || !newAdminPassword}
                     >
@@ -743,8 +686,7 @@ function ProfilePage() {
               </div>
               
               {/* Messages de succès ou d'erreur */}
-              {passwordError && <div className="error-message admin-message">{passwordError}</div>}
-              {passwordSuccess && <div className="success-message admin-message">{passwordSuccess}</div>}
+              
             </div>
           )}
 
@@ -760,7 +702,7 @@ function ProfilePage() {
         size="medium"
       >
         <form onSubmit={handlePasswordSubmit} className="password-form">
-          <div className="form-group">
+          <div className="profile-form-group">
             <label htmlFor="currentPassword">Mot de passe actuel</label>
             <input
               type="password"
@@ -773,7 +715,7 @@ function ProfilePage() {
             />
           </div>
 
-          <div className="form-group">
+          <div className="profile-form-group">
             <label htmlFor="newPassword">Nouveau mot de passe</label>
             <input
               type="password"
@@ -786,7 +728,7 @@ function ProfilePage() {
             />
           </div>
 
-          <div className="form-group">
+          <div className="profile-form-group">
             <label htmlFor="confirmPassword">Confirmer le mot de passe</label>
             <input
               type="password"
@@ -801,11 +743,11 @@ function ProfilePage() {
 
           {/* Les messages d'erreur et de succès sont maintenant affichés avec des toasts */}
 
-          <div className="form-actions modal-buttons">
-            <button type="button" className="btn-cancel" onClick={() => setShowPasswordModal(false)}>
+          <div className="profile-form-actions profile-modal-buttons">
+            <button type="button" className="profile-btn-cancel" onClick={() => setShowPasswordModal(false)}>
               Annuler
             </button>
-            <button type="submit" className="btn-primary">
+            <button type="submit" className="profile-btn-primary">
               Enregistrer
             </button>
           </div>

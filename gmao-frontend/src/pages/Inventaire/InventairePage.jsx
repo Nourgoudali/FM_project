@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaTrash, FaEye } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaEye, FaSearch } from 'react-icons/fa';
 import { inventaireAPI } from '../../services/api';
 import AddInventaireForm from '../../components/Inventaire/AddInventaireForm';
 import ViewInventaireDetails from '../../components/Inventaire/ViewInventaireDetails';
@@ -164,31 +164,36 @@ const InventairePage = () => {
   };
 
   return (
-    <div className="inventaire-page-container">
-      <Sidebar />
-      <div className={`inventaire-main-content ${sidebarOpen ? "" : "sidebar-closed"}`}>
+    <div className="inventaire-container">
+      <Sidebar isOpen={sidebarOpen} />
+      <div className="inventaire-content">
         <Header title="Gestion des Inventaires" />
-        <div className="inventaire-container">
-          <div className="inventaire-header">
-          <div className="inventaire-search">
-          <input
-            type="text"
-            placeholder="Rechercher un produit ou lieu..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-            <button 
-              className="inventaire-add-button" 
-              onClick={() => setShowAddModal(true)}
-            >
-              <FaPlus /> Ajouter un inventaire
-            </button>
+        <main className="inventaire-main">
+          <div className="inventaire-controls">
+            <div className="inventaire-search-filter-container">
+              <div className="inventaire-search-container">
+                <input
+                  type="text"
+                  placeholder="Rechercher un produit ou lieu..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="inventaire-search-input"
+                />
+              </div>
+              <div className="inventaire-action-buttons">
+                <button 
+                  className="inventaire-add-button" 
+                  onClick={() => setShowAddModal(true)}
+                >
+                  <FaPlus /> Ajouter un inventaire
+                </button>
+              </div>
+            </div>
           </div>
       {error && <div className="inventaire-error">{error}</div>}
 
       {loading ? (
-        <div className="inventaire-loading">Chargement des inventaires...</div>
+        <div className="inventaire-loading-indicator">Chargement des inventaires...</div>
       ) : (
         <div className="inventaire-table-container">
           <table className="inventaire-table">
@@ -215,21 +220,23 @@ const InventairePage = () => {
                         'Non assigné'
                       )}
                     </td>
-                    <td className="inventaire-actions">
-                      <button 
-                        className="inventaire-view-button"
-                        onClick={() => handleViewDetails(inventaire._id)}
-                        title="Voir les détails"
-                      >
-                        <FaEye />
-                      </button>
-                      <button 
-                        className="inventaire-delete-button"
-                        onClick={() => handleDelete(inventaire._id)}
-                        title="Supprimer"
-                      >
-                        <FaTrash />
-                      </button>
+                    <td>
+                      <div className="inventaire-action-buttons">
+                        <button 
+                          className="inventaire-action-btn inventaire-view"
+                          onClick={() => handleViewDetails(inventaire._id)}
+                          title="Voir les détails"
+                        >
+                          <FaEye />
+                        </button>
+                        <button 
+                          className="inventaire-action-btn inventaire-delete"
+                          onClick={() => handleDelete(inventaire._id)}
+                          title="Supprimer"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -263,7 +270,7 @@ const InventairePage = () => {
           }}
         />
       )}
-        </div>
+        </main>
       </div>
     </div>
   );

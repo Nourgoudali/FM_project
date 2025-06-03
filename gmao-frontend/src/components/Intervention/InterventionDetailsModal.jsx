@@ -1,40 +1,100 @@
-"use client"
-
+import { useState, useEffect } from "react"
 import { FaTimes, FaTools, FaCalendarAlt, FaUser, FaMapMarkerAlt } from "react-icons/fa"
+import { interventionAPI } from "../../services/api"
 import "./InterventionDetailsModal.css"
 
-function InterventionDetailsModal({ intervention, onClose }) {
+function InterventionDetailsModal({ interventionId, intervention: initialData, onClose }) {
+  const [intervention, setIntervention] = useState(initialData)
+  const [loading, setLoading] = useState(!initialData && !!interventionId)
+  const [error, setError] = useState(null)
+  
+  useEffect(() => {
+    // Si nous avons déjà les données ou pas d'ID, ne pas charger
+    if (initialData || !interventionId) return
+    
+    const fetchInterventionData = async () => {
+      try {
+        setLoading(true)
+        const response = await interventionAPI.getInterventionById(interventionId)
+        setIntervention(response.data)
+        setError(null)
+      } catch (err) {
+        console.error("Erreur lors de la récupération des détails de l'intervention:", err)
+        setError("Impossible de charger les détails de l'intervention.")
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchInterventionData()
+  }, [interventionId, initialData])
+  
+  if (loading) return (
+    <div className="modal-overlay">
+      <div className="modal-container details-modal">
+        <div className="modal-header">
+          <h2>Détails de l'intervention</h2>
+          <button className="close-btn" onClick={onClose}>
+            <FaTimes />
+          </button>
+        </div>
+        <div className="modal-content details-content">
+          <div className="loading-spinner">Chargement...</div>
+        </div>
+      </div>
+    </div>
+  )
+  
+  if (error) return (
+    <div className="modal-overlay">
+      <div className="modal-container details-modal">
+        <div className="modal-header">
+          <h2>Erreur</h2>
+          <button className="close-btn" onClick={onClose}>
+            <FaTimes />
+          </button>
+        </div>
+        <div className="modal-content details-content">
+          <div className="error-message">{error}</div>
+          <div className="modal-footer">
+            <button className="cancel-btn" onClick={onClose}>Fermer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+  
   if (!intervention) return null
 
   // Fonction pour obtenir la classe CSS en fonction de la priorité
   const getPriorityClass = (priority) => {
     switch (priority) {
-      case "Critique":
-        return "priority-critical"
-      case "Haute":
-        return "priority-high"
-      case "Moyenne":
-        return "priority-medium"
-      case "Basse":
-        return "priority-low"
-      default:
-        return ""
+      case "Critique": return "intv-priority-critical"
+      case "Haute": return "intv-priority-high"
+      case "Normale": return "intv-priority-medium"
+      case "Basse": return "intv-priority-low"
+      default: return ""
     }
   }
 
   // Fonction pour obtenir la classe CSS en fonction du statut
   const getStatusClass = (status) => {
     switch (status) {
-      case "En cours":
-        return "status-in-progress"
-      case "Planifiée":
-        return "status-planned"
-      case "Terminée":
-        return "status-completed"
-      case "En retard":
-        return "status-late"
-      default:
-        return ""
+      case "En cours": return "intv-status-in-progress"
+      case "Planifiée": return "intv-status-planned"
+      case "Terminée": return "intv-status-completed"
+      case "Reportée": return "intv-status-late"
+      default: return ""
+    }
+  }
+  
+  // Fonction pour obtenir la classe CSS en fonction du type
+  const getTypeClass = (type) => {
+    switch (type) {
+      case "Curative": return "curative"
+      case "Préventive": return "preventive"
+      case "Corrective": return "corrective"
+      default: return ""
     }
   }
 
@@ -52,11 +112,11 @@ function InterventionDetailsModal({ intervention, onClose }) {
           <div className="intervention-reference-section">
             <span className="intervention-id">{intervention.id}</span>
             <div className="intervention-badges">
-              <span className={`type-badge ${intervention.type === "Curative" ? "curative" : "preventive"}`}>
+              <span className={`intv-type-badge ${getTypeClass(intervention.type)}`}>
                 {intervention.type}
               </span>
-              <span className={`priority-badge ${getPriorityClass(intervention.priority)}`}>{intervention.priority}</span>
-              <span className={`status-badge ${getStatusClass(intervention.status)}`}>{intervention.status}</span>
+              <span className={`intv-priority-badge ${getPriorityClass(intervention.priority)}`}>{intervention.priority}</span>
+              <span className={`intv-status-badge ${getStatusClass(intervention.status)}`}>{intervention.status}</span>
             </div>
           </div>
 
@@ -67,7 +127,7 @@ function InterventionDetailsModal({ intervention, onClose }) {
               </div>
               <div className="detail-content">
                 <span className="detail-label">Équipement</span>
-                <span className="detail-value">{intervention.equipment}</span>
+                <span className="detail-value">{intervention.equipment && typeof intervention.equipment === 'object' ? intervention.equipment.name : intervention.equipment}</span>
               </div>
             </div>
 
@@ -106,12 +166,6 @@ function InterventionDetailsModal({ intervention, onClose }) {
               <div className="detail-content">
                 <span className="detail-label">Technicien</span>
                 <div className="technician-info">
-                  <div
-                    className="technician-avatar"
-                    style={{ backgroundColor: intervention.technician.color }}
-                  >
-                    {intervention.technician.initials}
-                  </div>
                   <span>{intervention.technician.name}</span>
                 </div>
               </div>

@@ -171,6 +171,8 @@ export const userAPI = {
   login: (credentials) => API.post('/users/login', credentials),
   // Inscription
   register: (userData) => API.post('/users/register', userData),
+  // Ajouter un utilisateur (admin uniquement)
+  addUser: (userData) => API.post('/users/add', userData),
   // Récupérer le profil utilisateur
   getProfile: () => API.get('/users/profile'),
   // Récupérer l'utilisateur actuel

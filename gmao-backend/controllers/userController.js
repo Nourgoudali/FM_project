@@ -3,6 +3,48 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const userController = {
+  // Ajouter un nouvel utilisateur (pour les administrateurs)
+  addUser: async (req, res) => {
+    const { firstName, lastName, email, password, role, department, phone, status } = req.body;
+    console.log('Add user attempt received');
+    
+    try {
+      // Vérifier si l'utilisateur existe déjà
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        console.log('Add user failed: Email already exists');
+        return res.status(400).json({ message: 'Un utilisateur avec cet email existe déjà' });
+      }
+
+      // Créer un nouvel utilisateur
+      const user = new User({ 
+        firstName, 
+        lastName, 
+        email, 
+        password, 
+        role: role || 'user', 
+        department: department || 'Non assigné',
+        phone: phone || '',
+        status: status || 'Actif',
+        lastLogin: null
+      });
+      
+      console.log('New user created by admin');
+      
+      // Sauvegarder l'utilisateur (déclenchera le hook pre-save pour le hachage du mot de passe)
+      await user.save();
+      console.log('User saved successfully');
+      
+      // Retourner l'utilisateur créé sans le mot de passe
+      const userResponse = user.toObject();
+      delete userResponse.password;
+      
+      res.status(201).json(userResponse);
+    } catch (err) {
+      console.error('Add user error:', err.message);
+      res.status(400).json({ message: err.message });
+    }
+  },
   register: async (req, res) => {
     const { firstName, lastName, email, password, role, department, phone } = req.body;
     // Enregistrer seulement l'action, pas les données sensibles
@@ -378,6 +420,32 @@ const userController = {
       next(error);
     }
   },
+  
+  // Récupérer les rôles disponibles
+  getRoles: async (req, res) => {
+    try {
+      // Récupérer les rôles définis dans le schéma User
+      const roles = User.schema.path('role').enumValues;
+      // Renvoyer les rôles dans un format compatible avec le frontend
+      res.json({ data: roles });
+    } catch (err) {
+      console.error('Error fetching roles:', err);
+      res.status(500).json({ message: 'Error fetching roles' });
+    }
+  },
+
+  // Récupérer les départements disponibles
+  getDepartments: async (req, res) => {
+    try {
+      // Récupérer les départements uniques des utilisateurs existants
+      const departments = await User.distinct('department');
+      // Renvoyer les départements dans un format compatible avec le frontend
+      res.json({ data: departments });
+    } catch (err) {
+      console.error('Error fetching departments:', err);
+      res.status(500).json({ message: 'Error fetching departments' });
+    }
+  }
 };
 
 module.exports = userController;

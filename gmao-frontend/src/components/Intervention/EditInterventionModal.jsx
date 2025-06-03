@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import "./NewInterventionModal.css" // Réutilisation du CSS
-import { FaTimes } from "react-icons/fa"
+import { FaTimes, FaChevronDown } from "react-icons/fa"
 
 function EditInterventionModal({ intervention, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
@@ -93,7 +93,7 @@ function EditInterventionModal({ intervention, onClose, onSubmit }) {
                     <option value="Préventive">Préventive</option>
                     <option value="Curative">Curative</option>
                   </select>
-                  <span className="select-arrow">▼</span>
+                  <span className="select-arrow"><FaChevronDown/></span>
                 </div>
               </div>
 
@@ -106,7 +106,7 @@ function EditInterventionModal({ intervention, onClose, onSubmit }) {
                     <option value="Haute">Haute</option>
                     <option value="Critique">Critique</option>
                   </select>
-                  <span className="select-arrow">▼</span>
+                  <span className="select-arrow"><FaChevronDown/></span>
                 </div>
               </div>
             </div>
@@ -121,7 +121,7 @@ function EditInterventionModal({ intervention, onClose, onSubmit }) {
                     <option value="Terminée">Terminée</option>
                     <option value="En retard">En retard</option>
                   </select>
-                  <span className="select-arrow">▼</span>
+                  <span className="select-arrow"><FaChevronDown/></span>
                 </div>
               </div>
 
