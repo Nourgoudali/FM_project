@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import { inventaireAPI } from '../../services/api';
 import './InventaireForm.css';
+import { toast } from 'react-hot-toast';
 
 const ViewInventaireDetails = ({ inventaireId, onClose }) => {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [inventaire, setInventaire] = useState(null);
 
   useEffect(() => {
@@ -14,10 +14,8 @@ const ViewInventaireDetails = ({ inventaireId, onClose }) => {
         setLoading(true);
         const response = await inventaireAPI.getInventaireById(inventaireId);
         setInventaire(response.data);
-        setError(null);
       } catch (err) {
-        console.error("Erreur lors de la récupération des détails de l'inventaire:", err);
-        setError("Impossible de charger les détails de l'inventaire. Veuillez réessayer plus tard.");
+        toast.error("Impossible de charger les détails de l'inventaire. Veuillez réessayer plus tard.");
       } finally {
         setLoading(false);
       }
@@ -51,11 +49,9 @@ const ViewInventaireDetails = ({ inventaireId, onClose }) => {
           </button>
         </div>
 
-        {loading ? (
+        {loading && (
           <div className="inventaire-loading">Chargement des détails...</div>
-        ) : error ? (
-          <div className="inventaire-error">{error}</div>
-        ) : inventaire ? (
+        ) || inventaire && (
           <div className="inventaire-details">
             <div className="inventaire-details-section">
               <h3>Informations générales</h3>
@@ -76,10 +72,6 @@ const ViewInventaireDetails = ({ inventaireId, onClose }) => {
                     'Non assigné'
                   )}
                 </div>
-              </div>
-              <div className="inventaire-details-row">
-                <div className="inventaire-details-label">Statut:</div>
-                <div className="inventaire-details-value">{inventaire.statut || 'En cours'}</div>
               </div>
             </div>
 
@@ -146,8 +138,6 @@ const ViewInventaireDetails = ({ inventaireId, onClose }) => {
               )}
             </div>
           </div>
-        ) : (
-          <div className="inventaire-error">Inventaire non trouvé</div>
         )}
 
         <div className="inventaire-form-buttons">

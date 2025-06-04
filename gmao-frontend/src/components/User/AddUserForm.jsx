@@ -19,7 +19,6 @@ function AddUserForm({ onClose, onSubmit, user, isEdit = false, hidePasswordFiel
         }
   )
 
-  const [errors, setErrors] = useState({})
   const [roles, setRoles] = useState([])
   const [departments, setDepartments] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -64,58 +63,54 @@ function AddUserForm({ onClose, onSubmit, user, isEdit = false, hidePasswordFiel
   }
 
   const validateForm = () => {
-    const formErrors = {}
-    let isValid = true
-
     if (!formData.firstName.trim()) {
-      formErrors.firstName = "Le prénom est requis"
-      isValid = false
+      toast.error("Le prénom est requis")
+      return false
     }
 
     if (!formData.lastName.trim()) {
-      formErrors.lastName = "Le nom est requis"
-      isValid = false
+      toast.error("Le nom est requis")
+      return false
     }
 
     if (!formData.email.trim()) {
-      formErrors.email = "L'email est requis"
-      isValid = false
+      toast.error("L'email est requis")
+      return false
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      formErrors.email = "L'email n'est pas valide"
-      isValid = false
+      toast.error("L'email n'est pas valide")
+      return false
     }
 
     // Ne valider les mots de passe que si hidePasswordFields est false
     if (!hidePasswordFields) {
       if (!isEdit) {
         if (!formData.password) {
-          formErrors.password = "Le mot de passe est requis"
-          isValid = false
+          toast.error("Le mot de passe est requis")
+          return false
         } else if (formData.password.length < 6) {
-          formErrors.password = "Le mot de passe doit contenir au moins 6 caractères"
-          isValid = false
+          toast.error("Le mot de passe doit contenir au moins 6 caractères")
+          return false
         }
 
         if (formData.password !== formData.confirmPassword) {
-          formErrors.confirmPassword = "Les mots de passe ne correspondent pas"
-          isValid = false
+          toast.error("Les mots de passe ne correspondent pas")
+          return false
         }
       } else if (formData.password && formData.password !== "********") {
-      // Si c'est une modification et que le mot de passe a été changé
-      if (formData.password.length < 6) {
-        formErrors.password = "Le mot de passe doit contenir au moins 6 caractères"
-        isValid = false
-      }
+        // Si c'est une modification et que le mot de passe a été changé
+        if (formData.password.length < 6) {
+          toast.error("Le mot de passe doit contenir au moins 6 caractères")
+          return false
+        }
 
-      if (formData.password !== formData.confirmPassword) {
-        formErrors.confirmPassword = "Les mots de passe ne correspondent pas"
-        isValid = false
+        if (formData.password !== formData.confirmPassword) {
+          toast.error("Les mots de passe ne correspondent pas")
+          return false
+        }
       }
     }
-    }
-
-    setErrors(formErrors)
-    return isValid
+    
+    return true
   }
 
   const handleSubmit = (e) => {
@@ -142,6 +137,7 @@ function AddUserForm({ onClose, onSubmit, user, isEdit = false, hidePasswordFiel
       if (onSubmit) {
         onSubmit(userData)
       }
+
 
       // Fermer le formulaire
       if (onClose) {
@@ -170,7 +166,6 @@ function AddUserForm({ onClose, onSubmit, user, isEdit = false, hidePasswordFiel
                     onChange={handleChange}
                     placeholder="Prénom"
                   />
-                  {errors.firstName && <span className="user-form-error-message">{errors.firstName}</span>}
                 </div>
 
               <div className="user-form-group">
@@ -183,7 +178,6 @@ function AddUserForm({ onClose, onSubmit, user, isEdit = false, hidePasswordFiel
                   onChange={handleChange}
                     placeholder="Nom"
                 />
-                  {errors.lastName && <span className="user-form-error-message">{errors.lastName}</span>}
                 </div>
               </div>
 
@@ -197,7 +191,6 @@ function AddUserForm({ onClose, onSubmit, user, isEdit = false, hidePasswordFiel
                   onChange={handleChange}
                   placeholder="email@exemple.com"
                 />
-                {errors.email && <span className="user-form-error-message">{errors.email}</span>}
               </div>
 
               <div className="user-form-row">
@@ -254,7 +247,6 @@ function AddUserForm({ onClose, onSubmit, user, isEdit = false, hidePasswordFiel
                       onChange={handleChange}
                       placeholder={isEdit ? "Laisser vide pour ne pas changer" : "Mot de passe"}
                     />
-                    {errors.password && <span className="user-form-error-message">{errors.password}</span>}
                   </div>
 
                   <div className="user-form-group">
@@ -267,9 +259,6 @@ function AddUserForm({ onClose, onSubmit, user, isEdit = false, hidePasswordFiel
                       onChange={handleChange}
                       placeholder="Confirmer le mot de passe"
                     />
-                    {errors.confirmPassword && (
-                      <span className="user-form-error-message">{errors.confirmPassword}</span>
-                    )}
                   </div>
                 </>
               )}

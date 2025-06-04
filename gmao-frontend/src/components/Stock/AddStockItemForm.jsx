@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import "./AddStockItemForm.css"
 import { equipmentAPI, fournisseurAPI } from "../../services/api"
+import { toast } from 'react-hot-toast';
 
 function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
   // Initialize form data with empty values
@@ -84,16 +85,14 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
           setFournisseurList(response.data);
         }
       } catch (error) {
-        console.error("Erreur lors de la récupération des fournisseurs:", error);
+        toast.error("Erreur lors de la récupération des fournisseurs:", error);
       }
     };
     fetchFournisseurs();
   }, []);
 
   const [apiLoading, setApiLoading] = useState(false)
-  const [apiError, setApiError] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
 
   // Pré-remplir le formulaire si on est en mode édition
   useEffect(() => {
@@ -140,7 +139,6 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setApiLoading(true);
-    setApiError(null);
 
     try {
       // Simuler un délai réseau
@@ -154,13 +152,12 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
       
       // Soumettre les données
       await onSubmit(itemToSubmit)
-      
       // Réinitialiser le formulaire si ce n'est pas en mode édition
       if (!isEdit) {
         setFormData(emptyFormData);
       }
     } catch (err) {
-      setApiError("Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.")
+      toast.error("Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.")
     } finally {
       setApiLoading(false);
     }
@@ -168,7 +165,6 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
 
   return (
     <form onSubmit={handleSubmit} className="stock-form">
-      {apiError && <div className="stock-form__error">{apiError}</div>}
 
       <div className="stock-form__section">        
         <div className="stock-form__row">

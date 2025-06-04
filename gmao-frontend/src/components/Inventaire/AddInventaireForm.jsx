@@ -44,6 +44,18 @@ const AddInventaireForm = ({ onClose, onAddSuccess }) => {
     }]);
   };
 
+  const getEcartClass = (stockTheorique, quantiteComptee) => {
+    if(stockTheorique === quantiteComptee) {
+      return "inventaire-ecart-neutral"
+    }
+    else if(stockTheorique < quantiteComptee) {
+      return "inventaire-ecart-positive"
+    }
+    else {
+      return "inventaire-ecart-negative"
+    }
+  }
+
   // Supprimer un produit de l'inventaire
   const handleRemoveProduit = (index) => {
     const updatedProduits = [...selectedProduits];
@@ -225,7 +237,7 @@ const AddInventaireForm = ({ onClose, onAddSuccess }) => {
                             type="text"
                             value={item.ecart}
                             readOnly
-                            className={`inventaire-readonly-input ${parseFloat(item.ecart) !== 0 ? 'inventaire-ecart-warning' : ''}`}
+                            className={`inventaire-ecart ${getEcartClass(item.stockTheorique, item.quantiteComptee)}`}
                           />
                         </div>
 

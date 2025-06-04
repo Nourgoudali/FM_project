@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import { FaTimes, FaSearch, FaSearchMinus } from "react-icons/fa"
 import "./EquipmentModals.css"

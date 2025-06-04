@@ -1,7 +1,6 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import "./AddSupplierForm.css"
+import { toast } from 'react-hot-toast';
 
 function AddSupplierForm({ supplier, onClose, onSubmit, isEdit }) {
   const [formData, setFormData] = useState(
@@ -17,7 +16,6 @@ function AddSupplierForm({ supplier, onClose, onSubmit, isEdit }) {
         }
   )
 
-  const [errors, setErrors] = useState({})
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
@@ -78,7 +76,6 @@ function AddSupplierForm({ supplier, onClose, onSubmit, isEdit }) {
       isValid = false
     }
 
-    setErrors(formErrors)
     return isValid
   }
 
@@ -102,6 +99,7 @@ function AddSupplierForm({ supplier, onClose, onSubmit, isEdit }) {
       if (onSubmit) {
         onSubmit(supplierData)
       }
+
 
       // Fermer le formulaire
       if (onClose) {
@@ -130,7 +128,6 @@ function AddSupplierForm({ supplier, onClose, onSubmit, isEdit }) {
                   onChange={handleChange}
                   placeholder="Nom de l'entreprise"
                 />
-                {errors.nomEntreprise && <span className="supplier-form-error-message">{errors.nomEntreprise}</span>}
               </div>
 
               <div className="supplier-form-row">
@@ -144,7 +141,6 @@ function AddSupplierForm({ supplier, onClose, onSubmit, isEdit }) {
                     onChange={handleChange}
                     placeholder="Nom"
                   />
-                  {errors.nom && <span className="supplier-form-error-message">{errors.nom}</span>}
                 </div>
 
                 <div className="supplier-form-group">
@@ -157,7 +153,6 @@ function AddSupplierForm({ supplier, onClose, onSubmit, isEdit }) {
                     onChange={handleChange}
                     placeholder="Prénom"
                   />
-                  {errors.prenom && <span className="supplier-form-error-message">{errors.prenom}</span>}
                 </div>
               </div>
 
@@ -171,7 +166,6 @@ function AddSupplierForm({ supplier, onClose, onSubmit, isEdit }) {
                   onChange={handleChange}
                   placeholder="email@exemple.com"
                 />
-                {errors.email && <span className="supplier-form-error-message">{errors.email}</span>}
               </div>
 
               <div className="supplier-form-group">
@@ -184,7 +178,6 @@ function AddSupplierForm({ supplier, onClose, onSubmit, isEdit }) {
                   onChange={handleChange}
                   placeholder="+212 6 12 34 56 78"
                 />
-                {errors.telephone && <span className="supplier-form-error-message">{errors.telephone}</span>}
               </div>
 
               <div className="supplier-form-group">
@@ -197,7 +190,6 @@ function AddSupplierForm({ supplier, onClose, onSubmit, isEdit }) {
                   placeholder="Adresse complète"
                   rows="3"
                 />
-                {errors.adresse && <span className="supplier-form-error-message">{errors.adresse}</span>}
               </div>
             </div>
           </div>

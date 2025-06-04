@@ -64,18 +64,40 @@
   color: var(--text-light);
   }
   
-  .profile-form-group input {
+  .profile-admin-form-input {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
   font-size: 0.875rem;
   outline: none;
-  transition: border-color 0.2s;
-  }
-  
-  .profile-form-group input:focus {
-  border-color: var(--primary-color);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background-color: white;
+}
+
+.profile-admin-search-container {
+  position: relative;
+  width: 100%;
+}
+
+.profile-admin-search-clear {
+  position: absolute;
+  right: 2.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-light);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.profile-admin-search-clear:hover {
+  color: var(--text-color);
 }
 
 .profile-form-actions {
@@ -102,6 +124,39 @@
     }
   }
   
+/* Styles pour les boutons de sélection */
+.profile-admin-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.profile-admin-form-select {
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  appearance: none;
+  background-color: white;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.profile-admin-form-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.profile-admin-select-icon {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-light);
+}
+
 /* Styles pour le bouton de modification de mot de passe */
 .profile-password-button {
   display: flex;
@@ -253,11 +308,6 @@
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
-}
-
-.profile-admin-card:hover {
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
 }
 
 .profile-admin-form {

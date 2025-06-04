@@ -356,11 +356,11 @@ const AddTraitementForm = ({ commandeId, commandes, onClose, onAddSuccess }) => 
       )}
 
         <div className="traite-form-actions">
-          <button type="submit" className="traite-save-button" disabled={loading}>
-            {loading ? "Enregistrer" : "Enregistrement..."} {!loading && <FaSave />}
-          </button>
           <button type="button" className="traite-cancel-button" onClick={onClose} disabled={loading}>
             Annuler
+          </button>
+          <button type="submit" className="traite-save-button" disabled={loading}>
+            {loading ? "Enregistrer" : "Enregistrement..."} {!loading && <FaSave />}
           </button>
         </div>
       </form>

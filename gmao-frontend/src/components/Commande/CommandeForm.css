@@ -194,7 +194,8 @@
 .cmd-cancel-button,
 .cmd-submit-button,
 .edit-cmd-cancel-button,
-.edit-cmd-submit-button {
+.edit-cmd-submit-button,
+.cmd-delete-button {
   padding: 0.5rem 1rem;
   border-radius: 0.375rem;
   font-size: 0.875rem;

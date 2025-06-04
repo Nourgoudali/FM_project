@@ -214,21 +214,13 @@
 }
 
 .traite-save-button {
-  background-color: #4caf50;
+  background-color: var(--primary-color);
   color: white;
-}
-
-.traite-save-button:hover {
-  background-color: #43a047;
 }
 
 .traite-cancel-button {
-  background-color: #f44336;
-  color: white;
-}
-
-.traite-cancel-button:hover {
-  background-color: #e53935;
+  background-color: #e2e8f0;
+  color: #4a5568;
 }
 
 .traite-close-button {

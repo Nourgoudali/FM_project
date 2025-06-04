@@ -46,19 +46,6 @@ const InventairePage = () => {
     fetchInventaires();
   };
 
-  // Gestionnaire pour la suppression d'un inventaire
-  const handleDelete = async (id) => {
-    if (window.confirm("Êtes-vous sûr de vouloir supprimer cet inventaire ?")) {
-      try {
-        await inventaireAPI.deleteInventaire(id);
-        fetchInventaires();
-      } catch (err) {
-        console.error("Erreur lors de la suppression de l'inventaire:", err);
-        setError("Impossible de supprimer l'inventaire. Veuillez réessayer plus tard.");
-      }
-    }
-  };
-
   // Gestionnaire pour la vue des détails d'un inventaire
   const handleViewDetails = (id) => {
     setSelectedInventaireId(id);
@@ -228,13 +215,6 @@ const InventairePage = () => {
                           title="Voir les détails"
                         >
                           <FaEye />
-                        </button>
-                        <button 
-                          className="inventaire-action-btn inventaire-delete"
-                          onClick={() => handleDelete(inventaire._id)}
-                          title="Supprimer"
-                        >
-                          <FaTrash />
                         </button>
                       </div>
                     </td>

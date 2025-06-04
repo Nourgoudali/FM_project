@@ -16,7 +16,6 @@ import Header from "../../components/Header/Header"
 import "./UserManagementPage.css"
 import Modal from "../../components/Modal/Modal"
 import AddUserForm from "../../components/User/AddUserForm";
-import EditUserModal from "../../components/User/EditUserModal";
 import DeleteUserModal from "../../components/User/DeleteUserModal";
 import { useSidebar } from "../../contexts/SidebarContext"
 import { userAPI } from "../../services/api"
@@ -162,25 +161,7 @@ const UserManagementPage = () => {
     }
   }
 
-  // Fonction pour gérer le changement de statut d'un utilisateur
-  const handleToggleUserStatus = async (userId, currentStatus) => {
-    try {
-      const newStatus = currentStatus === "Actif" ? "Inactif" : "Actif";
-      const response = await userAPI.changeUserStatus(userId, newStatus);
-      
-      if (response && response.data) {
-        setUsers(users.map(user => 
-          (user._id || user.id) === userId ? { ...user, status: newStatus } : user
-        ));
-        toast.success(`Statut de l'utilisateur modifié en "${newStatus}"`);
-      } else {
-        throw new Error("Erreur lors du changement de statut");
-      }
-    } catch (error) {
-      toast.error("Une erreur est survenue lors du changement de statut de l'utilisateur");
-    }
-  }
-
+  // 
   // Obtenir les rôles, statuts et départements uniques pour les filtres
   const roles = ["all", ...new Set(users.map((user) => user.role))]
   const statuses = ["all", "Actif", "Inactif"]
@@ -347,16 +328,6 @@ const UserManagementPage = () => {
                       <td>
                         <div className="user-action-buttons">
                           <button 
-                            className="user-action-btn user-edit" 
-                            onClick={() => {
-                              setCurrentUser(user);
-                              setShowEditModal(true);
-                            }}
-                            title="Modifier"
-                          >
-                            <FaEdit />
-                          </button>
-                          <button 
                             className="user-action-btn user-delete" 
                             onClick={() => {
                               setCurrentUser(user);
@@ -388,17 +359,6 @@ const UserManagementPage = () => {
       </Modal>
 
       {/* Modal d'édition d'utilisateur */}
-      {showEditModal && currentUser && (
-        <EditUserModal
-          user={currentUser}
-          onSubmit={handleEditUser}
-          onClose={() => {
-            setShowEditModal(false);
-            setCurrentUser(null);
-          }}
-        />
-      )}
-
       {/* Modal de suppression d'utilisateur */}
       {showDeleteModal && currentUser && (
         <DeleteUserModal

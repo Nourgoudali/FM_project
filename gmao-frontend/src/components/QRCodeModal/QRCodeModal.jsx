@@ -1,4 +1,3 @@
-"use client"
 import "./QRCodeModal.css"
 
 function QRCodeModal({ isOpen, onClose, documentTitle, qrCodeUrl }) {

@@ -133,6 +133,7 @@ const StockManagementPage = () => {
     try {
       const response = await stockAPI.createStock(newItem);
       if (response.data) {
+        toast.success("Article ajouté avec succès");
         setStockItems([...stockItems, response.data]);
         setShowAddForm(false);
         
@@ -151,6 +152,7 @@ const StockManagementPage = () => {
         };
         setStockItems([...stockItems, tempItem]);
         setShowAddForm(false);
+        toast.success("Article ajouté avec succès");
         
         // Rafraîchir les données depuis l'API
         await refreshStockData();
@@ -246,7 +248,6 @@ const StockManagementPage = () => {
 
   // Obtenir les catégories uniques pour le filtre
   const categories = ["all", ...new Set(stockItems.map((item) => item.catégorie))]
-  const statuses = ["all", "En stock", "Stock faible", "Rupture de stock"]
 
   return (
     <div className="stock-container">
@@ -308,36 +309,6 @@ const StockManagementPage = () => {
                     ))}
                   </select>
                 </div>
-
-                <div className="stock-filter-group">
-                  <label>Statut:</label>
-                  <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
-                    {statuses.map((status) => (
-                      <option key={`status-${status.toLowerCase().replace(/\s+/g, '-')}`} value={status}>
-                        {status === "all" ? "Tous les statuts" : status}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="stock-filter-group">
-                  <label>Quantité min:</label>
-                  <input
-                    type="number"
-                    value={filters.minQuantity}
-                    onChange={(e) => setFilters({ ...filters, minQuantity: e.target.value })}
-                  />
-                </div>
-
-                <div className="stock-filter-group">
-                  <label>Quantité max:</label>
-                  <input
-                    type="number"
-                    value={filters.maxQuantity}
-                    onChange={(e) => setFilters({ ...filters, maxQuantity: e.target.value })}
-                  />
-                </div>
-
                 <div className="stock-filter-actions">
                   <button
                     className="stock-reset-filters-button"

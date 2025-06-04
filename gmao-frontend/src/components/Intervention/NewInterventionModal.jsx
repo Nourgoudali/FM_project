@@ -1,9 +1,8 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import "./NewInterventionModal.css"
 import { FaTimes } from "react-icons/fa"
 import { equipmentAPI, userAPI, interventionAPI } from "../../services/api"
+import { toast } from "react-hot-toast";
 
 function NewInterventionModal({ onClose, onSubmit }) {
   const [formData, setFormData] = useState({
@@ -20,7 +19,6 @@ function NewInterventionModal({ onClose, onSubmit }) {
   const [equipments, setEquipments] = useState([])
   const [technicians, setTechnicians] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
 
   // Charger les équipements et les techniciens
   useEffect(() => {
@@ -63,8 +61,7 @@ function NewInterventionModal({ onClose, onSubmit }) {
           setTechnicians(techniciansList)
         }
       } catch (err) {
-        console.error("Erreur lors du chargement des données:", err)
-        setError("Impossible de charger les données nécessaires")
+        toast.error("Impossible de charger les données nécessaires")
       } finally {
         setLoading(false)
       }
@@ -186,19 +183,6 @@ function NewInterventionModal({ onClose, onSubmit }) {
       <div className="modal-overlay">
         <div className="modal-container">
           <div className="loading-message">Chargement des données...</div>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="modal-overlay">
-        <div className="modal-container">
-          <div className="error-message">{error}</div>
-          <button className="close-btn" onClick={onClose}>
-            <FaTimes />
-          </button>
         </div>
       </div>
     )

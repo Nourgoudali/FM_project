@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
 import { commandeAPI, stockAPI } from "../../services/api";
 import "./CommandeForm.css";
+import { toast } from "react-hot-toast";
 
 const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
   const [formData, setFormData] = useState({
@@ -13,7 +14,6 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
   });
   const [stockItems, setStockItems] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [currentProduct, setCurrentProduct] = useState({});
 
@@ -25,7 +25,7 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
         setStockItems(response.data);
       } catch (error) {
         console.error("Erreur lors du chargement des articles de stock:", error);
-        setError("Impossible de charger les articles de stock.");
+        toast.error("Impossible de charger les articles de stock.");
       }
     };
 
@@ -86,7 +86,7 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
 
   const addProductToList = () => {
     if (!currentProduct.produit) {
-      setError("Veuillez sélectionner un produit.");
+      toast.error("Veuillez sélectionner un produit.");
       return;
     }
 
@@ -97,19 +97,19 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
     const remise = getNumericValue(currentProduct.remise);
 
     if (quantiteSouhaitee <= 0) {
-      setError("La quantité souhaitée doit être supérieure à 0.");
+      toast.error("La quantité souhaitée doit être supérieure à 0.");
       return;
     }
 
     const selectedStock = stockItems.find(item => item._id === currentProduct.produit);
     if (!selectedStock) {
-      setError("Produit non trouvé.");
+      toast.error("Produit non trouvé.");
       return;
     }
     
     // Vérifier si la quantité souhaitée est inférieure à la quantité minimale à commander
     if (quantiteSouhaitee < quantiteMinCommande) {
-      setError(`Vous devez commander au moins ${quantiteMinCommande} unités de ce produit.`);
+      toast.error(`Vous devez commander au moins ${quantiteMinCommande} unités de ce produit.`);
       return;
     }
 
@@ -136,7 +136,6 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
       prixUnitaire: 0,
       remise: 0
     });
-    setError("");
   };
 
   const removeProduct = (index) => {
@@ -148,16 +147,15 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
 
     if (!formData.fournisseur) {
-      setError("Veuillez sélectionner un fournisseur.");
+      toast.error("Veuillez sélectionner un fournisseur.");
       setLoading(false);
       return;
     }
 
     if (selectedProducts.length === 0) {
-      setError("Veuillez ajouter au moins un produit à la commande.");
+      toast.error("Veuillez ajouter au moins un produit à la commande.");
       setLoading(false);
       return;
     }
@@ -181,7 +179,7 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
       onSuccess(response.data);
     } catch (error) {
       console.error("Erreur lors de la création de la commande:", error);
-      setError("Une erreur est survenue lors de la création de la commande.");
+      toast.error("Une erreur est survenue lors de la création de la commande.");
     } finally {
       setLoading(false);
     }
@@ -355,8 +353,6 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
               </button>
             </div>
           </div>
-
-          {error && <div className="cmd-error-message">{error}</div>}
 
           <div className="cmd-selected-products-section">
             <h3>Produits sélectionnés</h3>

@@ -30,7 +30,6 @@ function ProfilePage() {
     confirmPassword: ""
   })
   // États pour le mot de passe
-  const [avatarImage, setAvatarImage] = useState(null)
   
   // États pour l'attribution de rôle
   const [selectedEmployee, setSelectedEmployee] = useState("")
@@ -47,6 +46,10 @@ function ProfilePage() {
   const [newAdminPassword, setNewAdminPassword] = useState("")
   const [showNewAdminPassword, setShowNewAdminPassword] = useState(false)
   const [showPasswordResults, setShowPasswordResults] = useState(false)
+  const [showAdminPasswordModal, setShowAdminPasswordModal] = useState(false)
+  const [showRoleModal, setShowRoleModal] = useState(false)
+  const [filteredEmployeesForRole, setFilteredEmployeesForRole] = useState([])
+  const [filteredEmployeesForPassword, setFilteredEmployeesForPassword] = useState([])
   
   // États pour la gestion des opérations
   
@@ -105,14 +108,10 @@ function ProfilePage() {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (roleSearchRef.current && !roleSearchRef.current.contains(event.target)) {
-        setTimeout(() => {
-          setShowRoleResults(false);
-        }, 150);
+        setShowRoleResults(false);
       }
       if (passwordSearchRef.current && !passwordSearchRef.current.contains(event.target)) {
-        setTimeout(() => {
-          setShowPasswordResults(false);
-        }, 150);
+        setShowPasswordResults(false);
       }
     };
     
@@ -186,11 +185,13 @@ function ProfilePage() {
     setSearchRole("")
     setSelectedEmployee("")
     setSelectedEmployeeName("")
-    setSelectedEmployeeRole("")
-    document.getElementById("searchEmployee").focus()
+    setFilteredEmployeesForRole([])
+    if (document.getElementById("searchEmployee")) {
+      document.getElementById("searchEmployee").focus()
+    }
   }
   
-  const handleAttributeRole = async () => {
+  const handleAssignRole = async () => {
     if (!selectedEmployee || !selectedRole) {
       toast.error("Veuillez sélectionner un employé et un rôle")
       return
@@ -199,12 +200,20 @@ function ProfilePage() {
     setLoading(true)
     
     try {
-      await userAPI.updateUserRole(selectedEmployee, selectedRole)
-      toast.success(`Rôle attribué avec succès`)
+      await userAPI.assignRole(selectedEmployee, { role: selectedRole })
+      
+      // Réinitialiser les champs après succès
+      setSelectedRole("")
       clearRoleSearch()
+      
+      // Fermer le modal
+      setShowRoleModal(false)
+      
+      toast.success("Rôle attribué avec succès")
     } catch (error) {
       console.error("Erreur lors de l'attribution du rôle:", error)
-      toast.error("Erreur lors de l'attribution du rôle")
+      const errorMessage = error.response?.data?.message || "Une erreur est survenue lors de l'attribution du rôle"
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -231,7 +240,10 @@ function ProfilePage() {
     setSearchPassword("")
     setSelectedEmployeeForPassword("")
     setSelectedEmployeePasswordName("")
-    document.getElementById("searchEmployeePassword").focus()
+    setFilteredEmployeesForPassword([])
+    if (document.getElementById("searchEmployeePassword")) {
+      document.getElementById("searchEmployeePassword").focus()
+    }
   }
   
   const handleChangePassword = async () => {
@@ -243,13 +255,20 @@ function ProfilePage() {
     setLoading(true)
     
     try {
-      await userAPI.adminChangeUserPassword(selectedEmployeeForPassword, newAdminPassword)
-      toast.success(`Mot de passe modifié avec succès`)
-      clearPasswordSearch()
+      await userAPI.adminChangeUserPassword(selectedEmployeeForPassword, { newPassword: newAdminPassword })
+      
+      // Réinitialiser les champs après succès
       setNewAdminPassword("")
+      clearPasswordSearch()
+      
+      // Fermer la modale
+      setShowAdminPasswordModal(false)
+      
+      toast.success("Mot de passe modifié avec succès")
     } catch (error) {
       console.error("Erreur lors de la modification du mot de passe:", error)
-      toast.error("Erreur lors de la modification du mot de passe")
+      const errorMessage = error.response?.data?.message || "Une erreur est survenue lors de la modification du mot de passe"
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -286,10 +305,8 @@ function ProfilePage() {
       
       toast.success("Mot de passe modifié avec succès");
       
-      // Fermer le modal après 2 secondes
-      setTimeout(() => {
-        setShowPasswordModal(false);
-      }, 2000);
+      // Fermer le modal
+      setShowPasswordModal(false);
       
     } catch (error) {
       if (error.response && error.response.data && error.response.data.message) {
@@ -303,22 +320,100 @@ function ProfilePage() {
   // Compétences pour la démo
   const skills = ["Mécanique", "Électricité", "Automatisme"]
   
-  // Fonction pour obtenir les rôles disponibles selon le rôle actuel
-  const getAvailableRoles = (currentRole) => {
-    switch(currentRole) {
-      case 'admin':
-        return ['team_leader', 'technicien', 'opérateur'];
-      case 'team_leader':
-        return ['technicien', 'opérateur'];
-      case 'technicien':
-        return ['technicien', 'opérateur'];
-      default:
-        return ['team_leader', 'technicien', 'opérateur'];
+  // Fonction pour gérer l'attribution de rôle
+  const handleAttributeRole = async () => {
+    if (!selectedEmployee || !selectedRole) {
+      toast.error("Veuillez sélectionner un employé et un rôle");
+      return;
     }
+    
+    setLoading(true);
+    
+    try {
+      // Vérifier si le rôle sélectionné est valide
+      const validRoles = ['admin', 'team_leader', 'technicien', 'opérateur'];
+      if (!validRoles.includes(selectedRole)) {
+        throw new Error("Rôle invalide");
+      }
+      
+      const response = await userAPI.assignRole(selectedEmployee, { role: selectedRole });
+      
+      // Ne pas vérifier response.success car certaines API ne le renvoient pas
+      // Réinitialiser les champs après succès
+      setSelectedRole("");
+      setSearchRole("");
+      setSelectedEmployee("");
+      setSelectedEmployeeName("");
+      
+      // Mettre à jour la liste des employés
+      const updatedEmployees = employeeList.map(emp => 
+        emp._id === selectedEmployee ? { ...emp, role: selectedRole } : emp
+      );
+      setEmployeeList(updatedEmployees);
+      
+      // Mettre à jour le rôle affiché dans le formulaire si l'utilisateur modifie son propre rôle
+      if (selectedEmployee === currentUser._id) {
+        setFormData(prev => ({
+          ...prev,
+          role: selectedRole
+        }));
+      }
+      
+      // Fermer la modale
+      setShowRoleModal(false);
+      
+      // Afficher le message de succès
+      toast.success("Rôle attribué avec succès");
+      
+    } catch (error) {
+      console.error("Erreur lors de l'attribution du rôle:", error);
+      let errorMessage = "Une erreur est survenue lors de l'attribution du rôle";
+      
+      if (error.message === "Rôle invalide") {
+        errorMessage = "Le rôle sélectionné n'est pas valide";
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fonction pour obtenir les rôles disponibles en fonction du rôle actuel
+  const getAvailableRoles = (currentRole) => {
+    // Liste des rôles valides et leurs libellés
+    const roleTranslations = {
+      'admin': 'Administrateur',
+      'team_leader': 'Team Leader',
+      'technicien': 'Technicien',
+      'opérateur': 'Opérateur'
+    };
+    
+    // Si currentRole n'est pas défini, retourner tous les rôles
+    if (!currentRole) {
+      return Object.entries(roleTranslations).map(([value, label]) => ({
+        value,
+        label
+      }));
+    }
+    
+    // Filtrer le rôle actuel et retourner les rôles disponibles avec leur traduction
+    return Object.entries(roleTranslations)
+      .filter(([role]) => role !== currentRole)
+      .map(([value, label]) => ({
+        value,
+        label
+      }));
   };
   
   // Fonctions de filtrage des employés pour exclure l'utilisateur courant
   const getFilteredEmployeesForRole = () => {
+    if (!employeeList.length) return [];
+    
     // Filtrer d'abord les employés pour exclure l'utilisateur courant
     const filteredEmployees = employeeList.filter(emp => {
       // Exclure l'utilisateur courant en utilisant son email comme identifiant unique
@@ -339,6 +434,8 @@ function ProfilePage() {
   };
 
   const getFilteredEmployeesForPassword = () => {
+    if (!employeeList.length) return [];
+    
     // Filtrer d'abord les employés pour exclure l'utilisateur courant
     const filteredEmployees = employeeList.filter(emp => {
       // Exclure l'utilisateur courant en utilisant son email comme identifiant unique
@@ -568,9 +665,9 @@ function ProfilePage() {
                       >
                         <option value="">Sélectionner un rôle</option>
                         {selectedEmployeeRole && 
-                          getAvailableRoles(selectedEmployeeRole).map(role => (
-                            <option key={role} value={role}>
-                              {role.charAt(0).toUpperCase() + role.slice(1)}
+                          getAvailableRoles(selectedEmployeeRole).map(({value, label}) => (
+                            <option key={value} value={value}>
+                              {label}
                             </option>
                           ))
                         }

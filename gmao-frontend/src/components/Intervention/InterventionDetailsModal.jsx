@@ -2,11 +2,11 @@ import { useState, useEffect } from "react"
 import { FaTimes, FaTools, FaCalendarAlt, FaUser, FaMapMarkerAlt } from "react-icons/fa"
 import { interventionAPI } from "../../services/api"
 import "./InterventionDetailsModal.css"
+import { toast } from "react-hot-toast";
 
 function InterventionDetailsModal({ interventionId, intervention: initialData, onClose }) {
   const [intervention, setIntervention] = useState(initialData)
   const [loading, setLoading] = useState(!initialData && !!interventionId)
-  const [error, setError] = useState(null)
   
   useEffect(() => {
     // Si nous avons déjà les données ou pas d'ID, ne pas charger
@@ -17,10 +17,9 @@ function InterventionDetailsModal({ interventionId, intervention: initialData, o
         setLoading(true)
         const response = await interventionAPI.getInterventionById(interventionId)
         setIntervention(response.data)
-        setError(null)
       } catch (err) {
         console.error("Erreur lors de la récupération des détails de l'intervention:", err)
-        setError("Impossible de charger les détails de l'intervention.")
+        toast.error("Impossible de charger les détails de l'intervention.")
       } finally {
         setLoading(false)
       }
@@ -44,26 +43,7 @@ function InterventionDetailsModal({ interventionId, intervention: initialData, o
       </div>
     </div>
   )
-  
-  if (error) return (
-    <div className="modal-overlay">
-      <div className="modal-container details-modal">
-        <div className="modal-header">
-          <h2>Erreur</h2>
-          <button className="close-btn" onClick={onClose}>
-            <FaTimes />
-          </button>
-        </div>
-        <div className="modal-content details-content">
-          <div className="error-message">{error}</div>
-          <div className="modal-footer">
-            <button className="cancel-btn" onClick={onClose}>Fermer</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-  
+    
   if (!intervention) return null
 
   // Fonction pour obtenir la classe CSS en fonction de la priorité
