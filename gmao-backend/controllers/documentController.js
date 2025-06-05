@@ -1,95 +1,216 @@
-const Document = require('../models/Document');
+const Document = require("../models/Document");
+const Equipment = require("../models/Equipment");
 
 const documentController = {
-  // Fonction pour uploader un document
+  // Créer un document avec fichier et QR code
   upload: async (req, res) => {
-    const { title, category, equipment, fileUrl, qrCode } = req.body;
     try {
-      const document = new Document({ 
-        title, 
-        category, 
-        equipment, 
-        fileUrl, 
-        qrCode, 
+      const { title, description, category, equipment, qrCodeData } = req.body;
+
+      // Validation des champs obligatoires
+      if (!title || !category) {
+        return res.status(400).json({
+          success: false,
+          message: "Le titre et la catégorie sont obligatoires",
+        });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: "Aucun fichier n'a été téléchargé",
+        });
+      }
+
+      // Vérifier l'équipement si fourni
+      if (equipment) {
+        const equipmentExists = await Equipment.findById(equipment);
+        if (!equipmentExists) {
+          return res.status(400).json({
+            success: false,
+            message: "L'équipement spécifié n'existe pas",
+          });
+        }
+      }
+
+      // Construire l'URL du fichier
+      const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+
+      // Créer le document
+      const document = new Document({
+        title,
+        description: description || "",
+        category,
+        equipment: equipment || null,
+        fileUrl,
+        qrCodeData: qrCodeData || null,
         uploadedBy: req.user._id,
-        uploadDate: new Date()
       });
+
       await document.save();
-      res.status(201).json(document);
+
+      // Populer les références
+      const savedDocument = await Document.findById(document._id)
+        .populate("equipment", "name reference")
+        .populate("uploadedBy", "firstName lastName");
+
+      res.status(201).json({
+        success: true,
+        data: savedDocument,
+      });
     } catch (err) {
-      res.status(400).json({ message: err.message });
+      console.error("Erreur lors de l'upload du document:", err);
+
+      if (err.name === "ValidationError") {
+        const messages = Object.values(err.errors).map((val) => val.message);
+        return res.status(400).json({
+          success: false,
+          message: "Erreur de validation",
+          errors: messages,
+        });
+      }
+
+      if (err.code === 11000) {
+        return res.status(400).json({
+          success: false,
+          message: "Un document avec ce code QR existe déjà",
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        message: "Erreur serveur lors de la création du document",
+      });
     }
   },
 
-  // Fonction pour récupérer tous les documents
+  // Récupérer tous les documents avec populate des équipements
   getAllDocuments: async (req, res) => {
     try {
-      const documents = await Document.find().populate('equipment uploadedBy');
-      res.json(documents);
+      const documents = await Document.find({})
+        .populate({
+          path: 'equipment',
+          select: 'name reference status',
+          match: { archived: { $ne: true } } // Ne pas inclure les équipements archivés
+        })
+        .populate({
+          path: 'uploadedBy',
+          select: 'firstName lastName email'
+        })
+        .sort({ createdAt: -1 }); // Plus récents en premier
+
+      // Filtrer les documents avec équipement null (si l'équipement a été supprimé ou archivé)
+      const filteredDocuments = documents.filter(doc => 
+        !doc.equipment || (doc.equipment && !doc.equipment.archived)
+      );
+
+      res.json({ 
+        success: true, 
+        count: filteredDocuments.length,
+        data: filteredDocuments 
+      });
     } catch (err) {
-      res.status(500).json({ message: err.message });
+      console.error('Erreur lors de la récupération des documents:', err);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erreur lors de la récupération des documents',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+      });
     }
   },
 
-  // Fonction pour récupérer un document par son ID
-  getDocument: async (req, res) => {
-    const { id } = req.params;
+  // Récupérer un document par ID avec populate
+  getDocumentById: async (req, res) => {
     try {
-      const document = await Document.findById(id).populate('equipment uploadedBy');
-      if (!document) return res.status(404).json({ message: 'Document not found' });
-      res.json(document);
+      const document = await Document.findById(req.params.id)
+        .populate({
+          path: 'equipment',
+          select: 'name reference status location',
+          match: { archived: { $ne: true } }
+        })
+        .populate('uploadedBy', 'firstName lastName email');
+
+      if (!document) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Document non trouvé' 
+        });
+      }
+
+      res.json({ success: true, data: document });
     } catch (err) {
-      res.status(500).json({ message: err.message });
+      console.error('Erreur lors de la récupération du document:', err);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erreur lors de la récupération du document',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+      });
     }
   },
 
-  // Fonction pour supprimer un document
-  deleteDocument: async (req, res) => {
-    const { id } = req.params;
-    try {
-      const document = await Document.findByIdAndDelete(id);
-      if (!document) return res.status(404).json({ message: 'Document not found' });
-      res.json({ message: 'Document deleted successfully' });
-    } catch (err) {
-      res.status(500).json({ message: err.message });
-    }
-  },
-
-  // Fonction pour récupérer les documents par équipement
+  // Récupérer les documents par équipement
   getDocumentsByEquipment: async (req, res) => {
-    const { equipmentId } = req.params;
     try {
-      const documents = await Document.find({ equipment: equipmentId }).populate('uploadedBy');
-      res.json(documents);
+      const { equipmentId } = req.params;
+      
+      // Vérifier que l'équipement existe et n'est pas archivé
+      const equipment = await Equipment.findOne({ 
+        _id: equipmentId, 
+        archived: { $ne: true } 
+      });
+
+      if (!equipment) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Équipement non trouvé ou archivé' 
+        });
+      }
+
+      const documents = await Document.find({ equipment: equipmentId })
+        .populate('uploadedBy', 'firstName lastName')
+        .sort({ createdAt: -1 });
+
+      res.json({ 
+        success: true, 
+        count: documents.length,
+        data: documents 
+      });
     } catch (err) {
-      res.status(500).json({ message: err.message });
+      console.error('Erreur lors de la récupération des documents par équipement:', err);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erreur lors de la récupération des documents',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+      });
     }
   },
 
-  // Anciennes fonctions conservées pour compatibilité
-  create: async (req, res) => {
-    return documentController.upload(req, res);
-  },
-
-  getAll: async (req, res) => {
-    return documentController.getAllDocuments(req, res);
-  },
-
-  update: async (req, res) => {
-    const { id } = req.params;
-    const updates = req.body;
+  // Supprimer un document
+  deleteDocument: async (req, res) => {
     try {
-      const document = await Document.findByIdAndUpdate(id, { ...updates, version: updates.version || 1 }, { new: true });
-      if (!document) return res.status(404).json({ message: 'Document not found' });
-      res.json(document);
+      const document = await Document.findByIdAndDelete(req.params.id);
+      
+      if (!document) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Document non trouvé' 
+        });
+      }
+      
+      res.json({ 
+        success: true, 
+        message: 'Document supprimé avec succès',
+        data: { id: document._id }
+      });
     } catch (err) {
-      res.status(400).json({ message: err.message });
+      console.error('Erreur lors de la suppression du document:', err);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Erreur lors de la suppression du document',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+      });
     }
   },
-
-  delete: async (req, res) => {
-    return documentController.deleteDocument(req, res);
-  }
 };
 
 module.exports = documentController;

@@ -1,13 +1,22 @@
 const express = require('express');
 const documentController = require('../controllers/documentController');
 const { verifyToken, checkRole } = require('../middleware/authMiddleware');
+const { upload, handleUploadErrors } = require('../middleware/uploadMiddleware');
 
 const router = express.Router();
 
-router.post('/', verifyToken, checkRole('admin'), documentController.upload);
+// Route pour créer un document avec upload de fichier
+router.post(
+  '/',
+  verifyToken,
+  checkRole('admin'),
+  upload.single('file'), // 'file' est le nom du champ dans le formulaire
+  handleUploadErrors,
+  documentController.upload
+);
+
+// Routes pour la gestion des documents
 router.get('/', verifyToken, documentController.getAllDocuments);
-router.get('/:id', verifyToken, documentController.getDocument);
 router.delete('/:id', verifyToken, checkRole('admin'), documentController.deleteDocument);
-router.get('/equipment/:equipmentId', verifyToken, documentController.getDocumentsByEquipment);
 
 module.exports = router;

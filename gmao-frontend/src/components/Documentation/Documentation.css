@@ -1,0 +1,504 @@
+/* Styles partagés pour les composants de documentation */
+
+/* Modal Container */
+.doc-modal-container {
+  background: white;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+/* Modal Header */
+.doc-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+}
+
+.doc-modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.doc-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.doc-modal-close:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+/* Form Styles */
+.doc-upload-form {
+  padding: 1.5rem;
+}
+
+.doc-form-group {
+  margin-bottom: 1.25rem;
+}
+
+.doc-form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.doc-form-row .doc-form-group {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.doc-form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.doc-form-control {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.doc-form-control:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+}
+
+textarea.doc-form-control {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Form Check */
+.doc-form-check {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.doc-form-check-input {
+  margin-right: 0.5rem;
+  width: 1rem;
+  height: 1rem;
+}
+
+.doc-form-check-label {
+  margin-bottom: 0;
+  font-weight: 400;
+}
+
+/* File Upload */
+.doc-file-upload-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.doc-file-upload-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  background-color: #f3f4f6;
+  color: #374151;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  border: 1px dashed #d1d5db;
+  text-align: center;
+}
+
+.doc-file-upload-label:hover {
+  background-color: #e5e7eb;
+}
+
+.doc-file-upload-label:active {
+  transform: translateY(1px);
+}
+
+.doc-file-upload-label span {
+  pointer-events: none;
+}
+
+.doc-file-input {
+  display: none;
+}
+
+.doc-file-selected {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.doc-file-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* File Preview */
+.doc-file-preview {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: #f9fafb;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+/* Form Actions */
+.doc-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* QR Code Styles */
+.qr-code-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin: 1rem 0;
+  border: 1px solid #e5e7eb;
+}
+
+.doc-qr-code-image {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.doc-qr-document-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1rem 0 0.5rem;
+  color: #1f2937;
+}
+
+.doc-category-badge {
+  display: inline-block;
+  background-color: #e0f2fe;
+  color: #0369a1;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+
+.doc-equipment-info {
+  margin-top: 0.75rem;
+  color: #4b5563;
+  font-size: 0.9375rem;
+}
+
+.doc-qr-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Buttons */
+.doc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  border: 1px solid transparent;
+}
+
+.doc-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.doc-btn-primary {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.doc-btn-primary:hover:not(:disabled) {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+.doc-btn-secondary {
+  background-color: #f3f4f6;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.doc-btn-secondary:hover:not(:disabled) {
+  background-color: #e5e7eb;
+}
+
+.doc-btn-danger {
+  background-color: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}
+
+.doc-btn-danger:hover:not(:disabled) {
+  background-color: #dc2626;
+  border-color: #dc2626;
+}
+
+.doc-btn svg {
+  margin-right: 0.5rem;
+}
+
+/* QR Code Modal Specific */
+.doc-qr-modal {
+  text-align: center;
+  max-width: 400px;
+}
+
+.doc-qr-code-content {
+  padding: 1.5rem;
+}
+
+.qr-code-image {
+  margin-bottom: 1.5rem;
+}
+
+.qr-placeholder {
+  background-color: #f9fafb;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 2rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.qr-simulated {
+  width: 150px;
+  height: 150px;
+  margin: 1rem auto;
+}
+
+.doc-qr-document-title {
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin: 1rem 0 0.5rem;
+  color: #111827;
+}
+
+.doc-qr-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+/* Delete Modal Specific */
+.doc-delete-modal {
+  max-width: 500px;
+}
+
+.doc-delete-modal-content {
+  padding: 1.5rem;
+}
+
+.doc-delete-warning {
+  display: flex;
+  align-items: center;
+  background-color: #fef2f2;
+  color: #b91c1c;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+}
+
+.doc-warning-icon {
+  margin-right: 0.75rem;
+  font-size: 1.25rem;
+}
+
+.doc-document-preview {
+  background-color: #f9fafb;
+  border-radius: 6px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.doc-document-preview h4 {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+  color: #111827;
+}
+
+.doc-document-description {
+  margin: 0.75rem 0 0;
+  color: #4b5563;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.doc-delete-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Document Category Badge */
+.doc-category-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .doc-form-row {
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  
+  .doc-form-row .doc-form-group {
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+  }
+}
+
+/* Styles pour le sélecteur d'équipement avec recherche */
+.equipment-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.search-box {
+  position: relative;
+  width: 100%;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  background-color: white;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+}
+
+.search-input:disabled {
+  background-color: #f8fafc;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Amélioration du sélecteur */
+.doc-form-group select.form-control {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  background-color: white;
+  font-size: 0.875rem;
+  color: #1e293b;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234b5563' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1em;
+  padding-right: 2.5rem;
+  transition: all 0.2s ease;
+}
+
+.doc-form-group select.form-control:disabled {
+  background-color: #f8fafc;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.doc-form-group select.form-control option {
+  padding: 0.5rem;
+  color: #1e293b;
+}
+
+/* État de chargement */
+.doc-form-group select.form-control:disabled {
+  background-image: none;
+  position: relative;
+  color: #94a3b8;
+}
+
+.doc-form-group select.form-control:disabled::after {
+  content: "Chargement...";
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+}

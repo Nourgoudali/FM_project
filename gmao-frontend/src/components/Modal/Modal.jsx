@@ -1,7 +1,6 @@
-"use client"
-
 import { useEffect } from "react"
 import "./Modal.css"
+import { FaTimes } from "react-icons/fa"
 
 function Modal({ isOpen, onClose, title, children, size = "medium" }) {
   // Empêcher le défilement du body quand le modal est ouvert
@@ -30,7 +29,7 @@ function Modal({ isOpen, onClose, title, children, size = "medium" }) {
         <div className="modal-header">
           <h2 className="modal-title">{title}</h2>
           <button className="modal-close" onClick={onClose}>
-            &times;
+          <FaTimes/>
           </button>
         </div>
         <div className="modal-content">{children}</div>

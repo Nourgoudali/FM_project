@@ -379,32 +379,11 @@ export const configurationAPI = {
 
 // API pour les documents
 export const documentAPI = {
-  // Récupérer tous les documents
-  getAllDocuments: () => API.get('/documents'),
-  // Récupérer un document par ID
-  getDocumentById: (id) => API.get(`/documents/${id}`),
-  // Télécharger un document
-  uploadDocument: (documentData, file) => {
-    const formData = new FormData();
-    
-    // Ajouter les données du document
-    Object.keys(documentData).forEach(key => {
-      if (documentData[key] !== null && documentData[key] !== undefined) {
-        formData.append(key, documentData[key]);
-      }
-    });
-    
-    // Ajouter le fichier si présent
-    if (file) {
-      formData.append('file', file);
-    }
-    
-    return API.post('/documents', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-  },
+  getAllDocuments: () => API.get("/documents"),
+  upload: (formData) =>
+    API.post("/documents", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
   // Supprimer un document
   deleteDocument: (id) => API.delete(`/documents/${id}`),
   // Générer un QR code pour un document
