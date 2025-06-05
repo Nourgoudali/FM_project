@@ -8,12 +8,8 @@ const equipmentController = {
       
       // Gérer l'image si elle est présente dans la requête
       let imagePath = null;
-      if (req.files && req.files.length > 0) {
-        // Trouver le fichier image dans les fichiers téléchargés
-        const imageFile = req.files.find(file => file.fieldname === 'image');
-        if (imageFile) {
-          imagePath = `/uploads/${imageFile.filename}`;
-        }
+      if (req.files && req.files.image && req.files.image[0]) {
+        imagePath = `/uploads/${req.files.image[0].filename}`;
       }
       
       // Créer l'équipement avec les champs requis

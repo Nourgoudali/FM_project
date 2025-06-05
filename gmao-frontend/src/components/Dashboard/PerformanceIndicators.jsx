@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import "./PerformanceIndicators.css"
 import { kpiAPI } from "../../services/api"

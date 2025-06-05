@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaPlus, FaTrash, FaQrcode, FaEye, FaDownload, FaTimes } from "react-icons/fa";
-import QRCode from "react-qr-code";
+import { FaPlus, FaTrash, FaEye, FaDownload } from "react-icons/fa";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import Header from "../../components/Header/Header";
 import UploadDocumentModal from "../../components/Documentation/UploadDocumentModal";
@@ -111,21 +110,6 @@ const DocumentationPage = () => {
   const handleDocumentUploaded = (newDocument) => {
     setDocuments((prevDocs) => [...prevDocs, newDocument]);
     setShowUploadModal(false);
-    toast.success("Document ajouté avec succès");
-  };
-
-  // Gestion de l'affichage du QR code
-  const handleShowQRCode = (doc) => {
-    if (!doc || !doc.qrCodeData) {
-      toast.error("Aucun QR code disponible pour ce document");
-      return;
-    }
-    setCurrentDocument({
-      _id: doc._id,
-      title: doc.title,
-      qrCodeData: doc.qrCodeData
-    });
-    setShowDocumentModal(true);
   };
 
   // Gestion de l'affichage des détails du document
@@ -139,9 +123,9 @@ const DocumentationPage = () => {
   };
 
   // Téléchargement du document
-  const handleDownloadDocument = async (document) => {
+  const handleDownloadDocument = async (doc) => {
     try {
-      const response = await fetch(document.fileUrl, {
+      const response = await fetch(doc.fileUrl, {
         headers: {
           Authorization: `Bearer ${JSON.parse(localStorage.getItem("user") || "{}").token}`,
         },
@@ -150,14 +134,14 @@ const DocumentationPage = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", document.title);
+      link.setAttribute("download", doc.title);
       document.body.appendChild(link);
       link.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(link);
     } catch (error) {
       console.error("Erreur lors du téléchargement:", error);
-      toast.error(`Erreur lors du téléchargement de "${document?.title || 'ce document'}"`);
+      toast.error(`Erreur lors du téléchargement de "${doc?.title || 'ce document'}"`);
     }
   };
 
@@ -195,57 +179,12 @@ const DocumentationPage = () => {
         onSuccess={handleDocumentUploaded}
       />
       {/* Modal de détail du document */}
-      {currentDocument && (
-        <div className={`doc-detail-modal ${showDocumentModal ? 'show' : ''}`}>
-          <div className="doc-detail-modal-content">
-            <div className="doc-detail-header">
-              <h3>{currentDocument.title}</h3>
-              <button 
-                className="doc-close-button" 
-                onClick={() => setShowDocumentModal(false)}
-                aria-label="Fermer"
-              >
-                <FaTimes />
-              </button>
-            </div>
-            <div className="doc-detail-body">
-              <div className="doc-detail-info">
-                <p><strong>Catégorie:</strong> {currentDocument.category}</p>
-                {currentDocument.equipment?.name && (
-                  <p><strong>Équipement:</strong> {currentDocument.equipment.name}</p>
-                )}
-                {currentDocument.description && (
-                  <p><strong>Description:</strong> {currentDocument.description}</p>
-                )}
-              </div>
-              
-              <div className="doc-detail-actions">
-                <button 
-                  className="doc-download-button"
-                  onClick={() => handleDownloadDocument(currentDocument)}
-                >
-                  <FaDownload /> Télécharger le PDF
-                </button>
-                
-                {currentDocument.qrCodeData && (
-                  <div className="doc-qr-section">
-                    <h4>QR Code d'accès rapide</h4>
-                    <div className="doc-qr-code">
-                      <QRCode 
-                        value={currentDocument.qrCodeData} 
-                        size={150} 
-                        level="H"
-                        bgColor="#FFFFFF"
-                        fgColor="#000000"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ViewQRCodeModal
+        isOpen={!!currentDocument && showDocumentModal}
+        document={currentDocument}
+        onClose={() => setShowDocumentModal(false)}
+        onDownload={handleDownloadDocument}
+      />
       <DeleteDocumentModal
         isOpen={showDeleteModal}
         document={currentDocument}
@@ -302,14 +241,26 @@ const DocumentationPage = () => {
               <table className="doc-table">
                 <thead>
                   <tr>
+                    <th onClick={() => requestSort("reference")}>
+                      Référence
+                    </th>
                     <th onClick={() => requestSort("title")}>
-                      Titre {sortConfig.key === "title" && (sortConfig.direction === "ascending" ? "↑" : "↓")}
+                      Titre
+                      {sortConfig.key === "title" && (
+                        <span>{sortConfig.direction === "ascending" ? " ↑" : " ↓"}</span>
+                      )}
                     </th>
                     <th onClick={() => requestSort("category")}>
-                      Catégorie {sortConfig.key === "category" && (sortConfig.direction === "ascending" ? "↑" : "↓")}
+                      Catégorie
+                      {sortConfig.key === "category" && (
+                        <span>{sortConfig.direction === "ascending" ? " ↑" : " ↓"}</span>
+                      )}
                     </th>
                     <th onClick={() => requestSort("equipment")}>
-                      Équipement {sortConfig.key === "equipment" && (sortConfig.direction === "ascending" ? "↑" : "↓")}
+                      Équipement
+                      {sortConfig.key === "equipment" && (
+                        <span>{sortConfig.direction === "ascending" ? " ↑" : " ↓"}</span>
+                      )}
                     </th>
                     <th>Actions</th>
                   </tr>
@@ -324,6 +275,7 @@ const DocumentationPage = () => {
                   ) : (
                     filteredDocuments.map((document) => (
                       <tr key={document._id}>
+                        <td className="doc-title">{document.reference}</td>
                         <td className="doc-title">{document.title}</td>
                         <td className="doc-category">
                           <span className="doc-category-badge">{document.category}</span>
@@ -332,9 +284,9 @@ const DocumentationPage = () => {
                         <td className="doc-actions-cell">
                           <div className="doc-action-buttons">
                             <button
-                              className="doc-view-button"
+                              className="doc-view-button view"
                               onClick={() => handleViewDocument(document)}
-                              title="Voir les détails du document"
+                              title="Voir les détails"
                             >
                               <FaEye />
                             </button>

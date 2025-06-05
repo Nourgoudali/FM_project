@@ -2,10 +2,10 @@ const Document = require("../models/Document");
 const Equipment = require("../models/Equipment");
 
 const documentController = {
-  // Créer un document avec fichier et QR code
+  // Créer un document avec fichier
   upload: async (req, res) => {
     try {
-      const { title, description, category, equipment, qrCodeData } = req.body;
+      const { title, description, category, equipment } = req.body;
 
       // Validation des champs obligatoires
       if (!title || !category) {
@@ -43,7 +43,7 @@ const documentController = {
         category,
         equipment: equipment || null,
         fileUrl,
-        qrCodeData: qrCodeData || null,
+
         uploadedBy: req.user._id,
       });
 
@@ -73,7 +73,7 @@ const documentController = {
       if (err.code === 11000) {
         return res.status(400).json({
           success: false,
-          message: "Un document avec ce code QR existe déjà",
+          message: "Une erreur de duplication s'est produite",
         });
       }
 

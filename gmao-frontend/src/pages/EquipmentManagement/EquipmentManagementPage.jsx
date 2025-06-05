@@ -93,7 +93,6 @@ const EquipmentManagementPage = () => {
       if (newEquipment) {
         // Fermer le modal d'abord
         setShowAddModal(false);
-        toast.success("Équipement ajouté avec succès");
         
         // Rafraîchir la liste complète des équipements depuis le serveur
         await fetchEquipments();

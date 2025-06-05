@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useRef, useState } from "react"
 import Chart from "chart.js/auto"
 import "./DashboardCharts.css"
@@ -47,10 +45,9 @@ function DashboardCharts({ equipmentData, interventionData }) {
     if (equipmentData && Array.isArray(equipmentData)) {
       // Calculer le nombre d'équipements par statut
       const statusCounts = {
-        "En service": 0,
-        "En maintenance": 0,
-        "Hors service": 0,
-        "En stock": 0,
+        "operational": 0,
+        "maintenance": 0,
+        "out_of_service": 0
       };
       
       // Extraire les équipements critiques pour le graphique de disponibilité
@@ -71,9 +68,16 @@ function DashboardCharts({ equipmentData, interventionData }) {
         }
       });
       
+      // Mapper les clés techniques vers des libellés lisibles
+      const statusLabels = {
+        'operational': 'En service',
+        'maintenance': 'En maintenance',
+        'out_of_service': 'Hors service'
+      };
+      
       // Mettre à jour les données pour le graphique de répartition par statut
       setEquipmentStatusData({
-        labels: Object.keys(statusCounts),
+        labels: Object.keys(statusCounts).map(key => statusLabels[key] || key),
         data: Object.values(statusCounts),
       });
       
@@ -171,7 +175,7 @@ function DashboardCharts({ equipmentData, interventionData }) {
           datasets: [
             {
               data: equipmentStatusData.data,
-              backgroundColor: ["#22c55e", "#f59e0b", "#ef4444", "#3b82f6"],
+              backgroundColor: ["#22c55e", "#f59e0b", "#ef4444"],
               borderWidth: 1,
             },
           ],

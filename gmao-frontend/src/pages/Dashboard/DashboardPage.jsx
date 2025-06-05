@@ -166,67 +166,11 @@ const DashboardPage = () => {
             </div>
           )}
 
-          {/* Performance Indicators */}
-          <PerformanceIndicators />
-
           {/* Charts */}
           <DashboardCharts 
             equipmentData={equipmentData} 
             interventionData={interventionData}
           />
-
-          {/* Recent Interventions */}
-          <div className="recent-interventions">
-            <div className="section-header">
-              <h3 className="section-title">Dernières Interventions</h3>
-              <Link to="/interventions" className="view-all-link">
-                Voir tout
-              </Link>
-            </div>
-
-            {loading ? (
-              <div className="loading-indicator">Chargement des interventions...</div>
-            ) : recentInterventions.length === 0 ? (
-              <div className="empty-data-message">Aucune intervention récente</div>
-            ) : (
-              <div className="table-container">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Référence</th>
-                      <th>Équipement</th>
-                      <th>Type</th>
-                      <th>Priorité</th>
-                      <th>Status</th>
-                      <th>Date</th>
-                      <th>Technicien</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentInterventions.map((intervention) => (
-                      <tr key={intervention._id || intervention.id || `intervention-${intervention.reference}`.toLowerCase().replace(/\s+/g, '-')}>
-                        <td>{intervention.reference || intervention.id}</td>
-                        <td>{intervention.equipment ? (typeof intervention.equipment === 'object' ? intervention.equipment.name || intervention.equipment.reference || 'Équipement sans nom' : intervention.equipment) : 'Équipement supprimé'}</td>
-                        <td>
-                          <span className={`badge ${getTypeClass(intervention.type)}`}>{intervention.type}</span>
-                        </td>
-                        <td>
-                          <span className={`badge ${getPriorityClass(intervention.priority)}`}>
-                            {intervention.priority}
-                          </span>
-                        </td>
-                        <td>
-                          <span className={`badge ${getStatusClass(intervention.status)}`}>{intervention.status}</span>
-                        </td>
-                        <td>{intervention.date ? new Date(intervention.date).toLocaleDateString() : '-'}</td>
-                        <td>{intervention.technician ? (typeof intervention.technician === 'object' ? intervention.technician.name || intervention.technician.firstName + ' ' + intervention.technician.lastName || 'Technicien sans nom' : intervention.technician) : '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
         </main>
       </div>
     </div>

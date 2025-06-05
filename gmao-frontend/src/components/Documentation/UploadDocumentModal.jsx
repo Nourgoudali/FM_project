@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { FaTimes, FaQrcode } from "react-icons/fa";
-import QRCode from "react-qr-code";
+import { FaTimes } from "react-icons/fa";
 import { documentAPI, equipmentAPI } from "../../services/api";
 import { toast } from "react-hot-toast";
 import "./Documentation.css";
@@ -12,12 +11,10 @@ const UploadDocumentModal = ({ isOpen, onClose, onSuccess }) => {
     category: "Manuel",
     equipment: "",
     file: null,
-    qrCodeData: null,
-    generateQR: false,
+
   };
 
   const [formData, setFormData] = useState(initialFormData);
-  const [showQRCode, setShowQRCode] = useState(false);
   const [availableEquipments, setAvailableEquipments] = useState([]);
   const [isLoadingEquipments, setIsLoadingEquipments] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -117,15 +114,9 @@ const UploadDocumentModal = ({ isOpen, onClose, onSuccess }) => {
       fetchEquipments();
     } else {
       setFormData(initialFormData);
-      setShowQRCode(false);
       setAvailableEquipments([]);
     }
   }, [isOpen, fetchEquipments]);
-
-  // Générer un identifiant unique pour le QR code
-  const generateQRCodeData = useCallback(() => {
-    return `doc-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-  }, []);
 
   // Gestion des changements dans le formulaire
   const handleChange = (e) => {
@@ -136,14 +127,7 @@ const UploadDocumentModal = ({ isOpen, onClose, onSuccess }) => {
 
       if (name === "file" && files?.length > 0) {
         newData.file = files[0];
-      } else if (name === "generateQR") {
-        newData.generateQR = checked;
-        newData.qrCodeData = checked ? generateQRCodeData() : null;
-        setShowQRCode(checked);
-      } else {
-        newData[name] = type === "checkbox" ? checked : value;
-      }
-
+      } 
       return newData;
     });
   };
@@ -186,11 +170,6 @@ const UploadDocumentModal = ({ isOpen, onClose, onSuccess }) => {
       // Ajouter le fichier
       formDataToSend.append("file", formData.file);
       
-      // Ajouter le QR code si généré
-      if (formData.qrCodeData) {
-        formDataToSend.append("qrCodeData", formData.qrCodeData);
-      }
-
       // Envoyer la requête
       const response = await documentAPI.upload(formDataToSend);
       
@@ -324,24 +303,6 @@ const UploadDocumentModal = ({ isOpen, onClose, onSuccess }) => {
             </label>
             
           </div>
-
-          <div className="doc-form-check">
-            <input
-              type="checkbox"
-              id="generateQR"
-              name="generateQR"
-              checked={formData.generateQR}
-              onChange={handleChange}
-              className="doc-form-check-input"
-              disabled={loading || !formData.equipment}
-            />
-            <label htmlFor="generateQR" className="doc-form-check-label">
-              Générer un QR code
-            </label>
-          </div>
-
-
-
           <div className="doc-form-actions">
             <button
               type="button"

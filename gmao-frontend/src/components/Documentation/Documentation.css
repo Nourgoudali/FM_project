@@ -32,7 +32,7 @@
   color: #111827;
 }
 
-.doc-modal-close {
+.doc-close-btn {
   background: none;
   border: none;
   font-size: 1.25rem;
@@ -46,7 +46,7 @@
   transition: background-color 0.2s;
 }
 
-.doc-modal-close:hover {
+.doc-close-btn:hover {
   background-color: #f3f4f6;
   color: #111827;
 }
