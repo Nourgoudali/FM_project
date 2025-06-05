@@ -5,7 +5,6 @@ import "./DashboardCharts.css"
 function DashboardCharts({ equipmentData, interventionData }) {
   const equipmentStatusChartRef = useRef(null)
   const interventionTypeChartRef = useRef(null)
-  const interventionTrendChartRef = useRef(null)
   const availabilityChartRef = useRef(null)
   
   // États pour stocker les données traitées pour les graphiques
@@ -104,7 +103,7 @@ function DashboardCharts({ equipmentData, interventionData }) {
       const typeCounts = {
         "Préventive": 0,
         "Curative": 0,
-        "Améliorative": 0,
+        "Corrective": 0,
       };
       
       interventionData.forEach(intervention => {
@@ -123,6 +122,7 @@ function DashboardCharts({ equipmentData, interventionData }) {
       const monthlyInterventions = {
         "Préventive": Array(12).fill(0),
         "Curative": Array(12).fill(0),
+        "Corrective": Array(12).fill(0),
       };
       
       interventionData.forEach(intervention => {
@@ -131,10 +131,8 @@ function DashboardCharts({ equipmentData, interventionData }) {
           const date = new Date(intervention.date);
           const month = date.getMonth(); // 0-11
           
-          if (intervention.type === "Préventive") {
-            monthlyInterventions["Préventive"][month]++;
-          } else if (intervention.type === "Curative") {
-            monthlyInterventions["Curative"][month]++;
+          if (intervention.type in monthlyInterventions) {
+            monthlyInterventions[intervention.type][month]++;
           }
         }
       });
@@ -229,7 +227,7 @@ function DashboardCharts({ equipmentData, interventionData }) {
           datasets: [
             {
               data: interventionTypeData.data,
-              backgroundColor: ["#3b82f6", "#f59e0b", "#8b5cf6"],
+              backgroundColor: ["#3b82f6", "#f59e0b", "#8b5cf6"], // Bleu, Orange, Violet
               borderWidth: 1,
             },
           ],
@@ -266,147 +264,6 @@ function DashboardCharts({ equipmentData, interventionData }) {
     }
   }, [interventionTypeChartRef, interventionTypeData]);
 
-  // Graphique d'évolution des interventions dans le temps
-  useEffect(() => {
-    if (interventionTrendChartRef.current) {
-      // Détruire le graphique existant s'il y en a un
-      const chartInstance = Chart.getChart(interventionTrendChartRef.current);
-      if (chartInstance) {
-        chartInstance.destroy();
-      }
-      
-      // Créer un nouveau graphique
-      new Chart(interventionTrendChartRef.current, {
-        type: "line",
-        data: {
-          labels: interventionTrendData.labels,
-          datasets: [
-            {
-              label: "Préventives",
-              data: interventionTrendData.datasets[0].data,
-              borderColor: "#3b82f6",
-              backgroundColor: "rgba(59, 130, 246, 0.1)",
-              borderWidth: 2,
-              fill: true,
-              tension: 0.4,
-            },
-            {
-              label: "Curatives",
-              data: interventionTrendData.datasets[1].data,
-              borderColor: "#f59e0b",
-              backgroundColor: "rgba(245, 158, 11, 0.1)",
-              borderWidth: 2,
-              fill: true,
-              tension: 0.4,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: "top",
-            },
-            title: {
-              display: true,
-              text: "Évolution des interventions",
-              font: {
-                size: 14,
-                weight: "bold",
-              },
-              padding: {
-                top: 10,
-                bottom: 20,
-              },
-            },
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              title: {
-                display: true,
-                text: "Nombre d'interventions",
-              },
-            },
-            x: {
-              title: {
-                display: true,
-                text: "Mois",
-              },
-            },
-          },
-        },
-      });
-    }
-  }, [interventionTrendChartRef, interventionTrendData]);
-
-  // Graphique de disponibilité des équipements critiques
-  useEffect(() => {
-    if (availabilityChartRef.current) {
-      // Détruire le graphique existant s'il y en a un
-      const chartInstance = Chart.getChart(availabilityChartRef.current);
-      if (chartInstance) {
-        chartInstance.destroy();
-      }
-      
-      // Générer les couleurs basées sur la valeur de disponibilité
-      const backgroundColors = availabilityData.data.map(value => {
-        if (value >= 90) return "#22c55e"; // Vert pour > 90%
-        if (value >= 70) return "#f59e0b"; // Orange pour > 70%
-        return "#ef4444"; // Rouge pour < 70%
-      });
-      
-      // Créer un nouveau graphique
-      new Chart(availabilityChartRef.current, {
-        type: "bar",
-        data: {
-          labels: availabilityData.labels,
-          datasets: [
-            {
-              label: "Disponibilité (%)",
-              data: availabilityData.data,
-              backgroundColor: backgroundColors,
-              borderWidth: 1,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          indexAxis: "y",
-          plugins: {
-            legend: {
-              display: false,
-            },
-            title: {
-              display: true,
-              text: "Disponibilité des équipements critiques",
-              font: {
-                size: 14,
-                weight: "bold",
-              },
-              padding: {
-                top: 10,
-                bottom: 20,
-              },
-            },
-          },
-          scales: {
-            x: {
-              beginAtZero: true,
-              max: 100,
-              title: {
-                display: true,
-                text: "Disponibilité (%)",
-              },
-            },
-          },
-        },
-      });
-    }
-  }, [availabilityChartRef, availabilityData]);
-
   if (!chartsReady || !equipmentData || !interventionData) {
     return <div className="charts-loading">Chargement des graphiques...</div>;
   }
@@ -416,16 +273,10 @@ function DashboardCharts({ equipmentData, interventionData }) {
       <h2 className="charts-title">Analyses et Graphiques</h2>
       <div className="charts-grid">
         <div className="chart-card">
-          <canvas ref={equipmentStatusChartRef}></canvas>
+          <canvas ref={equipmentStatusChartRef}/>
         </div>
         <div className="chart-card">
-          <canvas ref={interventionTypeChartRef}></canvas>
-        </div>
-        <div className="chart-card full-width">
-          <canvas ref={interventionTrendChartRef}></canvas>
-        </div>
-        <div className="chart-card full-width">
-          <canvas ref={availabilityChartRef}></canvas>
+          <canvas ref={interventionTypeChartRef}/>
         </div>
       </div>
     </div>
