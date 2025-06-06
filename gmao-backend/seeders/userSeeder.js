@@ -27,6 +27,15 @@ const users = [
     phone: '01 23 45 67 90',
   },
   {
+    firstName: 'teamleader',
+    lastName: 'teamleader',
+    email: 'ana@gmao.com',
+    password: 'Team123!',
+    role: 'team_leader',
+    department: 'Facilites',
+    phone: '01 23 45 67 90',
+  },
+  {
     firstName: 'technician',
     lastName: 'technician',
     email: 'tech@gmao.com',
