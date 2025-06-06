@@ -405,7 +405,12 @@ const StockManagementPage = () => {
                           <td>{item.catégorie}</td>
                           <td>{item.lieuStockage || 'Non spécifié'}</td>
                           <td>{item.prixUnitaire} DH</td>
-                          <td>{item.stockActuel}</td>
+                          <td style={{
+                            color: item.stockActuel < item.stockMin ? 'red' : item.stockActuel > item.stockMax ? 'orange' : 'inherit',
+                            fontWeight: (item.stockActuel < item.stockMin || item.stockActuel > item.stockMax) ? 'bold' : 'normal'
+                          }}>
+                            {item.stockActuel}
+                          </td>
                           <td>{item.stockMin}</td>
                           <td>{item.stockMax}</td>
                           <td>{item.stockSecurite}</td>

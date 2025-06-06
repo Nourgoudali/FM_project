@@ -11,7 +11,6 @@ const stockSchema = new mongoose.Schema({
   stockMax: { type: Number, required: true },
   stockSecurite: { type: Number, required: true },
   lieuStockage: { type: String, required: true, trim: true },
-  fournisseur:{type: mongoose.Schema.Types.ObjectId, ref: 'Fournisseur', required:true}, // Corrigé 'reference' en 'ref'
   createdAt: { type: Date, default: Date.now },
 });
 

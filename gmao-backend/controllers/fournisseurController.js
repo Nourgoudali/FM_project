@@ -4,7 +4,7 @@ const fournisseurController = {
   // Créer un nouveau fournisseur
   createFournisseur: async (req, res) => {
     try {
-      const { nomEntreprise, nom, prenom, email, telephone, adresse } = req.body;
+      const { nomEntreprise, nom, prenom, email, telephone, adresse, quantiteMinCommande } = req.body;
       
       // Vérifier si un fournisseur avec cet email existe déjà
       const existingFournisseur = await Fournisseur.findOne({ email });
@@ -18,7 +18,8 @@ const fournisseurController = {
         prenom,
         email,
         telephone,
-        adresse
+        adresse,
+        quantiteMinCommande: quantiteMinCommande || 1
       });
       
       await fournisseur.save();

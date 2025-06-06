@@ -14,7 +14,6 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
     stockMin: "",
     stockMax: "",
     stockSecurite: "",
-    fournisseur: "",
     lieuStockage: "", // Ajout du champ lieuStockage
     prixEuro: 0 // Ajout du champ pour le prix en euros
   };
@@ -74,22 +73,6 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
       setFormData(newData)
     }
   }, [item, isEdit])
-  const [fournisseurList, setFournisseurList] = useState([])
-
-  // Fetch fournisseur list for dropdown
-  useEffect(() => {
-    const fetchFournisseurs = async () => {
-      try {
-        const response = await fournisseurAPI.getAllFournisseurs();
-        if (response.data) {
-          setFournisseurList(response.data);
-        }
-      } catch (error) {
-        toast.error("Erreur lors de la récupération des fournisseurs:", error);
-      }
-    };
-    fetchFournisseurs();
-  }, []);
 
   const [apiLoading, setApiLoading] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -106,7 +89,6 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
         stockMin: item.stockMin || "",
         stockMax: item.stockMax || "",
         stockSecurite: item.stockSecurite || "",
-        fournisseur: item.fournisseur ? item.fournisseur._id : "",
         lieuStockage: item.lieuStockage || "", // Ajout du champ lieuStockage
         prixEuro: item.prixEuro || 0 // Ajout du champ pour le prix en euros
       })
@@ -177,28 +159,9 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
               value={formData.name}
               onChange={handleChange}
               required
+              placeholder="Nom du produit"
             />
           </div>
-          <div className="stock-form__group">
-            <label htmlFor="fournisseur">Fournisseur *</label>
-            <select
-              id="fournisseur"
-              name="fournisseur"
-              value={formData.fournisseur || ''}
-              onChange={handleChange}
-              required
-              disabled={apiLoading}
-            >
-              <option value="">Sélectionnez un fournisseur</option>
-              {fournisseurList.map((fournisseur) => (
-                <option key={fournisseur._id} value={fournisseur._id}>
-                  {fournisseur.nomEntreprise} - {fournisseur.nom + ' ' + fournisseur.prenom}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div className="stock-form__row">
           <div className="stock-form__group">
             <label htmlFor="lieuStockage">Lieu de stockage *</label>
             <input
@@ -212,7 +175,6 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
             />
           </div>
         </div>
-
         <div className="stock-form__row">
           <div className="stock-form__group">
             <label htmlFor="catégorie">Catégorie *</label>

@@ -13,6 +13,7 @@ const DeleteCommandeConfirm = ({ commande, onClose, onSuccess }) => {
     try {
       await commandeAPI.deleteCommande(commande._id);
       onSuccess(commande._id);
+      toast.success("Commande supprimée avec succès.");
     } catch (error) {
       toast.error("Une erreur est survenue lors de la suppression de la commande.");
     } finally {

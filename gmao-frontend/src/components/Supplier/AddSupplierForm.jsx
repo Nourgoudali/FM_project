@@ -13,6 +13,7 @@ function AddSupplierForm({ supplier, onClose, onSubmit, isEdit }) {
           email: "",
           telephone: "",
           adresse: "",
+          quantiteMinCommande: ""
         }
   )
 
@@ -27,6 +28,7 @@ function AddSupplierForm({ supplier, onClose, onSubmit, isEdit }) {
         email: supplier.email || "",
         telephone: supplier.telephone || "",
         adresse: supplier.adresse || "",
+        quantiteMinCommande: supplier.quantiteMinCommande || "",
       })
     }
   }, [supplier, isEdit])
@@ -92,7 +94,8 @@ function AddSupplierForm({ supplier, onClose, onSubmit, isEdit }) {
         prenom: formData.prenom,
         email: formData.email,
         telephone: formData.telephone,
-        adresse: formData.adresse
+        adresse: formData.adresse,
+        quantiteMinCommande: Number(formData.quantiteMinCommande) || ""
       }
 
       // Appeler la fonction de callback
@@ -181,7 +184,7 @@ function AddSupplierForm({ supplier, onClose, onSubmit, isEdit }) {
               </div>
 
               <div className="supplier-form-group">
-                <label htmlFor="adresse">Adresse*</label>
+                <label>Adresse:</label>
                 <textarea
                   id="adresse"
                   name="adresse"
@@ -189,6 +192,30 @@ function AddSupplierForm({ supplier, onClose, onSubmit, isEdit }) {
                   onChange={handleChange}
                   placeholder="Adresse complète"
                   rows="3"
+                />
+              </div>
+
+              <div className="supplier-form-group">
+                <label>Quantité minimale à commander:</label>
+                <input
+                  type="text"
+                  name="quantiteMinCommande"
+                  value={formData.quantiteMinCommande || ''}
+                  onChange={(e) => {
+                    // N'autoriser que les nombres entiers positifs
+                    const value = e.target.value;
+                    if (value === '' || /^\d+$/.test(value)) {
+                      handleChange({
+                        target: {
+                          name: 'quantiteMinCommande',
+                          value: value === '' ? '' : parseInt(value, 10)
+                        }
+                      });
+                    }
+                  }}
+                  pattern="\d*"
+                  inputMode="numeric"
+                  placeholder="0"
                 />
               </div>
             </div>

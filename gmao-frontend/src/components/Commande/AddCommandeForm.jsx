@@ -16,6 +16,7 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
   const [loading, setLoading] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [currentProduct, setCurrentProduct] = useState({});
+  const [selectedFournisseur, setSelectedFournisseur] = useState(null);
 
   // Charger les articles de stock
   useEffect(() => {
@@ -34,6 +35,22 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    if (name === 'fournisseur') {
+      const fournisseur = fournisseurs.find(f => f._id === value);
+      setSelectedFournisseur(fournisseur);
+      
+      // Mettre à jour la quantité minimale pour les produits existants
+      if (fournisseur) {
+        setSelectedProducts(prevProducts => 
+          prevProducts.map(p => ({
+            ...p,
+            quantiteMinCommande: fournisseur.quantiteMinCommande || 1
+          }))
+        );
+      }
+    }
+    
     setFormData({
       ...formData,
       [name]: value
@@ -50,7 +67,7 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
           ...currentProduct,
           produit: value,
           prixUnitaire: selectedStock.prixUnitaire,
-          quantiteMinCommande: selectedStock.stockMin
+          quantiteMinCommande: selectedFournisseur?.quantiteMinCommande || 1
         });
       } else {
         setCurrentProduct({
@@ -87,6 +104,11 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
   const addProductToList = () => {
     if (!currentProduct.produit) {
       toast.error("Veuillez sélectionner un produit.");
+      return;
+    }
+    
+    if (!formData.fournisseur) {
+      toast.error("Veuillez d'abord sélectionner un fournisseur.");
       return;
     }
 
@@ -131,10 +153,9 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
     setSelectedProducts([...selectedProducts, newProduct]);
     setCurrentProduct({
       produit: "",
-      quantiteSouhaitee: 0,
-      quantiteMinCommande: 0,
-      prixUnitaire: 0,
-      remise: 0
+      quantiteSouhaitee: "",
+      prixUnitaire: "",
+      remise: ""
     });
   };
 
@@ -166,7 +187,6 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
       produits: selectedProducts.map(product => ({
         produit: product.produit,
         quantiteSouhaitee: product.quantiteSouhaitee,
-        quantiteMinCommande: product.quantiteMinCommande,
         prixUnitaire: product.prixUnitaire,
         remise: product.remise,
         total: product.total,
@@ -177,6 +197,7 @@ const AddCommandeForm = ({ onClose, onSuccess, fournisseurs }) => {
     try {
       const response = await commandeAPI.createCommande(commandeData);
       onSuccess(response.data);
+      toast.success("Commande ajoutée avec succès.");
     } catch (error) {
       console.error("Erreur lors de la création de la commande:", error);
       toast.error("Une erreur est survenue lors de la création de la commande.");

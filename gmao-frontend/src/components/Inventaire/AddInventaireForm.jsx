@@ -220,11 +220,18 @@ const AddInventaireForm = ({ onClose, onAddSuccess }) => {
                         <div className="inventaire-form-group">
                           <label>Quantité comptée</label>
                           <input
-                            type="number"
+                            type="text"
                             value={item.quantiteComptee}
-                            onChange={(e) => handleProduitChange(index, 'quantiteComptee', e.target.value)}
-                            min="0"
-                            step="0.01"
+                            onChange={(e) => {
+                              // N'autoriser que les nombres décimaux positifs
+                              const value = e.target.value;
+                              if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                                handleProduitChange(index, 'quantiteComptee', value);
+                              }
+                            }}
+                            pattern="\d*(\.\d*)?"
+                            inputMode="decimal"
+                            placeholder="0"
                             required
                           />
                         </div>

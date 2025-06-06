@@ -3,13 +3,8 @@ const mongoose = require('mongoose');
 
 const stockController = {
   create: async (req, res) => {
-    const { name, catégorie, prixUnitaire, stockActuel, stockMin, stockMax, stockSecurite, fournisseur, prixEuro, lieuStockage } = req.body;
+    const { name, catégorie, prixUnitaire, stockActuel, stockMin, stockMax, stockSecurite, prixEuro, lieuStockage } = req.body;
     try {
-      // Vérifier si fournisseur est un ObjectId valide
-      if (!mongoose.Types.ObjectId.isValid(fournisseur)) {
-        return res.status(400).json({ message: "ID de fournisseur invalide" });
-      }
-      
       // La référence sera générée automatiquement par le hook pre-save
       const stock = new Stock({
         name,
@@ -19,16 +14,12 @@ const stockController = {
         stockMin,
         stockMax,
         stockSecurite,
-        fournisseur,
         lieuStockage,
         prixEuro: prixEuro || 0
       });
       
-      await stock.save();
-      
-      // Récupérer le stock avec les informations du fournisseur pour le retourner
-      const populatedStock = await Stock.findById(stock._id).populate('fournisseur');
-      res.status(201).json(populatedStock);
+      const savedStock = await stock.save();
+      res.status(201).json(savedStock);
     } catch (err) {
       console.error("Erreur lors de l'ajout de l'article:", err);
       res.status(400).json({ message: err.message });
@@ -37,7 +28,7 @@ const stockController = {
 
   getAll: async (req, res) => {
     try {
-      const stocks = await Stock.find().populate('fournisseur');
+      const stocks = await Stock.find();
       res.json(stocks);
     } catch (err) {
       res.status(500).json({ message: err.message });
@@ -47,7 +38,7 @@ const stockController = {
   getById: async (req, res) => {
     const { id } = req.params;
     try {
-      const stock = await Stock.findById(id).populate('fournisseur');
+      const stock = await Stock.findById(id);
       if (!stock) return res.status(404).json({ message: 'Stock not found' });
       res.json(stock);
     } catch (err) {
@@ -105,7 +96,7 @@ const stockController = {
   getLowStock: async (req, res) => {
     try {
       // Trouver les articles dont le stock actuel est inférieur ou égal au stock minimum
-      const lowStocks = await Stock.find({ $expr: { $lte: ["$stockActuel", "$stockMin"] } }).populate('fournisseur');
+      const lowStocks = await Stock.find({ $expr: { $lte: ["$stockActuel", "$stockMin"] } });
       res.json(lowStocks);
     } catch (err) {
       res.status(500).json({ message: err.message });

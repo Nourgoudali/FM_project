@@ -51,13 +51,29 @@ exports.createCommande = async (req, res) => {
       return res.status(400).json({ message: 'Données manquantes pour créer la commande' });
     }
     
+    // Vérifier que le fournisseur existe
+    const fournisseurExiste = await mongoose.model('Fournisseur').findById(fournisseur);
+    if (!fournisseurExiste) {
+      return res.status(404).json({ message: 'Fournisseur non trouvé' });
+    }
+    
+    // Préparer les produits avec les données nécessaires
+    const produitsAvecDetails = await Promise.all(produits.map(async (produit) => {
+      const stock = await Stock.findById(produit.produit);
+      return {
+        ...produit,
+        quantiteMinCommande: fournisseurExiste.quantiteMinCommande || 1,
+        nomProduit: stock ? stock.nom : 'Produit inconnu'
+      };
+    }));
+    
     // Création de la nouvelle commande
     const nouvelleCommande = new Commande({
       fournisseur,
       devise,
       tva,
       numeroBL,
-      produits,
+      produits: produitsAvecDetails,
       dateCommande: new Date()
     });
     

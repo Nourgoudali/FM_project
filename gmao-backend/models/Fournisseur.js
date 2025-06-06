@@ -34,6 +34,12 @@ const fournisseurSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  quantiteMinCommande: {
+    type: Number,
+    required: false,
+    default: 1,
+    min: 1
+  },
   createdAt: { 
     type: Date, 
     default: Date.now 

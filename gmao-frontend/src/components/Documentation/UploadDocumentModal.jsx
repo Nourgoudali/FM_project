@@ -196,7 +196,7 @@ const UploadDocumentModal = ({ isOpen, onClose, onSuccess }) => {
       <div className="doc-modal-container" onClick={(e) => e.stopPropagation()}>
         <div className="doc-modal-header">
           <h3>Ajouter un document</h3>
-          <button type="button" className="doc-close-button" onClick={onClose} disabled={loading}>
+          <button type="button" className="doc-close-btn" onClick={onClose} disabled={loading}>
             <FaTimes />
           </button>
         </div>

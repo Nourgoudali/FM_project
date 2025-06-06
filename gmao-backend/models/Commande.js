@@ -36,10 +36,7 @@ const commandeSchema = new mongoose.Schema({
       type: Number,
       required: true
     },
-    quantiteMinCommande: {
-      type: Number,
-      required: true
-    },
+
     prixUnitaire: {
       type: Number,
       required: true
