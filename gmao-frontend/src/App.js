@@ -16,6 +16,7 @@ import HomePage from "./pages/Home/HomePage"
 import CommandePage from "./pages/Commande/CommandePage"
 import TraitementPage from "./pages/Traitement/TraitementPage"
 import InventairePage from "./pages/Inventaire/InventairePage"
+import MaintenancePlanning from "./pages/MaintenancePlanning.jsx"
 
 import {Toaster} from "react-hot-toast"
 
@@ -160,6 +161,38 @@ function App() {
                             element={
                                 <ProtectedRoute>
                                     <ProfilePage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/traitement"
+                            element={
+                                <ProtectedRoute>
+                                    <TraitementPage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/inventaire"
+                            element={
+                                <ProtectedRoute>
+                                    <InventairePage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/maintenance-planning"
+                            element={
+                                <ProtectedRoute>
+                                    <MaintenancePlanning />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/maintenance-planning"
+                            element={
+                                <ProtectedRoute>
+                                    <MaintenancePlanning />
                                 </ProtectedRoute>
                             }
                         />

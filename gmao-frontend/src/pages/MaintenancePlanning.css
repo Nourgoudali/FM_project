@@ -1,0 +1,141 @@
+.page-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--background-color);
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+.maintenance-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--background-color);
+  position: relative;
+  width: 100%;
+}
+
+.content-wrapper {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  background-color: var(--background-color);
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.maintenance-planning-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+}
+
+h2 {
+  color: #333;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.maintenance-form {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #555;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-group textarea {
+  height: 100px;
+  resize: vertical;
+}
+
+.submit-btn {
+  background-color: #4CAF50;
+  color: white;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 250px;
+  margin-top: 2rem;
+  display: inline-block;
+}
+
+.submit-btn:hover {
+  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);
+}
+
+.calendar-container {
+  width: 100%;
+  margin-top: 2rem;
+  border-radius: 8px;
+  background: white;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.rbc-calendar {
+  border: none;
+}
+
+.rbc-month-view {
+  background: white;
+}
+
+.rbc-event {
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 5px;
+}
+
+/* Styles pour les différents statuts */
+.rbc-event.scheduled {
+  background-color: #D3D3D3;
+}
+
+.rbc-event.approaching {
+  background-color: #FFFF99;
+}
+
+.rbc-event.overdue {
+  background-color: #FF6666;
+}
+
+.rbc-event.completed {
+  background-color: #90EE90;
+}
