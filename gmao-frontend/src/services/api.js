@@ -1,4 +1,5 @@
 import axios from 'axios';
+import moment from 'moment';
 
 // Configuration de base d'axios
 const API = axios.create({
@@ -10,14 +11,151 @@ const API = axios.create({
   }
 });
 
+// Helper function to get color based on status
+const getColorForStatus = (status) => {
+  switch (status) {
+    case 'completed':
+      return '#4CAF50'; // Green for completed
+    case 'planned':
+      return '#D3D3D3'; // Gray for planned
+    case 'overdue':
+      return '#f44336'; // Red for overdue
+    default:
+      return '#D3D3D3';
+  }
+};
+
+// Maintenance API functions
+export const maintenanceAPI = {
+  createTask: async (data) => {
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid data format');
+    }
+
+    try {
+      // Calculate end date based on periodicity
+      let endDate;
+      switch (data.periodicity.toLowerCase()) {
+        case 'mensuelle':
+          endDate = moment(data.startDate).add(1, 'month').toDate();
+          break;
+        case 'trimestrielle':
+          endDate = moment(data.startDate).add(3, 'months').toDate();
+          break;
+        case 'annuelle':
+          endDate = moment(data.startDate).add(1, 'year').toDate();
+          break;
+        default:
+          endDate = moment(data.startDate).add(1, 'month').toDate();
+      }
+
+      const response = await API.post('/planning', {
+        intervention: {
+          title: data.description,
+          equipment: data.equipment,
+          provider: data.provider
+        },
+        startDate: data.startDate,
+        endDate: endDate,
+        status: 'planned',
+        color: getColorForStatus('planned')
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error creating maintenance task:', error);
+      throw error;
+    }
+  },
+
+  getTasks: async () => {
+    try {
+      const response = await API.get('/planning');
+      if (!response.data || !Array.isArray(response.data)) {
+        throw new Error('Invalid response format');
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching maintenance tasks:', error);
+      throw error;
+    }
+  },
+
+  updateTask: async (id, data) => {
+    if (!id || typeof id !== 'string') {
+      throw new Error('Invalid task ID');
+    }
+    if (!data || typeof data !== 'object' || !data.status) {
+      throw new Error('Invalid update data');
+    }
+
+    try {
+      const response = await API.put(`/planning/${id}`, {
+        status: data.status,
+        color: getColorForStatus(data.status)
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error updating maintenance task:', error);
+      throw error;
+    }
+  },
+
+  validateTask: async (taskId, userId) => {
+    try {
+      if (!taskId) {
+        throw new Error('ID de tâche manquant');
+      }
+
+      console.log('ID de tâche:', taskId);
+      console.log('ID utilisateur:', userId);
+
+      // Construire l'URL avec la bonne structure
+      const url = `/maintenance/planning/${taskId}/validate`;
+      console.log('URL de validation:', url);
+
+      // Ajouter un délai pour voir les logs
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const response = await API.put(url, { userId });
+      
+      console.log('Réponse de validation:', response.data);
+      
+      if (response.data?.status === 'success') {
+        return { status: 'success', message: response.data.message };
+      } else {
+        throw new Error(response.data?.message || 'Erreur lors de la validation');
+      }
+    } catch (error) {
+      console.error('Erreur détaillée:', {
+        error,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      
+      const errorMessage = error.response?.data?.message || 
+        error.response?.status === 401 ? 'Non authentifié' :
+        error.response?.status === 404 ? 'La tâche de maintenance n\'existe pas ou n\'est pas accessible' :
+        error.message || 'Erreur lors de la validation de la maintenance';
+      
+      throw new Error(errorMessage);
+    }
+  }
+};
+
 // Ajouter un intercepteur pour les requêtes
 API.interceptors.request.use(
   async config => {
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       
-      if (user.token) {
-        config.headers.Authorization = `Bearer ${user.token}`;
+      if (user && user.token) {
+        config.headers = {
+          ...config.headers,
+          Authorization: `Bearer ${user.token}`,
+          'Content-Type': 'application/json'
+        };
       }
 
       return config;
@@ -36,14 +174,19 @@ API.interceptors.request.use(
 API.interceptors.response.use(
   response => response,
   async error => {
-    const originalRequest = error.config;
-    
+    console.error('Erreur interceptée:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+      config: error.config
+    });
+
     if (error.response) {
-      console.error('Erreur API:', error.response.status, error.response.data);
+      console.error('Réponse d\'erreur:', error.response);
       
       // Si c'est une erreur 401 et qu'on a un refresh token
-      if (error.response.status === 401 && !originalRequest._retry) {
-        originalRequest._retry = true;
+      if (error.response.status === 401 && !error.config._retry) {
+        error.config._retry = true;
         
         try {
           const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -56,8 +199,8 @@ API.interceptors.response.use(
             const updatedUser = { ...user, token: refreshResponse.data.token };
             localStorage.setItem('user', JSON.stringify(updatedUser));
             
-            originalRequest.headers.Authorization = `Bearer ${refreshResponse.data.token}`;
-            return API(originalRequest);
+            error.config.headers.Authorization = `Bearer ${refreshResponse.data.token}`;
+            return API(error.config);
           }
         } catch (refreshError) {
           console.error('Erreur lors du refresh du token:', refreshError);
@@ -70,43 +213,6 @@ API.interceptors.response.use(
       console.error('Erreur réseau:', error.message);
     }
 
-    return Promise.reject(error);
-  }
-);
-
-// Intercepteur pour gérer les erreurs
-API.interceptors.response.use(
-  response => response,
-  error => {
-    console.error('Erreur API:', error.message);
-    return Promise.reject(error);
-  }
-);
-
-// Intercepteur pour ajouter le token JWT à chaque requête
-API.interceptors.request.use(
-  config => {
-    try {
-      // Récupérer l'objet utilisateur complet du localStorage
-      const userData = localStorage.getItem('user');
-      
-      if (userData) {
-        const user = JSON.parse(userData);
-        if (user && user.token) {
-          config.headers.Authorization = `Bearer ${user.token}`;
-          // Ajouter le refresh token si présent
-          if (user.refreshToken) {
-            config.headers['X-Refresh-Token'] = user.refreshToken;
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Erreur lors de la récupération du token:', error);
-    }
-    
-    return config;
-  },
-  error => {
     return Promise.reject(error);
   }
 );
