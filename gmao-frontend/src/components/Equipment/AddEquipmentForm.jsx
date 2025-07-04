@@ -24,11 +24,7 @@ const equipmentLocations = [
   'ATELIER 2'
 ];
 
-const pdrCategories = [
-  'Fluidique',
-  'Électrotechnique',
-  'Maintenance générale'
-];
+
 
 export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null, isEdit = false }) {
   const [formData, setFormData] = useState({
@@ -75,7 +71,7 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
         name: initialData.name || "",
         category: initialData?.category || "",
         location: initialData?.location || "",
-        pdrCategory: initialData?.pdrCategory || "",
+
         brand: initialData.brand || "",
         model: initialData.model || "",
         serialNumber: initialData.serialNumber || "",
@@ -134,7 +130,7 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
         purchaseDate: formData.purchaseDate,
         warrantyEnd: formData.warrantyEnd,
         description: formData.description,
-        pdrCategory: formData.pdrCategory,
+
         image: imageFile ? imageFile : undefined
       }
 
@@ -233,24 +229,7 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
             </select>
           </div>
 
-          <div className="aef-form-group">
-            <label htmlFor="pdrCategory" className="aef-form-label">
-              Catégorie PDR *
-            </label>
-            <select
-              id="pdrCategory"
-              name="pdrCategory"
-              value={formData.pdrCategory}
-              onChange={handleChange}
-              className="aef-form-control"
-              required
-            >
-              <option value="">Sélectionner une catégorie PDR</option>
-              {pdrCategories.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
-          </div>
+
         </div>
 
         <div className="aef-form-row">

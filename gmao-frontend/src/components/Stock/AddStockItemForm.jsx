@@ -5,7 +5,13 @@ import { toast } from 'react-hot-toast';
 
 function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
   // Initialize form data with empty values
-  const emptyFormData = {
+  const pdrCategories = [
+  'Fluidique',
+  'Électrotechnique',
+  'Maintenance générale'
+];
+
+const emptyFormData = {
     name: "",
     reference: "", // Ajout du champ reference même s'il sera généré automatiquement côté serveur
     catégorie: "",
@@ -15,7 +21,8 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
     stockMax: "",
     stockSecurite: "",
     lieuStockage: "", // Ajout du champ lieuStockage
-    prixEuro: 0 // Ajout du champ pour le prix en euros
+    prixEuro: 0, // Ajout du champ pour le prix en euros
+    pdrCategory: "" // Ajout du champ pour la catégorie PDR
   };
 
   // Ensure form data is always initialized with empty values
@@ -38,7 +45,8 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
         stockSecurite: item.stockSecurite || "",
         fournisseur: item.fournisseur ? item.fournisseur._id : "",
         lieuStockage: item.lieuStockage || "", // Ajout du champ lieuStockage
-        prixEuro: item.prixEuro || 0 // Ajout du champ pour le prix en euros
+        prixEuro: item.prixEuro || 0, // Ajout du champ pour le prix en euros
+        pdrCategory: item.pdrCategory || "" // Ajout du champ pour la catégorie PDR
       }
     : {
         name: "",
@@ -51,7 +59,8 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
         stockSecurite: "",
         fournisseur: "",
         lieuStockage: "", 
-        prixEuro: 0 
+        prixEuro: 0,
+        pdrCategory: ""
       }
 
   const [formData, setFormData] = useState(initialData)
@@ -130,6 +139,12 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
       const itemToSubmit = {
         ...(isEdit && item ? { _id: item._id } : {}),
         ...formData,
+      };
+
+      // Validate PDR category selection
+      if (formData.catégorie === 'PDR' && !formData.pdrCategory) {
+        toast.error("Vous devez sélectionner une catégorie PDR");
+        return;
       }
       
       // Soumettre les données
@@ -191,8 +206,25 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
               <option value="Matériel">Matériel</option>
               <option value="Papier">Papier</option>
               <option value="Électronique">Électronique</option>
-              <option value="Autre">Autre</option>
+              <option value="PDR">PDR</option>
             </select>
+          </div>
+
+          <div className="stock-form__group">
+            <label htmlFor="pdrCategory">Catégorie PDR</label>
+            <select
+              id="pdrCategory"
+              name="pdrCategory"
+              value={formData.pdrCategory || ''}
+              onChange={handleChange}
+              disabled={apiLoading}
+            >
+              <option value="">Sélectionnez une catégorie PDR</option>
+              {pdrCategories.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+          </div>
           </div>
           
           <div className="stock-form__group">
@@ -271,7 +303,7 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
             />
           </div>
         </div>
-      </div>  
+      </div>
       <div className="stock-form__actions stock-form__actions--main">
         <button type="button" className="stock-form__btn stock-form__btn--outline" onClick={onCancel}>
           Annuler
@@ -279,7 +311,6 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
         <button type="submit" className="stock-form__btn stock-form__btn--primary" disabled={apiLoading}>
           {loading ? "Enregistrement..." : isEdit ? "Enregistrer les modifications" : "Ajouter l'article"}
         </button>
-      </div>
       </div>
     </form>
   )
