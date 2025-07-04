@@ -14,8 +14,50 @@ const MaintenancePlanning = () => {
   const { toggleSidebar } = useSidebar();
   
   const [maintenanceData, setMaintenanceData] = useState([]);
+  const equipmentCategories = [
+    'Systèmes d\'air comprimé',
+    'Systèmes de pompages',
+    'Installations CVC',
+    'Systèmes solaire thermique',
+    'Équipements énergétiques',
+    'Équipements de production'
+  ];
+
+  const equipmentLocations = [
+    'ZONE TGBT',
+    'ZONE GROUPE ELECTROGENE',
+    'LOCAL ONDULEURS',
+    'LOCALE COMPRESSEURS',
+    'LOCAL SPRINKLER',
+    'RESTAURANT',
+    'DIRECTION',
+    'ATELIER 1',
+    'ATELIER 2'
+  ];
+
+  const pdrCategories = [
+    'Fluidique',
+    'Électrotechnique',
+    'Maintenance générale'
+  ];
+
+  const departments = [
+    'Département de la Production',
+    'Département Qualité',
+    'Département Logistique',
+    'Département Méthodes',
+    'Département Facilities',
+    'Département Finance',
+    'Département Ressources Humaines (RH)',
+    'Département Achats'
+  ];
+
   const [formData, setFormData] = useState({
     equipment: '',
+    category: '',
+    location: '',
+    pdrCategory: '',
+    department: '',
     periodicity: 'Mensuelle',
     description: '',
     provider: '',
@@ -114,7 +156,10 @@ const MaintenancePlanning = () => {
       if (!validateForm()) return;
 
       const data = {
-        equipment: formData.equipment,
+        category: formData.category,
+        location: formData.location,
+        pdrCategory: formData.pdrCategory,
+        department: formData.department,
         description: formData.description,
         provider: formData.provider,
         startDate: formData.startDate,
@@ -244,74 +289,123 @@ const MaintenancePlanning = () => {
     <div className="maintenance-planning-container">
       <Sidebar toggleSidebar={toggleSidebar} />
       <div className="main-content">
-        <Header />
+        <Header title="Planification de Maintenance" />
         <div className="planning-content">
-          <h2>Planification de Maintenance</h2>
-          <form onSubmit={handleSubmit} className="maintenance-form">
-            <div className="form-group">
-              <label htmlFor="equipment">Équipement:</label>
-              <input
-                type="text"
-                id="equipment"
-                name="equipment"
-                value={formData.equipment}
-                onChange={handleInputChange}
-                required
-                className="form-input"
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="periodicity">Périodicité:</label>
-              <select
-                id="periodicity"
-                name="periodicity"
-                value={formData.periodicity}
-                onChange={handleInputChange}
-                className="form-input"
-              >
-                <option value="Mensuelle">Mensuelle</option>
-                <option value="Trimestrielle">Trimestrielle</option>
-                <option value="Annuelle">Annuelle</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label htmlFor="description">Description:</label>
-              <textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                required
-                className="form-input"
-                rows="4"
-              ></textarea>
-            </div>
-            <div className="form-group">
-              <label htmlFor="provider">Prestataire:</label>
-              <input
-                type="text"
-                id="provider"
-                name="provider"
-                value={formData.provider}
-                onChange={handleInputChange}
-                required
-                className="form-input"
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="startDate">Date de Début:</label>
-              <input
-                type="date"
-                id="startDate"
-                name="startDate"
-                value={formData.startDate}
-                onChange={handleInputChange}
-                required
-                className="form-input"
-              />
-            </div>
-            <button type="submit" className="submit-btn">Planifier Maintenance</button>
-          </form>
+          <div className="maintenance-form">
+            <h2>Planifier une Maintenance</h2>
+            {error && <div className="error-message">{error}</div>}
+            {successMessage && <div className="success-message">{successMessage}</div>}
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label htmlFor="category">Catégorie d'équipement</label>
+                <select
+                  id="category"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Sélectionnez une catégorie</option>
+                  {equipmentCategories.map(category => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="location">Localisation</label>
+                <select
+                  id="location"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Sélectionnez une localisation</option>
+                  {equipmentLocations.map(location => (
+                    <option key={location} value={location}>{location}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="pdrCategory">Catégorie PDR</label>
+                <select
+                  id="pdrCategory"
+                  name="pdrCategory"
+                  value={formData.pdrCategory}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Sélectionnez une catégorie PDR</option>
+                  {pdrCategories.map(category => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="department">Département</label>
+                <select
+                  id="department"
+                  name="department"
+                  value={formData.department}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Sélectionnez un département</option>
+                  {departments.map(dept => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="periodicity">Périodicité</label>
+                <select
+                  id="periodicity"
+                  name="periodicity"
+                  value={formData.periodicity}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="Mensuelle">Mensuelle</option>
+                  <option value="Trimestrielle">Trimestrielle</option>
+                  <option value="Semestrielle">Semestrielle</option>
+                  <option value="Annuelle">Annuelle</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="description">Description</label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="provider">Prestataire</label>
+                <input
+                  type="text"
+                  id="provider"
+                  name="provider"
+                  value={formData.provider}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="startDate">Date de début</label>
+                <input
+                  type="date"
+                  id="startDate"
+                  name="startDate"
+                  value={formData.startDate}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <button type="submit" className="submit-btn">Planifier</button>
+            </form>
+          </div>
           <div className="calendar-container">
             <Calendar
               localizer={localizer}

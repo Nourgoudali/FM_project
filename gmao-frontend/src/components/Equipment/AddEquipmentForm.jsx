@@ -3,6 +3,33 @@ import "./AddEquipmentForm.css"
 import { equipmentAPI } from "../../services/api"
 import toast from "react-hot-toast"
 
+const equipmentCategories = [
+  'Systèmes d\'air comprimé',
+  'Systèmes de pompages',
+  'Installations CVC',
+  'Systèmes solaire thermique',
+  'Équipements énergétiques',
+  'Équipements de production'
+];
+
+const equipmentLocations = [
+  'ZONE TGBT',
+  'ZONE GROUPE ELECTROGENE',
+  'LOCAL ONDULEURS',
+  'LOCALE COMPRESSEURS',
+  'LOCAL SPRINKLER',
+  'RESTAURANT',
+  'DIRECTION',
+  'ATELIER 1',
+  'ATELIER 2'
+];
+
+const pdrCategories = [
+  'Fluidique',
+  'Électrotechnique',
+  'Maintenance générale'
+];
+
 export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null, isEdit = false }) {
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
@@ -46,8 +73,9 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
     if (initialData) {
       setFormData({
         name: initialData.name || "",
-        category: initialData.category || "",
-        location: initialData.location || "",
+        category: initialData?.category || "",
+        location: initialData?.location || "",
+        pdrCategory: initialData?.pdrCategory || "",
         brand: initialData.brand || "",
         model: initialData.model || "",
         serialNumber: initialData.serialNumber || "",
@@ -106,6 +134,7 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
         purchaseDate: formData.purchaseDate,
         warrantyEnd: formData.warrantyEnd,
         description: formData.description,
+        pdrCategory: formData.pdrCategory,
         image: imageFile ? imageFile : undefined
       }
 
@@ -186,29 +215,6 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
 
         <div className="aef-form-row">
           <div className="aef-form-group">
-            <label htmlFor="category" className="aef-form-label">
-              Catégorie *
-            </label>
-            <select
-              id="category"
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              className="aef-form-control"
-              required
-            >
-              <option value="">Sélectionner une catégorie</option>
-              <option value="Pompe">Pompe</option>
-              <option value="Compresseur">Compresseur</option>
-              <option value="Moteur">Moteur</option>
-              <option value="Convoyeur">Convoyeur</option>
-              <option value="Chaudière">Chaudière</option>
-              <option value="Robot">Robot</option>
-              <option value="Autre">Autre</option>
-            </select>
-          </div>
-
-          <div className="aef-form-group">
             <label htmlFor="location" className="aef-form-label">
               Localisation *
             </label>
@@ -221,20 +227,52 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
               required
             >
               <option value="">Sélectionner une localisation</option>
-              <option value="Atelier A">Atelier A</option>
-              <option value="Atelier B">Atelier B</option>
-              <option value="Atelier C">Atelier C</option>
-              <option value="Atelier D">Atelier D</option>
-              <option value="Entrepôt">Entrepôt</option>
+              {equipmentLocations.map(location => (
+                <option key={location} value={location}>{location}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="aef-form-group">
+            <label htmlFor="pdrCategory" className="aef-form-label">
+              Catégorie PDR *
+            </label>
+            <select
+              id="pdrCategory"
+              name="pdrCategory"
+              value={formData.pdrCategory}
+              onChange={handleChange}
+              className="aef-form-control"
+              required
+            >
+              <option value="">Sélectionner une catégorie PDR</option>
+              {pdrCategories.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
             </select>
           </div>
         </div>
-      </div>
-
-      <div className="aef-form-section">
-        <h3 className="aef-form-section-title">Caractéristiques techniques</h3>
 
         <div className="aef-form-row">
+          <div className="aef-form-group">
+            <label htmlFor="category" className="aef-form-label">
+              Catégorie *
+            </label>
+            <select
+              id="category"
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className="aef-form-control"
+              required
+            >
+              <option value="">Sélectionner une catégorie</option>
+              {equipmentCategories.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+          </div>
+
           <div className="aef-form-group">
             <label htmlFor="brand" className="aef-form-label">
               Marque
@@ -248,7 +286,13 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
               className="aef-form-control"
             />
           </div>
+        </div>
+      </div>
 
+      <div className="aef-form-section">
+        <h3 className="aef-form-section-title">Caractéristiques techniques</h3>
+
+        <div className="aef-form-row">
           <div className="aef-form-group">
             <label htmlFor="model" className="aef-form-label">
               Modèle
@@ -262,9 +306,7 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
               className="aef-form-control"
             />
           </div>
-        </div>
 
-        <div className="aef-form-row">
           <div className="aef-form-group">
             <label htmlFor="serialNumber" className="aef-form-label">
               Numéro de série
@@ -278,7 +320,9 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
               className="aef-form-control"
             />
           </div>
+        </div>
 
+        <div className="aef-form-row">
           <div className="aef-form-group">
             <label htmlFor="purchaseDate" className="aef-form-label">
               Date d'achat
@@ -292,13 +336,7 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
               className="aef-form-control"
             />
           </div>
-        </div>
-      </div>
 
-      <div className="aef-form-section">
-        <h3 className="aef-form-section-title">Informations complémentaires</h3>
-
-        <div className="aef-form-row">
           <div className="aef-form-group">
             <label htmlFor="warrantyEnd" className="aef-form-label">
               Fin de garantie
@@ -311,31 +349,6 @@ export function AddEquipmentForm({ onClose, onEquipmentAdded, initialData = null
               onChange={handleChange}
               className="aef-form-control"
             />
-          </div>
-
-          <div className="aef-form-group">
-            <label htmlFor="image" className="aef-form-label">
-              Image de l'équipement
-            </label>
-            <div className="aef-image-upload-container">
-              <input
-                type="file"
-                id="image"
-                name="image"
-                onChange={handleImageChange}
-                accept="image/*"
-                className="aef-image-input"
-              />
-              <div className="aef-image-preview-container">
-                {imagePreview ? (
-                  <img src={imagePreview || "/placeholder.svg"} alt="Aperçu" className="aef-image-preview" />
-                ) : (
-                  <div className="aef-image-placeholder">
-                    <span className="aef-image-placeholder-text">Ajouter une image</span>
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         </div>
 

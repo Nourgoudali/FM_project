@@ -7,7 +7,20 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, enum: ['admin', 'team_leader', 'technicien', 'opérateur'], required: true },
-  department: { type: String, default: 'Non assigné' },
+  department: { 
+    type: String, 
+    enum: [
+      'Département de la Production',
+      'Département Qualité',
+      'Département Logistique',
+      'Département Méthodes',
+      'Département Facilities',
+      'Département Finance',
+      'Département Ressources Humaines (RH)',
+      'Département Achats'
+    ],
+    required: true
+  },
   phone: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now },
 }, {

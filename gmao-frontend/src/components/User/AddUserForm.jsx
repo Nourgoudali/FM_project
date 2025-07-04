@@ -20,22 +20,16 @@ function AddUserForm({ onClose, onSubmit, user, isEdit = false, hidePasswordFiel
   )
 
   const [roles, setRoles] = useState([])
-  const [departments, setDepartments] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const fetchRolesAndDepartments = async () => {
+    const fetchRoles = async () => {
       try {
         setIsLoading(true)
         // Récupérer les rôles depuis le backend
         const rolesResponse = await userAPI.getRoles()
         // Vérifier si les données sont dans le format attendu
         setRoles(rolesResponse.data?.data || [])
-
-        // Récupérer les départements depuis le backend
-        const departmentsResponse = await userAPI.getDepartments()
-        // Vérifier si les données sont dans le format attendu
-        setDepartments(departmentsResponse.data?.data || [])
       } catch (error) {
         toast.error("Erreur lors de la récupération des données")
       } finally {
@@ -43,7 +37,7 @@ function AddUserForm({ onClose, onSubmit, user, isEdit = false, hidePasswordFiel
       }
     }
 
-    fetchRolesAndDepartments()
+    fetchRoles()
   }, [])
 
   const handleChange = (e) => {
@@ -201,24 +195,26 @@ function AddUserForm({ onClose, onSubmit, user, isEdit = false, hidePasswordFiel
                     {Array.isArray(roles) && roles.map((role) => (
                       <option key={`role-${role}`} value={role}>
                         {role === "admin" ? "Admin" : 
-                         role === "team_leader" ? "Team Leader" : 
+                         role === "team_leader" ? "Chef d'équipe" : 
                          role === "technicien" ? "Technicien" : 
-                         role === "opérateur" ? "Opérateur" : 
-                         role}
+                         "Opérateur"}
                       </option>
                     ))}
                   </select>
                 </div>
 
                 <div className="user-form-group">
-                  <label htmlFor="department">Département</label>
+                  <label htmlFor="department">Département*</label>
                   <select id="department" name="department" value={formData.department} onChange={handleChange}>
                     <option value="">Sélectionner un département</option>
-                    {Array.isArray(departments) && departments.map((dept) => (
-                      <option key={`dept-${dept}`} value={dept}>
-                        {dept}
-                      </option>
-                    ))}
+                    <option value="Département de la Production">Département de la Production</option>
+                    <option value="Département Qualité">Département Qualité</option>
+                    <option value="Département Logistique">Département Logistique</option>
+                    <option value="Département Méthodes">Département Méthodes</option>
+                    <option value="Département Facilities">Département Facilities</option>
+                    <option value="Département Finance">Département Finance</option>
+                    <option value="Département Ressources Humaines (RH)">Département Ressources Humaines (RH)</option>
+                    <option value="Département Achats">Département Achats</option>
                   </select>
                 </div>
               </div>

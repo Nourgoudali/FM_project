@@ -34,7 +34,7 @@ const UserManagementPage = () => {
   const [sortConfig, setSortConfig] = useState({ key: "lastName", direction: "ascending" })
   const [filters, setFilters] = useState({
     role: "all",
-    department: "all",
+    department: "Département de la Production",
   })
   const [showFilters, setShowFilters] = useState(false)
 
@@ -165,7 +165,17 @@ const UserManagementPage = () => {
   // Obtenir les rôles, statuts et départements uniques pour les filtres
   const roles = ["all", ...new Set(users.map((user) => user.role))]
   const statuses = ["all", "Actif", "Inactif"]
-  const departments = ["all", ...new Set(users.map((user) => user.department))]
+  const departments = [
+  "all",
+  "Département de la Production",
+  "Département Qualité",
+  "Département Logistique",
+  "Département Méthodes",
+  "Département Facilities",
+  "Département Finance",
+  "Département Ressources Humaines (RH)",
+  "Département Achats"
+]
 
   // Fonction pour obtenir l'icône du rôle
   const getRoleIcon = (role) => {
