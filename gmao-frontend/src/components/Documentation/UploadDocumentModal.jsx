@@ -120,16 +120,12 @@ const UploadDocumentModal = ({ isOpen, onClose, onSuccess }) => {
 
   // Gestion des changements dans le formulaire
   const handleChange = (e) => {
-    const { name, value, files, checked, type } = e.target;
-
-    setFormData((prev) => {
-      const newData = { ...prev };
-
-      if (name === "file" && files?.length > 0) {
-        newData.file = files[0];
-      } 
-      return newData;
-    });
+    const { name, value, files } = e.target;
+  
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "file" ? files[0] : value,
+    }));
   };
 
   // Gestion de la soumission du formulaire
