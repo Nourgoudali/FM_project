@@ -35,11 +35,7 @@ const MaintenancePlanning = () => {
     'ATELIER 2'
   ];
 
-  const pdrCategories = [
-    'Fluidique',
-    'Électrotechnique',
-    'Maintenance générale'
-  ];
+
 
   const departments = [
     'Département de la Production',
@@ -54,9 +50,7 @@ const MaintenancePlanning = () => {
 
   const [formData, setFormData] = useState({
     equipment: '',
-    category: '',
     location: '',
-    pdrCategory: '',
     department: '',
     periodicity: 'Mensuelle',
     description: '',
@@ -327,19 +321,7 @@ const MaintenancePlanning = () => {
                 </select>
               </div>
               <div className="form-group">
-                <label htmlFor="pdrCategory">Catégorie PDR</label>
-                <select
-                  id="pdrCategory"
-                  name="pdrCategory"
-                  value={formData.pdrCategory}
-                  onChange={handleInputChange}
-                  required
-                >
-                  <option value="">Sélectionnez une catégorie PDR</option>
-                  {pdrCategories.map(category => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
-                </select>
+  
               </div>
               <div className="form-group">
                 <label htmlFor="department">Département</label>

@@ -5,33 +5,18 @@ import { toast } from 'react-hot-toast';
 
 function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
   // Initialize form data with empty values
-  const pdrCategories = [
-    'Fluidique',
-    'Électrotechnique',
-    'Maintenance générale'
-  ];
 
-  const equipmentCategories = [
-    'Systèmes d\'air comprimé',
-    'Systèmes de pompages',
-    'Installations CVC',
-    'Systèmes solaire thermique',
-    'Équipements énergétiques',
-    'Équipements de production'
-  ];
 
 const emptyFormData = {
     name: "",
     reference: "", // Ajout du champ reference même s'il sera généré automatiquement côté serveur
-    catégorie: "",
     prixUnitaire: "",
     stockActuel: "",
     stockMin: "",
     stockMax: "",
     stockSecurite: "",
     lieuStockage: "", // Ajout du champ lieuStockage
-    prixEuro: 0, // Ajout du champ pour le prix en euros
-    pdrCategory: "" // Ajout du champ pour la catégorie PDR
+    prixEuro: 0 // Ajout du champ pour le prix en euros
   };
 
   // Ensure form data is always initialized with empty values
@@ -46,7 +31,6 @@ const emptyFormData = {
     ? {
         name: item.name || "",
         reference: item.reference || "", // Ajout du champ reference
-        catégorie: item.catégorie || "",
         prixUnitaire: item.prixUnitaire || "",
         stockActuel: item.stockActuel || "",
         stockMin: item.stockMin || "",
@@ -54,13 +38,11 @@ const emptyFormData = {
         stockSecurite: item.stockSecurite || "",
         fournisseur: item.fournisseur ? item.fournisseur._id : "",
         lieuStockage: item.lieuStockage || "", // Ajout du champ lieuStockage
-        prixEuro: item.prixEuro || 0, // Ajout du champ pour le prix en euros
-        pdrCategory: item.pdrCategory || "" // Ajout du champ pour la catégorie PDR
+        prixEuro: item.prixEuro || 0
       }
     : {
         name: "",
         reference: "", 
-        catégorie: "",
         prixUnitaire: "",
         stockActuel: "",
         stockMin: "",
@@ -68,8 +50,7 @@ const emptyFormData = {
         stockSecurite: "",
         fournisseur: "",
         lieuStockage: "", 
-        prixEuro: 0,
-        pdrCategory: ""
+        prixEuro: 0
       }
 
   const [formData, setFormData] = useState(initialData)
@@ -79,7 +60,6 @@ const emptyFormData = {
     if (item && isEdit) {
       const newData = {
         name: item.name || "",
-        catégorie: item.catégorie || "",
         prixUnitaire: item.prixUnitaire || "",
         stockActuel: item.stockActuel || "",
         stockMin: item.stockMin || "",
@@ -101,7 +81,6 @@ const emptyFormData = {
       setFormData({
         name: item.name || "",
         reference: item.reference || "", // Ajout du champ reference
-        catégorie: item.catégorie || "",
         prixUnitaire: item.prixUnitaire || "",
         stockActuel: item.stockActuel || "",
         stockMin: item.stockMin || "",
@@ -150,12 +129,6 @@ const emptyFormData = {
         ...formData,
       };
 
-      // Validate PDR category selection
-      if (formData.catégorie === 'PDR' && !formData.pdrCategory) {
-        toast.error("Vous devez sélectionner une catégorie PDR");
-        return;
-      }
-      
       // Soumettre les données
       await onSubmit(itemToSubmit)
       // Réinitialiser le formulaire si ce n'est pas en mode édition
@@ -199,41 +172,6 @@ const emptyFormData = {
             />
           </div>
         </div>
-        <div className="stock-form__row">
-          <div className="stock-form__group">
-            <label htmlFor="catégorie">Catégorie *</label>
-            <select
-              id="catégorie"
-              name="catégorie"
-              value={formData.catégorie || ''}
-              onChange={handleChange}
-              required
-              disabled={apiLoading}
-            >
-              <option value="">Sélectionnez une catégorie</option>
-              {equipmentCategories.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="stock-form__group">
-            <label htmlFor="pdrCategory">Catégorie PDR</label>
-            <select
-              id="pdrCategory"
-              name="pdrCategory"
-              value={formData.pdrCategory || ''}
-              onChange={handleChange}
-              disabled={apiLoading}
-            >
-              <option value="">Sélectionnez une catégorie PDR</option>
-              {pdrCategories.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
-          </div>
-          </div>
-          
           <div className="stock-form__group">
             <label htmlFor="prixUnitaire">Prix unitaire (DH) *</label>
             <input
