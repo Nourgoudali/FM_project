@@ -3,12 +3,12 @@ const mongoose = require('mongoose');
 
 const stockController = {
   create: async (req, res) => {
-    const { name, catégorie, prixUnitaire, stockActuel, stockMin, stockMax, stockSecurite, prixEuro, lieuStockage } = req.body;
+    const { name, pdrCategory, prixUnitaire, stockActuel, stockMin, stockMax, stockSecurite, prixEuro, lieuStockage } = req.body;
     try {
       // La référence sera générée automatiquement par le hook pre-save
       const stock = new Stock({
         name,
-        catégorie,
+        pdrCategory,
         prixUnitaire,
         stockActuel,
         stockMin,

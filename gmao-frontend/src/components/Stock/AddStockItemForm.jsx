@@ -19,9 +19,9 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
     stockMin: "",
     stockMax: "",
     stockSecurite: "",
-    lieuStockage: "", // Ajout du champ lieuStockage
+    lieuStockage: "", // Champ requis pour le lieu de stockage
     prixEuro: 0, // Ajout du champ pour le prix en euros
-    pdrCategory: "" // Ajout du champ pour la catégorie PDR
+    pdrCategory: "" // Champ requis pour la catégorie PDR
   };
 
   // Ensure form data is always initialized with empty values
@@ -88,7 +88,7 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
       setFormData({
         name: item.name || "",
         reference: item.reference || "", // Ajout du champ reference
-        catégorie: item.catégorie || "",
+        pdrCategory: item.pdrCategory || "",
         prixUnitaire: item.prixUnitaire || "",
         stockActuel: item.stockActuel || "",
         stockMin: item.stockMin || "",
@@ -191,6 +191,7 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
               value={formData.pdrCategory || ''}
               onChange={handleChange}
               disabled={apiLoading}
+              required
             >
               <option value="">Sélectionnez une catégorie PDR</option>
               {pdrCategories.map(category => (
@@ -198,8 +199,6 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
               ))}
             </select>
           </div>
-          </div>
-          
           <div className="stock-form__group">
             <label htmlFor="prixUnitaire">Prix unitaire (DH) *</label>
             <input
@@ -276,16 +275,31 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
             />
           </div>
         </div>
+        <div className="stock-form__row">
+          <div className="stock-form__group">
+            <label htmlFor="lieuStockage">Lieu de stockage *</label>
+            <input
+              type="text"
+              id="lieuStockage"
+              name="lieuStockage"
+              value={formData.lieuStockage}
+              onChange={handleChange}
+              required
+              placeholder="Ex: Magasin principal, Étagère A3, etc."
+            />
+          </div>
+        </div>
       </div>
       <div className="stock-form__actions stock-form__actions--main">
         <button type="button" className="stock-form__btn stock-form__btn--outline" onClick={onCancel}>
           Annuler
         </button>
-        <button type="submit" className="stock-form__btn stock-form__btn--primary" disabled={apiLoading}>
-          {loading ? "Enregistrement..." : isEdit ? "Enregistrer les modifications" : "Ajouter l'article"}
+        <button type="submit" className="stock-form__btn" disabled={apiLoading}>
+          {isEdit ? 'Modifier' : 'Ajouter'}
         </button>
       </div>
-    </form>
+    </div>
+  </form>
   )
 }
 

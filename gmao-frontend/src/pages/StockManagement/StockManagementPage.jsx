@@ -140,11 +140,12 @@ const StockManagementPage = () => {
         // Rafraîchir les données depuis l'API
         await refreshStockData();
       } else {
-        // Fallback si pas de réponse valide
+        // Si la réponse est nulle mais pas d'erreur, on utilise les données temporaires
         const tempItem = { 
           ...newItem, 
           _id: `temp-${stockItems.length + 1}`,
           reference: `ST-${String(stockItems.length + 1).padStart(3, '0')}`,
+          pdrCategory: newItem.pdrCategory || "Fluidique", // Défaut sur Fluidique si non spécifié
           fournisseur: {
             _id: newItem.fournisseur,
             nomEntreprise: "Fournisseur temporaire"
@@ -158,7 +159,9 @@ const StockManagementPage = () => {
         await refreshStockData();
       }
     } catch (error) {
-      toast.error("Une erreur est survenue lors de l'ajout de l'article");
+      // Afficher le message d'erreur spécifique de l'API
+      toast.error(error.response?.data?.message || "Une erreur est survenue lors de l'ajout de l'article");
+      throw error;
     }
   }
 
@@ -246,8 +249,8 @@ const StockManagementPage = () => {
     }
   }
 
-  // Obtenir les catégories uniques pour le filtre
-  const categories = ["all", ...new Set(stockItems.map((item) => item.catégorie))]
+  // Obtenir les catégories PDR uniques pour le filtre
+  const categories = ["all", ...new Set(stockItems.map((item) => item.pdrCategory))]
 
   return (
     <div className="stock-container">

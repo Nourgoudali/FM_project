@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const stockSchema = new mongoose.Schema({
   reference: { type: String, unique: true }, // Retiré required car généré automatiquement
   name: { type: String, required: true },
-  catégorie: { type: String, required: true },
+  pdrCategory: { type: String, required: true },
   prixUnitaire: { type: Number, required: true },
   prixEuro: { type: Number, default: 0 }, // Ajout du champ pour le prix en euros
   stockActuel: { type: Number, required: true },
