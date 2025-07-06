@@ -6,10 +6,19 @@ import { toast } from 'react-hot-toast';
 function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
   // Initialize form data with empty values
   const pdrCategories = [
-  'Fluidique',
-  'Électrotechnique',
-  'Maintenance générale'
-];
+    'Fluidique',
+    'Électrotechnique',
+    'Maintenance générale'
+  ];
+
+  const equipmentCategories = [
+    'Systèmes d\'air comprimé',
+    'Systèmes de pompages',
+    'Installations CVC',
+    'Systèmes solaire thermique',
+    'Équipements énergétiques',
+    'Équipements de production'
+  ];
 
 const emptyFormData = {
     name: "",
@@ -202,11 +211,9 @@ const emptyFormData = {
               disabled={apiLoading}
             >
               <option value="">Sélectionnez une catégorie</option>
-              <option value="Fournitures">Fournitures</option>
-              <option value="Matériel">Matériel</option>
-              <option value="Papier">Papier</option>
-              <option value="Électronique">Électronique</option>
-              <option value="PDR">PDR</option>
+              {equipmentCategories.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
             </select>
           </div>
 
