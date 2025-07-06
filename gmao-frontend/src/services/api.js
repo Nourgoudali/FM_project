@@ -486,15 +486,25 @@ export const configurationAPI = {
 // API pour les documents
 export const documentAPI = {
   getAllDocuments: () => API.get("/documents"),
-  upload: (formData) =>
-    API.post("/documents", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
-  // Supprimer un document
+  upload: (formData) => {
+    console.log("Configuration de la requête d'upload:", {
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
+    });
+    
+    return API.post("/documents", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data"
+      },
+      transformRequest: [(data) => {
+        console.log("Données avant transformation:", data);
+        return data;
+      }]
+    });
+  },
   deleteDocument: (id) => API.delete(`/documents/${id}`),
-  // Générer un QR code pour un document
   generateQRCode: (documentId) => API.post(`/documents/${documentId}/qr-code`),
-  // Récupérer les documents par équipement
   getDocumentsByEquipment: (equipmentId) => API.get(`/documents/equipment/${equipmentId}`),
 };
 

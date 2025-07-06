@@ -5,10 +5,16 @@ const documentController = {
   // Créer un document avec fichier
   upload: async (req, res) => {
     try {
+      console.log("=== Début de l'upload ===");
+      console.log("Headers de la requête:", req.headers);
+      console.log("Corps de la requête:", req.body);
+      console.log("Fichier reçu:", req.file);
+
       const { title, description, category, equipment } = req.body;
 
       // Validation des champs obligatoires
       if (!title || !category) {
+        console.log("Validation échouée: titre ou catégorie manquant");
         return res.status(400).json({
           success: false,
           message: "Le titre et la catégorie sont obligatoires",
@@ -16,6 +22,8 @@ const documentController = {
       }
 
       if (!req.file) {
+        console.log("Aucun fichier n'a été reçu dans la requête");
+        console.log("Contenu de req.files:", req.files);
         return res.status(400).json({
           success: false,
           message: "Aucun fichier n'a été téléchargé",
@@ -24,17 +32,21 @@ const documentController = {
 
       // Vérifier l'équipement si fourni
       if (equipment) {
+        console.log("Vérification de l'équipement:", equipment);
         const equipmentExists = await Equipment.findById(equipment);
         if (!equipmentExists) {
+          console.log("Équipement non trouvé:", equipment);
           return res.status(400).json({
             success: false,
             message: "L'équipement spécifié n'existe pas",
           });
         }
+        console.log("Équipement trouvé:", equipmentExists);
       }
 
       // Construire l'URL du fichier
       const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+      console.log("URL du fichier générée:", fileUrl);
 
       // Créer le document
       const document = new Document({
@@ -43,26 +55,36 @@ const documentController = {
         category,
         equipment: equipment || null,
         fileUrl,
-
         uploadedBy: req.user._id,
       });
 
+      console.log("Document à sauvegarder:", document);
+
       await document.save();
+      console.log("Document sauvegardé avec succès");
 
       // Populer les références
       const savedDocument = await Document.findById(document._id)
         .populate("equipment", "name reference")
         .populate("uploadedBy", "firstName lastName");
 
+      console.log("Document complet avec références:", savedDocument);
+
       res.status(201).json({
         success: true,
         data: savedDocument,
       });
     } catch (err) {
-      console.error("Erreur lors de l'upload du document:", err);
+      console.error("Erreur détaillée lors de l'upload:", {
+        name: err.name,
+        message: err.message,
+        stack: err.stack,
+        code: err.code
+      });
 
       if (err.name === "ValidationError") {
         const messages = Object.values(err.errors).map((val) => val.message);
+        console.log("Erreur de validation:", messages);
         return res.status(400).json({
           success: false,
           message: "Erreur de validation",
@@ -71,15 +93,18 @@ const documentController = {
       }
 
       if (err.code === 11000) {
+        console.log("Erreur de duplication:", err.keyPattern);
         return res.status(400).json({
           success: false,
           message: "Une erreur de duplication s'est produite",
+          details: err.keyPattern
         });
       }
 
       res.status(500).json({
         success: false,
         message: "Erreur serveur lors de la création du document",
+        details: process.env.NODE_ENV === 'development' ? err.message : undefined
       });
     }
   },

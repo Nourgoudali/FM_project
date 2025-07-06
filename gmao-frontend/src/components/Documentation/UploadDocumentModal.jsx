@@ -121,6 +121,10 @@ const UploadDocumentModal = ({ isOpen, onClose, onSuccess }) => {
   // Gestion des changements dans le formulaire
   const handleChange = (e) => {
     const { name, value, files } = e.target;
+    
+    if (name === "file") {
+      console.log("Fichier sélectionné:", files[0]);
+    }
   
     setFormData((prev) => ({
       ...prev,
@@ -152,6 +156,14 @@ const UploadDocumentModal = ({ isOpen, onClose, onSuccess }) => {
         return;
       }
 
+      console.log("Données du formulaire avant envoi:", {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        equipment: formData.equipment,
+        file: formData.file
+      });
+
       // Préparer les données du formulaire
       const formDataToSend = new FormData();
       formDataToSend.append("title", formData.title.trim());
@@ -165,19 +177,29 @@ const UploadDocumentModal = ({ isOpen, onClose, onSuccess }) => {
       
       // Ajouter le fichier
       formDataToSend.append("file", formData.file);
+
+      // Log du contenu du FormData
+      console.log("FormData envoyé:");
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(key + ':', value instanceof File ? value.name : value);
+      }
       
       // Envoyer la requête
       const response = await documentAPI.upload(formDataToSend);
       
       if (response.data?.success) {
         toast.success("Document ajouté avec succès");
-        onSuccess(response.data.data); // Passer les données du document créé
+        onSuccess(response.data.data);
         onClose();
       } else {
         throw new Error(response.data?.message || "Erreur inconnue");
       }
     } catch (error) {
-      console.error("Erreur lors de l'upload du document:", error);
+      console.error("Erreur détaillée lors de l'upload:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
       const errorMessage = error.response?.data?.message || error.message || "Erreur lors de l'envoi du document";
       toast.error(errorMessage);
     } finally {
