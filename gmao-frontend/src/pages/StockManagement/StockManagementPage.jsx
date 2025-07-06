@@ -47,47 +47,46 @@ const StockManagementPage = () => {
     fetchStockItems();
   }, []);
 
-  // Filtrer les éléments en fonction du terme de recherche et des filtres
+  // Filtrer et trier les articles
   useEffect(() => {
-    let result = stockItems
+    let filtered = [...stockItems];
 
-    // Appliquer le terme de recherche
+    // Rechercher par nom ou référence
     if (searchTerm) {
-      result = result.filter(
-        (item) =>
-          item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (item.fournisseur && item.fournisseur.nomEntreprise && 
-           item.fournisseur.nomEntreprise.toLowerCase().includes(searchTerm.toLowerCase())),
-      )
+      filtered = filtered.filter((item) => 
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.reference.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
 
-    // Appliquer les filtres
+    // Filtrer par catégorie PDR
     if (filters.category !== "all") {
-      result = result.filter((item) => item.pdrCategory === filters.category)
+      filtered = filtered.filter(item => item.pdrCategory === filters.category);
     }
 
+    // Filtrer par statut
     if (filters.status !== "all") {
-      // Déterminer le statut en fonction du stock actuel et du stock minimum
       if (filters.status === "En stock") {
-        result = result.filter((item) => item.stockActuel > item.stockMin)
+        filtered = filtered.filter(item => item.stockActuel > item.stockMin);
       } else if (filters.status === "Stock faible") {
-        result = result.filter((item) => item.stockActuel <= item.stockMin && item.stockActuel > 0)
+        filtered = filtered.filter(item => item.stockActuel <= item.stockMin && item.stockActuel > 0);
       } else if (filters.status === "Rupture de stock") {
-        result = result.filter((item) => item.stockActuel === 0)
+        filtered = filtered.filter(item => item.stockActuel === 0);
       }
     }
 
-    if (filters.minQuantity !== "") {
-      result = result.filter((item) => item.stockActuel >= Number.parseInt(filters.minQuantity))
+    // Filtrer par stock minimum
+    if (filters.minQuantity) {
+      filtered = filtered.filter(item => item.stockActuel >= parseInt(filters.minQuantity));
     }
 
-    if (filters.maxQuantity !== "") {
-      result = result.filter((item) => item.stockActuel <= Number.parseInt(filters.maxQuantity))
+    // Filtrer par stock maximum
+    if (filters.maxQuantity) {
+      filtered = filtered.filter(item => item.stockActuel <= parseInt(filters.maxQuantity));
     }
 
-    setFilteredItems(result)
-  }, [searchTerm, stockItems, filters])
+    setFilteredItems(filtered);
+  }, [stockItems, filters, searchTerm]);
 
   // Fonction de tri
   const requestSort = (key) => {
@@ -410,7 +409,7 @@ const StockManagementPage = () => {
                         <tr key={item._id}>
                           <td>{item.reference}</td>
                           <td>{item.name}</td>
-                          <td>{item.catégorie}</td>
+                          <td>{item.pdrCategory}</td>
                           <td>{item.lieuStockage || 'Non spécifié'}</td>
                           <td>{item.prixUnitaire} DH</td>
                           <td style={{

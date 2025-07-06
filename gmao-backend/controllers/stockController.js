@@ -16,17 +16,23 @@ const stockController = {
   create: async (req, res) => {
     const { name, pdrCategory, prixUnitaire, stockActuel, stockMin, stockMax, stockSecurite, prixEuro, lieuStockage } = req.body;
     try {
+      // Valider la catégorie PDR
+      const validCategories = ['Fluidique', 'Électrotechnique', 'Maintenance générale'];
+      if (!validCategories.includes(pdrCategory)) {
+        return res.status(400).json({ message: 'Catégorie PDR invalide' });
+      }
+
       // La référence sera générée automatiquement par le hook pre-save
       const stock = new Stock({
         name,
         pdrCategory,
-        prixUnitaire,
-        stockActuel,
-        stockMin,
-        stockMax,
-        stockSecurite,
+        prixUnitaire: parseFloat(prixUnitaire),
+        stockActuel: parseInt(stockActuel),
+        stockMin: parseInt(stockMin),
+        stockMax: parseInt(stockMax),
+        stockSecurite: parseInt(stockSecurite),
         lieuStockage,
-        prixEuro: prixEuro || 0
+        prixEuro: parseFloat(prixEuro) || 0
       });
       
       const savedStock = await stock.save();

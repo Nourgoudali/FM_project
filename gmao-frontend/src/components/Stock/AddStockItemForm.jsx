@@ -128,27 +128,31 @@ function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setApiLoading(true);
-
     try {
-      // Simuler un délai réseau
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Préparer l'objet à retourner, avec l'ID si on est en mode édition
-      const itemToSubmit = {
-        ...(isEdit && item ? { _id: item._id } : {}),
-        ...formData,
+      // Vérifier si la catégorie PDR est valide
+      if (!pdrCategories.includes(formData.pdrCategory)) {
+        throw new Error("Catégorie PDR invalide");
+      }
+
+      // Préparer les données à envoyer
+      const dataToSend = {
+        name: formData.name,
+        pdrCategory: formData.pdrCategory,
+        prixUnitaire: parseFloat(formData.prixUnitaire),
+        stockActuel: parseInt(formData.stockActuel),
+        stockMin: parseInt(formData.stockMin),
+        stockMax: parseInt(formData.stockMax),
+        stockSecurite: parseInt(formData.stockSecurite),
+        lieuStockage: formData.lieuStockage,
+        prixEuro: parseFloat(formData.prixEuro)
       };
 
-
-      
-      // Soumettre les données
-      await onSubmit(itemToSubmit)
-      // Réinitialiser le formulaire si ce n'est pas en mode édition
+      await onSubmit(dataToSend);
       if (!isEdit) {
         setFormData(emptyFormData);
       }
     } catch (err) {
-      toast.error("Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.")
+      toast.error(err.message || "Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.")
     } finally {
       setApiLoading(false);
     }
