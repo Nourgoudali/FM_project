@@ -35,8 +35,6 @@ const MaintenancePlanning = () => {
     'ATELIER 2'
   ];
 
-
-
   const departments = [
     'Département de la Production',
     'Département Qualité',
@@ -50,6 +48,7 @@ const MaintenancePlanning = () => {
 
   const [formData, setFormData] = useState({
     equipment: '',
+    category: '',
     location: '',
     department: '',
     periodicity: 'Mensuelle',
@@ -320,9 +319,7 @@ const MaintenancePlanning = () => {
                   ))}
                 </select>
               </div>
-              <div className="form-group">
-  
-              </div>
+
               <div className="form-group">
                 <label htmlFor="department">Département</label>
                 <select

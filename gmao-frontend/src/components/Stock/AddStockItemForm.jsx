@@ -5,9 +5,13 @@ import { toast } from 'react-hot-toast';
 
 function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
   // Initialize form data with empty values
+  const pdrCategories = [
+    'Fluidique',
+    'Électrotechnique',
+    'Maintenance générale'
+  ];
 
-
-const emptyFormData = {
+  const emptyFormData = {
     name: "",
     reference: "", // Ajout du champ reference même s'il sera généré automatiquement côté serveur
     prixUnitaire: "",
@@ -16,7 +20,8 @@ const emptyFormData = {
     stockMax: "",
     stockSecurite: "",
     lieuStockage: "", // Ajout du champ lieuStockage
-    prixEuro: 0 // Ajout du champ pour le prix en euros
+    prixEuro: 0, // Ajout du champ pour le prix en euros
+    pdrCategory: "" // Ajout du champ pour la catégorie PDR
   };
 
   // Ensure form data is always initialized with empty values
@@ -38,7 +43,8 @@ const emptyFormData = {
         stockSecurite: item.stockSecurite || "",
         fournisseur: item.fournisseur ? item.fournisseur._id : "",
         lieuStockage: item.lieuStockage || "", // Ajout du champ lieuStockage
-        prixEuro: item.prixEuro || 0
+        prixEuro: item.prixEuro || 0, // Ajout du champ pour le prix en euros
+        pdrCategory: item.pdrCategory || ""
       }
     : {
         name: "",
@@ -48,9 +54,9 @@ const emptyFormData = {
         stockMin: "",
         stockMax: "",
         stockSecurite: "",
-        fournisseur: "",
         lieuStockage: "", 
-        prixEuro: 0
+        prixEuro: 0,
+        pdrCategory: ""
       }
 
   const [formData, setFormData] = useState(initialData)
@@ -67,6 +73,7 @@ const emptyFormData = {
         stockSecurite: item.stockSecurite || "",
         fournisseur: item.fournisseur ? item.fournisseur._id : "",
         lieuStockage: item.lieuStockage || "", // Ajout du champ lieuStockage
+        pdrCategory: item.pdrCategory || ""
       }
       setFormData(newData)
     }
@@ -81,6 +88,7 @@ const emptyFormData = {
       setFormData({
         name: item.name || "",
         reference: item.reference || "", // Ajout du champ reference
+        catégorie: item.catégorie || "",
         prixUnitaire: item.prixUnitaire || "",
         stockActuel: item.stockActuel || "",
         stockMin: item.stockMin || "",
@@ -129,6 +137,8 @@ const emptyFormData = {
         ...formData,
       };
 
+
+      
       // Soumettre les données
       await onSubmit(itemToSubmit)
       // Réinitialiser le formulaire si ce n'est pas en mode édition
@@ -172,6 +182,24 @@ const emptyFormData = {
             />
           </div>
         </div>
+        <div className="stock-form__row">
+          <div className="stock-form__group">
+            <label htmlFor="pdrCategory">Catégorie PDR *</label>
+            <select
+              id="pdrCategory"
+              name="pdrCategory"
+              value={formData.pdrCategory || ''}
+              onChange={handleChange}
+              disabled={apiLoading}
+            >
+              <option value="">Sélectionnez une catégorie PDR</option>
+              {pdrCategories.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+          </div>
+          </div>
+          
           <div className="stock-form__group">
             <label htmlFor="prixUnitaire">Prix unitaire (DH) *</label>
             <input
