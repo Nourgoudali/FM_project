@@ -413,6 +413,8 @@ export const stockAPI = {
   getTraitementsPourInventaire: () => API.get('/inventaires/traitements-pour-inventaire'),
   // Récupérer un stock par ID
   getStockById: (id) => API.get(`/stock/${id}`),
+  // Récupérer les catégories PDR
+  getPdrCategories: () => API.get('/stock/categories'),
   // Créer un nouveau stock
   createStock: (stockData) => API.post('/stock', stockData),
   // Mettre à jour un stock

@@ -2,6 +2,17 @@ const Stock = require('../models/Stock');
 const mongoose = require('mongoose');
 
 const stockController = {
+  // Récupérer les catégories PDR uniques
+  getPdrCategories: async (req, res) => {
+    try {
+      const categories = await Stock.distinct('pdrCategory');
+      res.json(categories);
+    } catch (err) {
+      console.error("Erreur lors de la récupération des catégories PDR:", err);
+      res.status(500).json({ message: 'Erreur serveur' });
+    }
+  },
+
   create: async (req, res) => {
     const { name, pdrCategory, prixUnitaire, stockActuel, stockMin, stockMax, stockSecurite, prixEuro, lieuStockage } = req.body;
     try {

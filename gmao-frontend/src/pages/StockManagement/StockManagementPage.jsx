@@ -64,7 +64,7 @@ const StockManagementPage = () => {
 
     // Appliquer les filtres
     if (filters.category !== "all") {
-      result = result.filter((item) => item.catégorie === filters.category)
+      result = result.filter((item) => item.pdrCategory === filters.category)
     }
 
     if (filters.status !== "all") {
@@ -349,8 +349,8 @@ const StockManagementPage = () => {
                           <span>{sortConfig.direction === "ascending" ? "↑" : "↓"}</span>
                         )}
                       </th>
-                      <th onClick={() => requestSort("catégorie")}>
-                        Catégorie {sortConfig.key === "catégorie" && (
+                      <th onClick={() => requestSort("pdrCategory")}>
+                        Catégorie PDR {sortConfig.key === "pdrCategory" && (
                           <span>{sortConfig.direction === "ascending" ? "↑" : "↓"}</span>
                         )}
                       </th>

@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.post('/', verifyToken, checkRole('admin'), stockController.create);
 router.get('/', verifyToken, stockController.getAll);
+router.get('/categories', verifyToken, stockController.getPdrCategories);
 router.get('/low', verifyToken, stockController.getLowStock);
 router.get('/:id', verifyToken, stockController.getById);
 router.put('/:id', verifyToken, checkRole('admin'), stockController.update);
