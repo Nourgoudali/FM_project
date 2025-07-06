@@ -18,6 +18,8 @@ const fournisseurRoutes = require('./routes/fournisseursRoutes');
 const commandeRoutes = require('./routes/commandeRoutes');
 const traitementRoutes = require('./routes/traitementRoutes');
 const inventaireRoutes = require('./routes/inventaireRoutes');
+const initializePdrCategories = require('./middleware/pdrCategoriesMiddleware');
+const pdrRoutes = require('./routes/pdrRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -63,7 +65,11 @@ app.use(express.urlencoded({ extended: true }));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected successfully'))
+  .then(() => {
+    console.log('MongoDB connected successfully');
+    // Initialiser les catégories PDR après la connexion réussie
+    app.use('/', initializePdrCategories);
+  })
   .catch(() => console.error('MongoDB connection failed'));
 
 // Apply Routes
@@ -82,6 +88,7 @@ app.use('/api/fournisseurs', fournisseurRoutes);
 app.use('/api/commandes', commandeRoutes);
 app.use('/api/traitements', traitementRoutes);
 app.use('/api/inventaires', inventaireRoutes);
+app.use('/api/pdr', pdrRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

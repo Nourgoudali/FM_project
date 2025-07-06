@@ -249,8 +249,13 @@ const StockManagementPage = () => {
     }
   }
 
+  // Les catégories PDR disponibles
+  const pdrCategories = ['Fluidique', 'Électrotechnique', 'Maintenance générale'];
+  
   // Obtenir les catégories PDR uniques pour le filtre
-  const categories = ["all", ...new Set(stockItems.map((item) => item.pdrCategory))]
+  const categories = stockItems.length > 0 
+    ? ["all", ...new Set(stockItems.map((item) => item.pdrCategory))]
+    : ["all", ...pdrCategories]
 
   return (
     <div className="stock-container">

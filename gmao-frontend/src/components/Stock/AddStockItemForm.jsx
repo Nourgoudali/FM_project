@@ -4,24 +4,13 @@ import { equipmentAPI, fournisseurAPI, stockAPI } from "../../services/api"
 import { toast } from 'react-hot-toast';
 
 function AddStockItemForm({ item = null, onSubmit, onCancel, isEdit = false }) {
-  // État pour les catégories PDR
-  const [pdrCategories, setPdrCategories] = useState([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
+  // Les catégories PDR par défaut
+  const pdrCategories = ['Fluidique', 'Électrotechnique', 'Maintenance générale'];
+  const [loadingCategories, setLoadingCategories] = useState(false);
 
-  // Charger les catégories PDR depuis l'API
+  // Initialiser les catégories dès le début
   useEffect(() => {
-    const fetchPdrCategories = async () => {
-      try {
-        const response = await stockAPI.getPdrCategories();
-        setPdrCategories(response.data);
-      } catch (error) {
-        console.error("Erreur lors du chargement des catégories PDR:", error);
-        toast.error("Impossible de charger les catégories PDR");
-      } finally {
-        setLoadingCategories(false);
-      }
-    };
-    fetchPdrCategories();
+    setLoadingCategories(false);
   }, []);
 
   const emptyFormData = {
